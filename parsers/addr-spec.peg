@@ -1,0 +1,5 @@
+addr-spec := local_part=local-part '@' domain=domain
+local-part :=   dot_atom=dot-atom | quoted_string=quoted-string | obs_local_part=obs-local-part
+domain          :=   dot_atom=dot-atom | domain_literal=domain-literal | obs_domain=obs-domain
+domain-literal  :=   CFWS? "[" {FWS? dtext}* FWS? "]" CFWS?
+dtext         := '[!"#$%&\'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ]' | '[^_`abcdefghijklmnopqrstuvwxyz{|}~]' | obs-dtext // Printable US-ASCII characters not including "[", "]", or "\"
