@@ -102,4 +102,14 @@ describe('addr-spec', () => {
       })
     })
   })
+  describe('domain', () => {
+    describe('dot-atom', () => {
+      test('dot-atom-text', () => {
+        let domain = parse('a@def.ghi.jkl').ast!.domain
+        expect(domain.token.kind).toBe(ASTKinds.dot_atom)
+        let dot_atom = domain.token as dot_atom
+        expect(dot_atom.parts).toEqual(['def', 'ghi', 'jkl'])
+      })
+    })
+  })
 })
