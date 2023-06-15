@@ -52,7 +52,9 @@ specials        :=     '\(' |'\)' | '[<>]' | '\[' | '\]' | '[:;@]' | '\\' | ',' 
 // (Printable US-ASCII characters not including '\"' or the quote character)
 qtext           :=    '\x21' | '[\x23-\x5b]' | '[\x5d-\x7e]' | obs_qtext
 qcontent        :=    qtext | quoted_pair
-quoted_string   :=    CFWS? DQUOTE {FWS? qcontent = qcontent}* FWS? DQUOTE CFWS?
+quoted_string   :=    CFWS? DQUOTE _contents = {FWS? qcontent = qcontent}* FWS? DQUOTE CFWS?
+                      .literal = string { return `"${this.contents}"` }
+                      .contents = string { return this._contents.map(c => c.qcontent).join('') }
 
 // § 3.2.5 Miscellaneous Tokens
 // See: https://datatracker.ietf.org/doc/html/rfc5322#section-3.2.5

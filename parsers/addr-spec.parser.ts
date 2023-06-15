@@ -46,7 +46,9 @@
 * // (Printable US-ASCII characters not including '\"' or the quote character)
 * qtext           :=    '\x21' | '[\x23-\x5b]' | '[\x5d-\x7e]' | obs_qtext
 * qcontent        :=    qtext | quoted_pair
-* quoted_string   :=    CFWS? DQUOTE {FWS? qcontent = qcontent}* FWS? DQUOTE CFWS?
+* quoted_string   :=    CFWS? DQUOTE _contents = {FWS? qcontent = qcontent}* FWS? DQUOTE CFWS?
+*                       .literal = string { return `"${this.contents}"` }
+*                       .contents = string { return this._contents.map(c => c.qcontent).join('') }
 * // § 3.2.5 Miscellaneous Tokens
 * // See: https://datatracker.ietf.org/doc/html/rfc5322#section-3.2.5
 * word            :=    atom | quoted_string
@@ -292,8 +294,20 @@ export type qtext_4 = obs_qtext;
 export type qcontent = qcontent_1 | qcontent_2;
 export type qcontent_1 = qtext;
 export type qcontent_2 = quoted_pair;
-export interface quoted_string {
-    kind: ASTKinds.quoted_string;
+export class quoted_string {
+    public kind: ASTKinds.quoted_string = ASTKinds.quoted_string;
+    public _contents: quoted_string_$0[];
+    public literal: string;
+    public contents: string;
+    constructor(_contents: quoted_string_$0[]){
+        this._contents = _contents;
+        this.literal = ((): string => {
+        return `"${this.contents}"`
+        })();
+        this.contents = ((): string => {
+        return this._contents.map(c => c.qcontent).join('')
+        })();
+    }
 }
 export interface quoted_string_$0 {
     kind: ASTKinds.quoted_string_$0;
@@ -766,16 +780,17 @@ export class Parser {
     public matchquoted_string($$dpth: number, $$cr?: ErrorTracker): Nullable<quoted_string> {
         return this.run<quoted_string>($$dpth,
             () => {
+                let $scope$_contents: Nullable<quoted_string_$0[]>;
                 let $$res: Nullable<quoted_string> = null;
                 if (true
                     && ((this.matchCFWS($$dpth + 1, $$cr)) || true)
                     && this.matchDQUOTE($$dpth + 1, $$cr) !== null
-                    && this.loop<quoted_string_$0>(() => this.matchquoted_string_$0($$dpth + 1, $$cr), true) !== null
+                    && ($scope$_contents = this.loop<quoted_string_$0>(() => this.matchquoted_string_$0($$dpth + 1, $$cr), true)) !== null
                     && ((this.matchFWS($$dpth + 1, $$cr)) || true)
                     && this.matchDQUOTE($$dpth + 1, $$cr) !== null
                     && ((this.matchCFWS($$dpth + 1, $$cr)) || true)
                 ) {
-                    $$res = {kind: ASTKinds.quoted_string, };
+                    $$res = new quoted_string($scope$_contents);
                 }
                 return $$res;
             });
