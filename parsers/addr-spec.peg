@@ -19,23 +19,23 @@ WSP             :=    SP | HTAB     // white space
 
 // § 3.2.1 Quoted Characters
 // See: https://datatracker.ietf.org/doc/html/rfc5322#section-3.2.1
-quoted_pair     :=    {'\\' {VCHAR | WSP}} | obs_qp
+quoted_pair     :=    { '\\' { VCHAR | WSP } } | obs_qp
 
 // §3.2.2 Folding White Space and Comments
 // See: https://datatracker.ietf.org/doc/html/rfc5322#section-3.2.2
-FWS             :=    {{WSP* CRLF}? WSP+} |  obs_FWS
+FWS             :=    { { WSP* CRLF }? WSP+ } |  obs_FWS
 ctext           :=    '[\x21-\x27]' | '[\x2a-\x5b]' | '[\x5d-\x7e]' | obs_ctext
 ccontent        :=    ctext | quoted_pair | comment
-comment         :=    '\(' {FWS? ccontent}* FWS? '\)'
-CFWS            :=    {{FWS? comment}+ FWS?} | FWS
+comment         :=    '\(' { FWS? ccontent }* FWS? '\)'
+CFWS            :=    { { FWS? comment }+ FWS? } | FWS
 
 // § 3.2.3 Atom
 // See: https://datatracker.ietf.org/doc/html/rfc5322#section-3.2.3
 // (Printable US-ASCII characters not including specials. Used for atoms.)
 atext           :=    '[A-Za-z0-9!#$%&\x27*+\-\/=?^_`{|}~]'
 atom            :=    CFWS? atext+ CFWS?
-dot_atom_text   :=    _head_atext = atext+ _tail_atext={'\.' _atext = atext+}*
-                      .head = string { return this._head_atext.join('')}
+dot_atom_text   :=    _head_atext = atext+ _tail_atext={ '\.' _atext = atext+ }*
+                      .head = string { return this._head_atext.join('') }
                       .tail = string[] { return this._tail_atext.map(a => a._atext.join('')) }
                       .literal = string { return this.head + this.tail.map(atext => '.' + atext).join('') }
 
@@ -52,7 +52,7 @@ specials        :=     '\(' |'\)' | '[<>]' | '\[' | '\]' | '[:;@]' | '\\' | ',' 
 // (Printable US-ASCII characters not including '\"' or the quote character)
 qtext           :=    '\x21' | '[\x23-\x5b]' | '[\x5d-\x7e]' | obs_qtext
 qcontent        :=    qtext | quoted_pair
-quoted_string   :=    CFWS? DQUOTE _contents = {FWS? qcontent = qcontent}* FWS? DQUOTE CFWS?
+quoted_string   :=    CFWS? DQUOTE _contents = { FWS? qcontent = qcontent }* FWS? DQUOTE CFWS?
                       .literal = string { return `"${this.contents}"` }
                       .contents = string { return this._contents.map(c => c.qcontent).join('') }
 
@@ -65,7 +65,7 @@ word            :=    atom | quoted_string
 addr_spec       :=    local_part = local_part '@' domain = domain
 local_part      :=    token = dot_atom | token = quoted_string | token = obs_local_part
 domain          :=    dot_atom = dot_atom | domain_literal = domain_literal | obs_domain = obs_domain
-domain_literal  :=    CFWS? '\[' {FWS? dtext=dtext}* FWS? '\]' CFWS?
+domain_literal  :=    CFWS? '\[' { FWS? dtext = dtext }* FWS? '\]' CFWS?
 // (Printable US-ASCII characters not including '[', ']', or '\"')
 dtext           :=    '[\x21-\x5a]' | '[\x5e-\x7e]' | obs_dtext = obs_dtext
 
@@ -75,14 +75,14 @@ dtext           :=    '[\x21-\x5a]' | '[\x5e-\x7e]' | obs_dtext = obs_dtext
 obs_NO_WS_CTL   :=    '[\x01-\x08]' | '\x0B' | '\x0C' | '[\x0E-\x1F]' | '\x7F'
 obs_qtext       :=    obs_NO_WS_CTL
 obs_ctext       :=    obs_NO_WS_CTL
-obs_qp          :=    '\\' {'\x00' | obs_NO_WS_CTL | LF | CR}
+obs_qp          :=    '\\' { '\x00' | obs_NO_WS_CTL | LF | CR }
 
 // § 4.2 Obsolete Folding White Space
 // See: https://datatracker.ietf.org/doc/html/rfc5322#section-4.2
-obs_FWS         :=    WSP+ {CRLF WSP+}*
+obs_FWS         :=    WSP+ { CRLF WSP+ }*
 
 // § 4.4 Obsolete Addressing
 // See: https://datatracker.ietf.org/doc/html/rfc5322#section-4.4
-obs_local_part  :=    word {'\.' word}*
-obs_domain      :=    head_atom = atom {'\.' tail_atom = atom}*
+obs_local_part  :=    word { '\.' word }*
+obs_domain      :=    head_atom = atom { '\.' tail_atom = atom }*
 obs_dtext       :=    obs_NO_WS_CTL | quoted_pair
