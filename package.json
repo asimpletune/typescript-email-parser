@@ -13,8 +13,7 @@
   "main": "index.js",
   "scripts": {
     "test": "npm run gen && jest",
-    "opts": "tspeg --help",
-    "gen": "tspeg --enable-memo --include-grammar-comment=false --num-enums ./parsers/addr-spec.peg ./parsers/addr-spec.parser.ts"
+    "gen": "tspeg ./parsers/addr-spec.peg ./parsers/addr-spec.parser.ts"
   },
   "repository": {
     "type": "git",
