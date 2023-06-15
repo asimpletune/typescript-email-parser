@@ -12,6 +12,17 @@ describe('addr-spec', () => {
         expect(dot_atom.tail).toEqual(['def'])
         expect(dot_atom.literal).toBe('abc.def')
       })
+      describe('CFWS', () => {
+        test('a single space', () => {
+          expect(parse(' abc.def@domain').ast?.local_part.token.kind).toBe(ASTKinds.dot_atom)
+        })
+        test('multiple tabs', () => {
+          expect(parse('\t\tabc.def@domain').ast?.local_part.token.kind).toBe(ASTKinds.dot_atom)
+        })
+        test('CRLF followed by space', () => {
+          expect(parse('\r\n abc.def@domain').ast?.local_part.token.kind).toBe(ASTKinds.dot_atom)
+        })
+      })
     })
   })
 })
