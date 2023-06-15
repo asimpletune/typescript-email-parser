@@ -2143,6 +2143,220 @@ export class Parser {
             this.$scope$obs_group_list_$0$memo,
         );
     }
+    public matchobs_angle_addr($$dpth: number, $$cr?: ErrorTracker): Nullable<obs_angle_addr> {
+        return this.run<obs_angle_addr>($$dpth,
+            () => {
+                let $$res: Nullable<obs_angle_addr> = null;
+                if (true
+                    && ((this.matchCFWS($$dpth + 1, $$cr)) || true)
+                    && this.regexAccept(String.raw`(?:<)`, $$dpth + 1, $$cr) !== null
+                    && this.matchobs_route($$dpth + 1, $$cr) !== null
+                    && this.matchaddr_spec($$dpth + 1, $$cr) !== null
+                    && this.regexAccept(String.raw`(?:>)`, $$dpth + 1, $$cr) !== null
+                    && ((this.matchCFWS($$dpth + 1, $$cr)) || true)
+                ) {
+                    $$res = {kind: ASTKinds.obs_angle_addr, };
+                }
+                return $$res;
+            });
+    }
+    public matchobs_route($$dpth: number, $$cr?: ErrorTracker): Nullable<obs_route> {
+        return this.run<obs_route>($$dpth,
+            () => {
+                let $$res: Nullable<obs_route> = null;
+                if (true
+                    && this.matchobs_domain_list($$dpth + 1, $$cr) !== null
+                    && this.regexAccept(String.raw`(?::)`, $$dpth + 1, $$cr) !== null
+                ) {
+                    $$res = {kind: ASTKinds.obs_route, };
+                }
+                return $$res;
+            });
+    }
+    public matchobs_domain_list($$dpth: number, $$cr?: ErrorTracker): Nullable<obs_domain_list> {
+        return this.run<obs_domain_list>($$dpth,
+            () => {
+                let $$res: Nullable<obs_domain_list> = null;
+                if (true
+                    && this.loop<obs_domain_list_$0>(() => this.matchobs_domain_list_$0($$dpth + 1, $$cr), true) !== null
+                    && this.regexAccept(String.raw`(?:@)`, $$dpth + 1, $$cr) !== null
+                    && this.matchdomain($$dpth + 1, $$cr) !== null
+                    && this.loop<obs_domain_list_$1>(() => this.matchobs_domain_list_$1($$dpth + 1, $$cr), true) !== null
+                ) {
+                    $$res = {kind: ASTKinds.obs_domain_list, };
+                }
+                return $$res;
+            });
+    }
+    public matchobs_domain_list_$0($$dpth: number, $$cr?: ErrorTracker): Nullable<obs_domain_list_$0> {
+        return this.choice<obs_domain_list_$0>([
+            () => this.matchobs_domain_list_$0_1($$dpth + 1, $$cr),
+            () => this.matchobs_domain_list_$0_2($$dpth + 1, $$cr),
+        ]);
+    }
+    public matchobs_domain_list_$0_1($$dpth: number, $$cr?: ErrorTracker): Nullable<obs_domain_list_$0_1> {
+        return this.matchCFWS($$dpth + 1, $$cr);
+    }
+    public matchobs_domain_list_$0_2($$dpth: number, $$cr?: ErrorTracker): Nullable<obs_domain_list_$0_2> {
+        return this.regexAccept(String.raw`(?:,)`, $$dpth + 1, $$cr);
+    }
+    public matchobs_domain_list_$1($$dpth: number, $$cr?: ErrorTracker): Nullable<obs_domain_list_$1> {
+        return this.run<obs_domain_list_$1>($$dpth,
+            () => {
+                let $$res: Nullable<obs_domain_list_$1> = null;
+                if (true
+                    && this.regexAccept(String.raw`(?:,)`, $$dpth + 1, $$cr) !== null
+                    && ((this.matchCFWS($$dpth + 1, $$cr)) || true)
+                    && ((this.matchobs_domain_list_$1_$0($$dpth + 1, $$cr)) || true)
+                ) {
+                    $$res = {kind: ASTKinds.obs_domain_list_$1, };
+                }
+                return $$res;
+            });
+    }
+    public matchobs_domain_list_$1_$0($$dpth: number, $$cr?: ErrorTracker): Nullable<obs_domain_list_$1_$0> {
+        return this.run<obs_domain_list_$1_$0>($$dpth,
+            () => {
+                let $$res: Nullable<obs_domain_list_$1_$0> = null;
+                if (true
+                    && this.regexAccept(String.raw`(?:@)`, $$dpth + 1, $$cr) !== null
+                    && this.matchdomain($$dpth + 1, $$cr) !== null
+                ) {
+                    $$res = {kind: ASTKinds.obs_domain_list_$1_$0, };
+                }
+                return $$res;
+            });
+    }
+    public matchobs_mbox_list($$dpth: number, $$cr?: ErrorTracker): Nullable<obs_mbox_list> {
+        return this.run<obs_mbox_list>($$dpth,
+            () => {
+                let $$res: Nullable<obs_mbox_list> = null;
+                if (true
+                    && this.loop<obs_mbox_list_$0>(() => this.matchobs_mbox_list_$0($$dpth + 1, $$cr), true) !== null
+                    && this.matchmailbox($$dpth + 1, $$cr) !== null
+                    && this.loop<obs_mbox_list_$1>(() => this.matchobs_mbox_list_$1($$dpth + 1, $$cr), true) !== null
+                ) {
+                    $$res = {kind: ASTKinds.obs_mbox_list, };
+                }
+                return $$res;
+            });
+    }
+    public matchobs_mbox_list_$0($$dpth: number, $$cr?: ErrorTracker): Nullable<obs_mbox_list_$0> {
+        return this.run<obs_mbox_list_$0>($$dpth,
+            () => {
+                let $$res: Nullable<obs_mbox_list_$0> = null;
+                if (true
+                    && ((this.matchCFWS($$dpth + 1, $$cr)) || true)
+                    && this.regexAccept(String.raw`(?:,)`, $$dpth + 1, $$cr) !== null
+                ) {
+                    $$res = {kind: ASTKinds.obs_mbox_list_$0, };
+                }
+                return $$res;
+            });
+    }
+    public matchobs_mbox_list_$1($$dpth: number, $$cr?: ErrorTracker): Nullable<obs_mbox_list_$1> {
+        return this.run<obs_mbox_list_$1>($$dpth,
+            () => {
+                let $$res: Nullable<obs_mbox_list_$1> = null;
+                if (true
+                    && this.regexAccept(String.raw`(?:,)`, $$dpth + 1, $$cr) !== null
+                    && ((this.matchobs_mbox_list_$1_$0($$dpth + 1, $$cr)) || true)
+                ) {
+                    $$res = {kind: ASTKinds.obs_mbox_list_$1, };
+                }
+                return $$res;
+            });
+    }
+    public matchobs_mbox_list_$1_$0($$dpth: number, $$cr?: ErrorTracker): Nullable<obs_mbox_list_$1_$0> {
+        return this.choice<obs_mbox_list_$1_$0>([
+            () => this.matchobs_mbox_list_$1_$0_1($$dpth + 1, $$cr),
+            () => this.matchobs_mbox_list_$1_$0_2($$dpth + 1, $$cr),
+        ]);
+    }
+    public matchobs_mbox_list_$1_$0_1($$dpth: number, $$cr?: ErrorTracker): Nullable<obs_mbox_list_$1_$0_1> {
+        return this.matchmailbox($$dpth + 1, $$cr);
+    }
+    public matchobs_mbox_list_$1_$0_2($$dpth: number, $$cr?: ErrorTracker): Nullable<obs_mbox_list_$1_$0_2> {
+        return this.matchCFWS($$dpth + 1, $$cr);
+    }
+    public matchobs_addr_list($$dpth: number, $$cr?: ErrorTracker): Nullable<obs_addr_list> {
+        return this.run<obs_addr_list>($$dpth,
+            () => {
+                let $$res: Nullable<obs_addr_list> = null;
+                if (true
+                    && this.loop<obs_addr_list_$0>(() => this.matchobs_addr_list_$0($$dpth + 1, $$cr), true) !== null
+                    && this.matchaddress($$dpth + 1, $$cr) !== null
+                    && this.loop<obs_addr_list_$1>(() => this.matchobs_addr_list_$1($$dpth + 1, $$cr), true) !== null
+                ) {
+                    $$res = {kind: ASTKinds.obs_addr_list, };
+                }
+                return $$res;
+            });
+    }
+    public matchobs_addr_list_$0($$dpth: number, $$cr?: ErrorTracker): Nullable<obs_addr_list_$0> {
+        return this.run<obs_addr_list_$0>($$dpth,
+            () => {
+                let $$res: Nullable<obs_addr_list_$0> = null;
+                if (true
+                    && ((this.matchCFWS($$dpth + 1, $$cr)) || true)
+                    && this.regexAccept(String.raw`(?:,)`, $$dpth + 1, $$cr) !== null
+                ) {
+                    $$res = {kind: ASTKinds.obs_addr_list_$0, };
+                }
+                return $$res;
+            });
+    }
+    public matchobs_addr_list_$1($$dpth: number, $$cr?: ErrorTracker): Nullable<obs_addr_list_$1> {
+        return this.run<obs_addr_list_$1>($$dpth,
+            () => {
+                let $$res: Nullable<obs_addr_list_$1> = null;
+                if (true
+                    && this.regexAccept(String.raw`(?:,)`, $$dpth + 1, $$cr) !== null
+                    && ((this.matchobs_addr_list_$1_$0($$dpth + 1, $$cr)) || true)
+                ) {
+                    $$res = {kind: ASTKinds.obs_addr_list_$1, };
+                }
+                return $$res;
+            });
+    }
+    public matchobs_addr_list_$1_$0($$dpth: number, $$cr?: ErrorTracker): Nullable<obs_addr_list_$1_$0> {
+        return this.choice<obs_addr_list_$1_$0>([
+            () => this.matchobs_addr_list_$1_$0_1($$dpth + 1, $$cr),
+            () => this.matchobs_addr_list_$1_$0_2($$dpth + 1, $$cr),
+        ]);
+    }
+    public matchobs_addr_list_$1_$0_1($$dpth: number, $$cr?: ErrorTracker): Nullable<obs_addr_list_$1_$0_1> {
+        return this.matchaddress($$dpth + 1, $$cr);
+    }
+    public matchobs_addr_list_$1_$0_2($$dpth: number, $$cr?: ErrorTracker): Nullable<obs_addr_list_$1_$0_2> {
+        return this.matchCFWS($$dpth + 1, $$cr);
+    }
+    public matchobs_group_list($$dpth: number, $$cr?: ErrorTracker): Nullable<obs_group_list> {
+        return this.run<obs_group_list>($$dpth,
+            () => {
+                let $$res: Nullable<obs_group_list> = null;
+                if (true
+                    && this.loop<obs_group_list_$0>(() => this.matchobs_group_list_$0($$dpth + 1, $$cr), false) !== null
+                    && ((this.matchCFWS($$dpth + 1, $$cr)) || true)
+                ) {
+                    $$res = {kind: ASTKinds.obs_group_list, };
+                }
+                return $$res;
+            });
+    }
+    public matchobs_group_list_$0($$dpth: number, $$cr?: ErrorTracker): Nullable<obs_group_list_$0> {
+        return this.run<obs_group_list_$0>($$dpth,
+            () => {
+                let $$res: Nullable<obs_group_list_$0> = null;
+                if (true
+                    && ((this.matchCFWS($$dpth + 1, $$cr)) || true)
+                    && this.regexAccept(String.raw`(?:,)`, $$dpth + 1, $$cr) !== null
+                ) {
+                    $$res = {kind: ASTKinds.obs_group_list_$0, };
+                }
+                return $$res;
+            });
+    }
     public matchobs_local_part($$dpth: number, $$cr?: ErrorTracker): Nullable<obs_local_part> {
         return this.memoise(
             () => {
