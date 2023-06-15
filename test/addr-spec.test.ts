@@ -64,6 +64,17 @@ describe('addr-spec', () => {
         let domain_literal = domain.token as domain_literal
         expect(domain_literal.contents).toBe('dt(e)xt')
       })
+      describe('CFWS', () => {
+        test('a single space', () => {
+          expect(parse(' abc.def@domain').ast?.local_part.token.kind).toBe(ASTKinds.dot_atom)
+        })
+        test('multiple tabs', () => {
+          expect(parse('\t\tabc.def@domain').ast?.local_part.token.kind).toBe(ASTKinds.dot_atom)
+        })
+        test('CRLF followed by space', () => {
+          expect(parse('\r\n abc.def@domain').ast?.local_part.token.kind).toBe(ASTKinds.dot_atom)
+        })
+      })
     })
   })
 })
