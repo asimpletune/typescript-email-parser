@@ -53,9 +53,9 @@ specials        :=     '\(' |'\)' | '[<>]' | '\[' | '\]' | '[:;@]' | '\\' | ',' 
 // (Printable US-ASCII characters not including '\"' or the quote character)
 qtext           :=    '\x21' | '[\x23-\x5b]' | '[\x5d-\x7e]' | obs_qtext
 qcontent        :=    qtext | quoted_pair
-quoted_string   :=    CFWS? DQUOTE _contents = { FWS? qcontent = qcontent }* FWS? DQUOTE CFWS?
+quoted_string   :=    CFWS? DQUOTE _contents = { FWS? _qcontent = qcontent }* FWS? DQUOTE CFWS?
                       .literal = string { return `"${this.contents}"` }
-                      .contents = string { return this._contents.map(c => c.qcontent).join('') }
+                      .contents = string { return this._contents.map(c => c._qcontent).join('') }
 
 // § 3.2.5 Miscellaneous Tokens
 // See: https://datatracker.ietf.org/doc/html/rfc5322#section-3.2.5
@@ -66,7 +66,9 @@ word            :=    atom | quoted_string
 addr_spec       :=    local_part = local_part '@' domain = domain
 local_part      :=    token = dot_atom | token = quoted_string | token = obs_local_part
 domain          :=    token = dot_atom | token = domain_literal | token = obs_domain
-domain_literal  :=    CFWS? '\[' { FWS? dtext = dtext }* FWS? '\]' CFWS?
+domain_literal  :=    CFWS? '\[' _contents = { FWS? _dtext = dtext }* FWS? '\]' CFWS?
+                      .literal = string { return `[${this.contents}]` }
+                      .contents = string { return this._contents.map(c => c._dtext).join('') }
 // (Printable US-ASCII characters not including '[', ']', or '\"')
 dtext           :=    '[\x21-\x5a]' | '[\x5e-\x7e]' | obs_dtext = obs_dtext
 

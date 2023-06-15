@@ -47,9 +47,9 @@
 * // (Printable US-ASCII characters not including '\"' or the quote character)
 * qtext           :=    '\x21' | '[\x23-\x5b]' | '[\x5d-\x7e]' | obs_qtext
 * qcontent        :=    qtext | quoted_pair
-* quoted_string   :=    CFWS? DQUOTE _contents = { FWS? qcontent = qcontent }* FWS? DQUOTE CFWS?
+* quoted_string   :=    CFWS? DQUOTE _contents = { FWS? _qcontent = qcontent }* FWS? DQUOTE CFWS?
 *                       .literal = string { return `"${this.contents}"` }
-*                       .contents = string { return this._contents.map(c => c.qcontent).join('') }
+*                       .contents = string { return this._contents.map(c => c._qcontent).join('') }
 * // § 3.2.5 Miscellaneous Tokens
 * // See: https://datatracker.ietf.org/doc/html/rfc5322#section-3.2.5
 * word            :=    atom | quoted_string
@@ -58,7 +58,9 @@
 * addr_spec       :=    local_part = local_part '@' domain = domain
 * local_part      :=    token = dot_atom | token = quoted_string | token = obs_local_part
 * domain          :=    token = dot_atom | token = domain_literal | token = obs_domain
-* domain_literal  :=    CFWS? '\[' { FWS? dtext = dtext }* FWS? '\]' CFWS?
+* domain_literal  :=    CFWS? '\[' _contents = { FWS? _dtext = dtext }* FWS? '\]' CFWS?
+*                       .literal = string { return `[${this.contents}]` }
+*                       .contents = string { return this._contents.map(c => c._dtext).join('') }
 * // (Printable US-ASCII characters not including '[', ']', or '\"')
 * dtext           :=    '[\x21-\x5a]' | '[\x5e-\x7e]' | obs_dtext = obs_dtext
 * // § 4.1 Miscellaneous Obsolete Tokens
@@ -310,13 +312,13 @@ export class quoted_string {
         return `"${this.contents}"`
         })();
         this.contents = ((): string => {
-        return this._contents.map(c => c.qcontent).join('')
+        return this._contents.map(c => c._qcontent).join('')
         })();
     }
 }
 export interface quoted_string_$0 {
     kind: ASTKinds.quoted_string_$0;
-    qcontent: qcontent;
+    _qcontent: qcontent;
 }
 export type word = word_1 | word_2;
 export type word_1 = atom;
@@ -352,12 +354,24 @@ export interface domain_3 {
     kind: ASTKinds.domain_3;
     token: obs_domain;
 }
-export interface domain_literal {
-    kind: ASTKinds.domain_literal;
+export class domain_literal {
+    public kind: ASTKinds.domain_literal = ASTKinds.domain_literal;
+    public _contents: domain_literal_$0[];
+    public literal: string;
+    public contents: string;
+    constructor(_contents: domain_literal_$0[]){
+        this._contents = _contents;
+        this.literal = ((): string => {
+        return `[${this.contents}]`
+        })();
+        this.contents = ((): string => {
+        return this._contents.map(c => c._dtext).join('')
+        })();
+    }
 }
 export interface domain_literal_$0 {
     kind: ASTKinds.domain_literal_$0;
-    dtext: dtext;
+    _dtext: dtext;
 }
 export type dtext = dtext_1 | dtext_2 | dtext_3;
 export type dtext_1 = string;
@@ -803,13 +817,13 @@ export class Parser {
     public matchquoted_string_$0($$dpth: number, $$cr?: ErrorTracker): Nullable<quoted_string_$0> {
         return this.run<quoted_string_$0>($$dpth,
             () => {
-                let $scope$qcontent: Nullable<qcontent>;
+                let $scope$_qcontent: Nullable<qcontent>;
                 let $$res: Nullable<quoted_string_$0> = null;
                 if (true
                     && ((this.matchFWS($$dpth + 1, $$cr)) || true)
-                    && ($scope$qcontent = this.matchqcontent($$dpth + 1, $$cr)) !== null
+                    && ($scope$_qcontent = this.matchqcontent($$dpth + 1, $$cr)) !== null
                 ) {
-                    $$res = {kind: ASTKinds.quoted_string_$0, qcontent: $scope$qcontent};
+                    $$res = {kind: ASTKinds.quoted_string_$0, _qcontent: $scope$_qcontent};
                 }
                 return $$res;
             });
@@ -937,16 +951,17 @@ export class Parser {
     public matchdomain_literal($$dpth: number, $$cr?: ErrorTracker): Nullable<domain_literal> {
         return this.run<domain_literal>($$dpth,
             () => {
+                let $scope$_contents: Nullable<domain_literal_$0[]>;
                 let $$res: Nullable<domain_literal> = null;
                 if (true
                     && ((this.matchCFWS($$dpth + 1, $$cr)) || true)
                     && this.regexAccept(String.raw`(?:\[)`, $$dpth + 1, $$cr) !== null
-                    && this.loop<domain_literal_$0>(() => this.matchdomain_literal_$0($$dpth + 1, $$cr), true) !== null
+                    && ($scope$_contents = this.loop<domain_literal_$0>(() => this.matchdomain_literal_$0($$dpth + 1, $$cr), true)) !== null
                     && ((this.matchFWS($$dpth + 1, $$cr)) || true)
                     && this.regexAccept(String.raw`(?:\])`, $$dpth + 1, $$cr) !== null
                     && ((this.matchCFWS($$dpth + 1, $$cr)) || true)
                 ) {
-                    $$res = {kind: ASTKinds.domain_literal, };
+                    $$res = new domain_literal($scope$_contents);
                 }
                 return $$res;
             });
@@ -954,13 +969,13 @@ export class Parser {
     public matchdomain_literal_$0($$dpth: number, $$cr?: ErrorTracker): Nullable<domain_literal_$0> {
         return this.run<domain_literal_$0>($$dpth,
             () => {
-                let $scope$dtext: Nullable<dtext>;
+                let $scope$_dtext: Nullable<dtext>;
                 let $$res: Nullable<domain_literal_$0> = null;
                 if (true
                     && ((this.matchFWS($$dpth + 1, $$cr)) || true)
-                    && ($scope$dtext = this.matchdtext($$dpth + 1, $$cr)) !== null
+                    && ($scope$_dtext = this.matchdtext($$dpth + 1, $$cr)) !== null
                 ) {
-                    $$res = {kind: ASTKinds.domain_literal_$0, dtext: $scope$dtext};
+                    $$res = {kind: ASTKinds.domain_literal_$0, _dtext: $scope$_dtext};
                 }
                 return $$res;
             });

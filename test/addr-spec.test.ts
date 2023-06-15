@@ -1,5 +1,5 @@
 import { describe, expect, test } from '@jest/globals';
-import { ASTKinds, dot_atom, parse, quoted_string } from '../parsers/addr-spec.parser'
+import { ASTKinds, domain_literal, dot_atom, parse, quoted_string } from '../parsers/addr-spec.parser'
 
 describe('addr-spec', () => {
   describe('local-part', () => {
@@ -55,6 +55,14 @@ describe('addr-spec', () => {
         expect(domain.token.kind).toBe(ASTKinds.dot_atom)
         let dot_atom = domain.token as dot_atom
         expect(dot_atom.parts).toEqual(['def', 'ghi', 'jkl'])
+      })
+    })
+    describe('domain-literal', () => {
+      test('dtext', () => {
+        let domain = parse('a@[dt(e)xt]').ast!.domain
+        expect(domain.token.kind).toBe(ASTKinds.domain_literal)
+        let domain_literal = domain.token as domain_literal
+        expect(domain_literal.contents).toBe('dt(e)xt')
       })
     })
   })
