@@ -1,5 +1,5 @@
 import { describe, expect, test } from '@jest/globals';
-import { ASTKinds, dot_atom, parse } from '../parsers/addr-spec'
+import { ASTKinds, dot_atom, parse } from '../parsers/addr-spec.parser'
 
 describe('addr-spec', () => {
   describe('local-part', () => {

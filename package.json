@@ -13,7 +13,7 @@
   "main": "index.js",
   "scripts": {
     "test": "npm run gen && jest",
-    "gen": "tspeg ./parsers/addr-spec.peg ./parsers/addr-spec.ts"
+    "gen": "tspeg ./parsers/addr-spec.peg ./parsers/addr-spec.parser.ts"
   },
   "repository": {
     "type": "git",
