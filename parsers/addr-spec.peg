@@ -60,6 +60,20 @@ quoted_string   :=    CFWS? DQUOTE _contents = { FWS? _qcontent = qcontent }* FW
 // § 3.2.5 Miscellaneous Tokens
 // See: https://datatracker.ietf.org/doc/html/rfc5322#section-3.2.5
 word            :=    atom | quoted_string
+phrase          :=    word+ | obs_phrase
+
+// § 3.4 Address Specification
+// See: https://datatracker.ietf.org/doc/html/rfc5322#section-3.4
+
+address         :=    mailbox | group
+mailbox         :=    name_addr | addr_spec
+name_addr       :=    display_name? angle_addr
+angle_addr      :=    CFWS? '<' addr_spec '>' CFWS? | obs_angle_addr
+group           :=    display_name ':' group_list? ';' CFWS?
+display_name    :=    phrase
+mailbox_list    :=    { mailbox { ',' mailbox }* } | obs_mbox_list
+address_list    :=    { address { ',' address }*  } | obs_addr_list
+group_list      :=    mailbox_list | CFWS | obs_group_list
 
 // § 3.4.1 Addr-Spec Specification
 // See: https://datatracker.ietf.org/doc/html/rfc5322#section-3.4.1
@@ -79,6 +93,7 @@ obs_NO_WS_CTL   :=    '[\x01-\x08]' | '\x0B' | '\x0C' | '[\x0E-\x1F]' | '\x7F'
 obs_qtext       :=    obs_NO_WS_CTL
 obs_ctext       :=    obs_NO_WS_CTL
 obs_qp          :=    '\\' { '\x00' | obs_NO_WS_CTL | LF | CR }
+obs_phrase      :=    word { word | '.' | CFWS }
 
 // § 4.2 Obsolete Folding White Space
 // See: https://datatracker.ietf.org/doc/html/rfc5322#section-4.2
@@ -86,6 +101,12 @@ obs_FWS         :=    WSP+ { CRLF WSP+ }*
 
 // § 4.4 Obsolete Addressing
 // See: https://datatracker.ietf.org/doc/html/rfc5322#section-4.4
+obs_angle_addr  :=    CFWS? '<' obs_route addr_spec '>' CFWS?
+obs_route       :=    obs_domain_list ':'
+obs_domain_list :=    { CFWS | ',' }* '@' domain { ',' CFWS? { '@' domain }? }*
+obs_mbox_list   :=    { CFWS? ',' }* mailbox { ',' { mailbox | CFWS }? }*
+obs_addr_list   :=    { CFWS? ',' }* address { ',' { address | CFWS }? }*
+obs_group_list  :=    { CFWS? ',' }+ CFWS?
 obs_local_part  :=    word { '\.' word }*
 obs_domain      :=    head_atom = atom { '\.' tail_atom = atom }*
 obs_dtext       :=    obs_NO_WS_CTL | quoted_pair

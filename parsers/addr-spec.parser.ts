@@ -53,6 +53,18 @@
 * // § 3.2.5 Miscellaneous Tokens
 * // See: https://datatracker.ietf.org/doc/html/rfc5322#section-3.2.5
 * word            :=    atom | quoted_string
+* phrase          :=    word+ | obs_phrase
+* // § 3.4 Address Specification
+* // See: https://datatracker.ietf.org/doc/html/rfc5322#section-3.4
+* address         :=    mailbox | group
+* mailbox         :=    name_addr | addr_spec
+* name_addr       :=    display_name? angle_addr
+* angle_addr      :=    CFWS? '<' addr_spec '>' CFWS? | obs_angle_addr
+* group           :=    display_name ':' group_list? ';' CFWS?
+* display_name    :=    phrase
+* mailbox_list    :=    { mailbox { ',' mailbox }* } | obs_mbox_list
+* address_list    :=    { address { ',' address }*  } | obs_addr_list
+* group_list      :=    mailbox_list | CFWS | obs_group_list
 * // § 3.4.1 Addr-Spec Specification
 * // See: https://datatracker.ietf.org/doc/html/rfc5322#section-3.4.1
 * addr_spec       :=    local_part = local_part '@' domain = domain
@@ -70,11 +82,18 @@
 * obs_qtext       :=    obs_NO_WS_CTL
 * obs_ctext       :=    obs_NO_WS_CTL
 * obs_qp          :=    '\\' { '\x00' | obs_NO_WS_CTL | LF | CR }
+* obs_phrase      :=    word { word | '.' | CFWS }
 * // § 4.2 Obsolete Folding White Space
 * // See: https://datatracker.ietf.org/doc/html/rfc5322#section-4.2
 * obs_FWS         :=    WSP+ { CRLF WSP+ }*
 * // § 4.4 Obsolete Addressing
 * // See: https://datatracker.ietf.org/doc/html/rfc5322#section-4.4
+* obs_angle_addr  :=    CFWS? '<' obs_route addr_spec '>' CFWS?
+* obs_route       :=    obs_domain_list ':'
+* obs_domain_list :=    { CFWS | ',' }* '@' domain { ',' CFWS? { '@' domain }? }*
+* obs_mbox_list   :=    { CFWS? ',' }* mailbox { ',' { mailbox | CFWS }? }*
+* obs_addr_list   :=    { CFWS? ',' }* address { ',' { address | CFWS }? }*
+* obs_group_list  :=    { CFWS? ',' }+ CFWS?
 * obs_local_part  :=    word { '\.' word }*
 * obs_domain      :=    head_atom = atom { '\.' tail_atom = atom }*
 * obs_dtext       :=    obs_NO_WS_CTL | quoted_pair
@@ -142,6 +161,28 @@ export enum ASTKinds {
     quoted_string_$0 = "quoted_string_$0",
     word_1 = "word_1",
     word_2 = "word_2",
+    phrase_1 = "phrase_1",
+    phrase_2 = "phrase_2",
+    address_1 = "address_1",
+    address_2 = "address_2",
+    mailbox_1 = "mailbox_1",
+    mailbox_2 = "mailbox_2",
+    name_addr = "name_addr",
+    angle_addr_1 = "angle_addr_1",
+    angle_addr_2 = "angle_addr_2",
+    group = "group",
+    display_name = "display_name",
+    mailbox_list_1 = "mailbox_list_1",
+    mailbox_list_2 = "mailbox_list_2",
+    mailbox_list_$0 = "mailbox_list_$0",
+    mailbox_list_$0_$0 = "mailbox_list_$0_$0",
+    address_list_1 = "address_list_1",
+    address_list_2 = "address_list_2",
+    address_list_$0 = "address_list_$0",
+    address_list_$0_$0 = "address_list_$0_$0",
+    group_list_1 = "group_list_1",
+    group_list_2 = "group_list_2",
+    group_list_3 = "group_list_3",
     addr_spec = "addr_spec",
     local_part_1 = "local_part_1",
     local_part_2 = "local_part_2",
@@ -166,8 +207,31 @@ export enum ASTKinds {
     obs_qp_$0_2 = "obs_qp_$0_2",
     obs_qp_$0_3 = "obs_qp_$0_3",
     obs_qp_$0_4 = "obs_qp_$0_4",
+    obs_phrase = "obs_phrase",
+    obs_phrase_$0_1 = "obs_phrase_$0_1",
+    obs_phrase_$0_2 = "obs_phrase_$0_2",
+    obs_phrase_$0_3 = "obs_phrase_$0_3",
     obs_FWS = "obs_FWS",
     obs_FWS_$0 = "obs_FWS_$0",
+    obs_angle_addr = "obs_angle_addr",
+    obs_route = "obs_route",
+    obs_domain_list = "obs_domain_list",
+    obs_domain_list_$0_1 = "obs_domain_list_$0_1",
+    obs_domain_list_$0_2 = "obs_domain_list_$0_2",
+    obs_domain_list_$1 = "obs_domain_list_$1",
+    obs_domain_list_$1_$0 = "obs_domain_list_$1_$0",
+    obs_mbox_list = "obs_mbox_list",
+    obs_mbox_list_$0 = "obs_mbox_list_$0",
+    obs_mbox_list_$1 = "obs_mbox_list_$1",
+    obs_mbox_list_$1_$0_1 = "obs_mbox_list_$1_$0_1",
+    obs_mbox_list_$1_$0_2 = "obs_mbox_list_$1_$0_2",
+    obs_addr_list = "obs_addr_list",
+    obs_addr_list_$0 = "obs_addr_list_$0",
+    obs_addr_list_$1 = "obs_addr_list_$1",
+    obs_addr_list_$1_$0_1 = "obs_addr_list_$1_$0_1",
+    obs_addr_list_$1_$0_2 = "obs_addr_list_$1_$0_2",
+    obs_group_list = "obs_group_list",
+    obs_group_list_$0 = "obs_group_list_$0",
     obs_local_part = "obs_local_part",
     obs_local_part_$0 = "obs_local_part_$0",
     obs_domain = "obs_domain",
@@ -323,6 +387,49 @@ export interface quoted_string_$0 {
 export type word = word_1 | word_2;
 export type word_1 = atom;
 export type word_2 = quoted_string;
+export type phrase = phrase_1 | phrase_2;
+export type phrase_1 = word[];
+export type phrase_2 = obs_phrase;
+export type address = address_1 | address_2;
+export type address_1 = mailbox;
+export type address_2 = group;
+export type mailbox = mailbox_1 | mailbox_2;
+export type mailbox_1 = name_addr;
+export type mailbox_2 = addr_spec;
+export interface name_addr {
+    kind: ASTKinds.name_addr;
+}
+export type angle_addr = angle_addr_1 | angle_addr_2;
+export interface angle_addr_1 {
+    kind: ASTKinds.angle_addr_1;
+}
+export type angle_addr_2 = obs_angle_addr;
+export interface group {
+    kind: ASTKinds.group;
+}
+export type display_name = phrase;
+export type mailbox_list = mailbox_list_1 | mailbox_list_2;
+export type mailbox_list_1 = mailbox_list_$0;
+export type mailbox_list_2 = obs_mbox_list;
+export interface mailbox_list_$0 {
+    kind: ASTKinds.mailbox_list_$0;
+}
+export interface mailbox_list_$0_$0 {
+    kind: ASTKinds.mailbox_list_$0_$0;
+}
+export type address_list = address_list_1 | address_list_2;
+export type address_list_1 = address_list_$0;
+export type address_list_2 = obs_addr_list;
+export interface address_list_$0 {
+    kind: ASTKinds.address_list_$0;
+}
+export interface address_list_$0_$0 {
+    kind: ASTKinds.address_list_$0_$0;
+}
+export type group_list = group_list_1 | group_list_2 | group_list_3;
+export type group_list_1 = mailbox_list;
+export type group_list_2 = CFWS;
+export type group_list_3 = obs_group_list;
 export interface addr_spec {
     kind: ASTKinds.addr_spec;
     local_part: local_part;
@@ -396,11 +503,66 @@ export type obs_qp_$0_1 = string;
 export type obs_qp_$0_2 = obs_NO_WS_CTL;
 export type obs_qp_$0_3 = LF;
 export type obs_qp_$0_4 = CR;
+export interface obs_phrase {
+    kind: ASTKinds.obs_phrase;
+}
+export type obs_phrase_$0 = obs_phrase_$0_1 | obs_phrase_$0_2 | obs_phrase_$0_3;
+export type obs_phrase_$0_1 = word;
+export type obs_phrase_$0_2 = string;
+export type obs_phrase_$0_3 = CFWS;
 export interface obs_FWS {
     kind: ASTKinds.obs_FWS;
 }
 export interface obs_FWS_$0 {
     kind: ASTKinds.obs_FWS_$0;
+}
+export interface obs_angle_addr {
+    kind: ASTKinds.obs_angle_addr;
+}
+export interface obs_route {
+    kind: ASTKinds.obs_route;
+}
+export interface obs_domain_list {
+    kind: ASTKinds.obs_domain_list;
+}
+export type obs_domain_list_$0 = obs_domain_list_$0_1 | obs_domain_list_$0_2;
+export type obs_domain_list_$0_1 = CFWS;
+export type obs_domain_list_$0_2 = string;
+export interface obs_domain_list_$1 {
+    kind: ASTKinds.obs_domain_list_$1;
+}
+export interface obs_domain_list_$1_$0 {
+    kind: ASTKinds.obs_domain_list_$1_$0;
+}
+export interface obs_mbox_list {
+    kind: ASTKinds.obs_mbox_list;
+}
+export interface obs_mbox_list_$0 {
+    kind: ASTKinds.obs_mbox_list_$0;
+}
+export interface obs_mbox_list_$1 {
+    kind: ASTKinds.obs_mbox_list_$1;
+}
+export type obs_mbox_list_$1_$0 = obs_mbox_list_$1_$0_1 | obs_mbox_list_$1_$0_2;
+export type obs_mbox_list_$1_$0_1 = mailbox;
+export type obs_mbox_list_$1_$0_2 = CFWS;
+export interface obs_addr_list {
+    kind: ASTKinds.obs_addr_list;
+}
+export interface obs_addr_list_$0 {
+    kind: ASTKinds.obs_addr_list_$0;
+}
+export interface obs_addr_list_$1 {
+    kind: ASTKinds.obs_addr_list_$1;
+}
+export type obs_addr_list_$1_$0 = obs_addr_list_$1_$0_1 | obs_addr_list_$1_$0_2;
+export type obs_addr_list_$1_$0_1 = address;
+export type obs_addr_list_$1_$0_2 = CFWS;
+export interface obs_group_list {
+    kind: ASTKinds.obs_group_list;
+}
+export interface obs_group_list_$0 {
+    kind: ASTKinds.obs_group_list_$0;
 }
 export interface obs_local_part {
     kind: ASTKinds.obs_local_part;
@@ -840,6 +1002,191 @@ export class Parser {
     public matchword_2($$dpth: number, $$cr?: ErrorTracker): Nullable<word_2> {
         return this.matchquoted_string($$dpth + 1, $$cr);
     }
+    public matchphrase($$dpth: number, $$cr?: ErrorTracker): Nullable<phrase> {
+        return this.choice<phrase>([
+            () => this.matchphrase_1($$dpth + 1, $$cr),
+            () => this.matchphrase_2($$dpth + 1, $$cr),
+        ]);
+    }
+    public matchphrase_1($$dpth: number, $$cr?: ErrorTracker): Nullable<phrase_1> {
+        return this.loop<word>(() => this.matchword($$dpth + 1, $$cr), false);
+    }
+    public matchphrase_2($$dpth: number, $$cr?: ErrorTracker): Nullable<phrase_2> {
+        return this.matchobs_phrase($$dpth + 1, $$cr);
+    }
+    public matchaddress($$dpth: number, $$cr?: ErrorTracker): Nullable<address> {
+        return this.choice<address>([
+            () => this.matchaddress_1($$dpth + 1, $$cr),
+            () => this.matchaddress_2($$dpth + 1, $$cr),
+        ]);
+    }
+    public matchaddress_1($$dpth: number, $$cr?: ErrorTracker): Nullable<address_1> {
+        return this.matchmailbox($$dpth + 1, $$cr);
+    }
+    public matchaddress_2($$dpth: number, $$cr?: ErrorTracker): Nullable<address_2> {
+        return this.matchgroup($$dpth + 1, $$cr);
+    }
+    public matchmailbox($$dpth: number, $$cr?: ErrorTracker): Nullable<mailbox> {
+        return this.choice<mailbox>([
+            () => this.matchmailbox_1($$dpth + 1, $$cr),
+            () => this.matchmailbox_2($$dpth + 1, $$cr),
+        ]);
+    }
+    public matchmailbox_1($$dpth: number, $$cr?: ErrorTracker): Nullable<mailbox_1> {
+        return this.matchname_addr($$dpth + 1, $$cr);
+    }
+    public matchmailbox_2($$dpth: number, $$cr?: ErrorTracker): Nullable<mailbox_2> {
+        return this.matchaddr_spec($$dpth + 1, $$cr);
+    }
+    public matchname_addr($$dpth: number, $$cr?: ErrorTracker): Nullable<name_addr> {
+        return this.run<name_addr>($$dpth,
+            () => {
+                let $$res: Nullable<name_addr> = null;
+                if (true
+                    && ((this.matchdisplay_name($$dpth + 1, $$cr)) || true)
+                    && this.matchangle_addr($$dpth + 1, $$cr) !== null
+                ) {
+                    $$res = {kind: ASTKinds.name_addr, };
+                }
+                return $$res;
+            });
+    }
+    public matchangle_addr($$dpth: number, $$cr?: ErrorTracker): Nullable<angle_addr> {
+        return this.choice<angle_addr>([
+            () => this.matchangle_addr_1($$dpth + 1, $$cr),
+            () => this.matchangle_addr_2($$dpth + 1, $$cr),
+        ]);
+    }
+    public matchangle_addr_1($$dpth: number, $$cr?: ErrorTracker): Nullable<angle_addr_1> {
+        return this.run<angle_addr_1>($$dpth,
+            () => {
+                let $$res: Nullable<angle_addr_1> = null;
+                if (true
+                    && ((this.matchCFWS($$dpth + 1, $$cr)) || true)
+                    && this.regexAccept(String.raw`(?:<)`, $$dpth + 1, $$cr) !== null
+                    && this.matchaddr_spec($$dpth + 1, $$cr) !== null
+                    && this.regexAccept(String.raw`(?:>)`, $$dpth + 1, $$cr) !== null
+                    && ((this.matchCFWS($$dpth + 1, $$cr)) || true)
+                ) {
+                    $$res = {kind: ASTKinds.angle_addr_1, };
+                }
+                return $$res;
+            });
+    }
+    public matchangle_addr_2($$dpth: number, $$cr?: ErrorTracker): Nullable<angle_addr_2> {
+        return this.matchobs_angle_addr($$dpth + 1, $$cr);
+    }
+    public matchgroup($$dpth: number, $$cr?: ErrorTracker): Nullable<group> {
+        return this.run<group>($$dpth,
+            () => {
+                let $$res: Nullable<group> = null;
+                if (true
+                    && this.matchdisplay_name($$dpth + 1, $$cr) !== null
+                    && this.regexAccept(String.raw`(?::)`, $$dpth + 1, $$cr) !== null
+                    && ((this.matchgroup_list($$dpth + 1, $$cr)) || true)
+                    && this.regexAccept(String.raw`(?:;)`, $$dpth + 1, $$cr) !== null
+                    && ((this.matchCFWS($$dpth + 1, $$cr)) || true)
+                ) {
+                    $$res = {kind: ASTKinds.group, };
+                }
+                return $$res;
+            });
+    }
+    public matchdisplay_name($$dpth: number, $$cr?: ErrorTracker): Nullable<display_name> {
+        return this.matchphrase($$dpth + 1, $$cr);
+    }
+    public matchmailbox_list($$dpth: number, $$cr?: ErrorTracker): Nullable<mailbox_list> {
+        return this.choice<mailbox_list>([
+            () => this.matchmailbox_list_1($$dpth + 1, $$cr),
+            () => this.matchmailbox_list_2($$dpth + 1, $$cr),
+        ]);
+    }
+    public matchmailbox_list_1($$dpth: number, $$cr?: ErrorTracker): Nullable<mailbox_list_1> {
+        return this.matchmailbox_list_$0($$dpth + 1, $$cr);
+    }
+    public matchmailbox_list_2($$dpth: number, $$cr?: ErrorTracker): Nullable<mailbox_list_2> {
+        return this.matchobs_mbox_list($$dpth + 1, $$cr);
+    }
+    public matchmailbox_list_$0($$dpth: number, $$cr?: ErrorTracker): Nullable<mailbox_list_$0> {
+        return this.run<mailbox_list_$0>($$dpth,
+            () => {
+                let $$res: Nullable<mailbox_list_$0> = null;
+                if (true
+                    && this.matchmailbox($$dpth + 1, $$cr) !== null
+                    && this.loop<mailbox_list_$0_$0>(() => this.matchmailbox_list_$0_$0($$dpth + 1, $$cr), true) !== null
+                ) {
+                    $$res = {kind: ASTKinds.mailbox_list_$0, };
+                }
+                return $$res;
+            });
+    }
+    public matchmailbox_list_$0_$0($$dpth: number, $$cr?: ErrorTracker): Nullable<mailbox_list_$0_$0> {
+        return this.run<mailbox_list_$0_$0>($$dpth,
+            () => {
+                let $$res: Nullable<mailbox_list_$0_$0> = null;
+                if (true
+                    && this.regexAccept(String.raw`(?:,)`, $$dpth + 1, $$cr) !== null
+                    && this.matchmailbox($$dpth + 1, $$cr) !== null
+                ) {
+                    $$res = {kind: ASTKinds.mailbox_list_$0_$0, };
+                }
+                return $$res;
+            });
+    }
+    public matchaddress_list($$dpth: number, $$cr?: ErrorTracker): Nullable<address_list> {
+        return this.choice<address_list>([
+            () => this.matchaddress_list_1($$dpth + 1, $$cr),
+            () => this.matchaddress_list_2($$dpth + 1, $$cr),
+        ]);
+    }
+    public matchaddress_list_1($$dpth: number, $$cr?: ErrorTracker): Nullable<address_list_1> {
+        return this.matchaddress_list_$0($$dpth + 1, $$cr);
+    }
+    public matchaddress_list_2($$dpth: number, $$cr?: ErrorTracker): Nullable<address_list_2> {
+        return this.matchobs_addr_list($$dpth + 1, $$cr);
+    }
+    public matchaddress_list_$0($$dpth: number, $$cr?: ErrorTracker): Nullable<address_list_$0> {
+        return this.run<address_list_$0>($$dpth,
+            () => {
+                let $$res: Nullable<address_list_$0> = null;
+                if (true
+                    && this.matchaddress($$dpth + 1, $$cr) !== null
+                    && this.loop<address_list_$0_$0>(() => this.matchaddress_list_$0_$0($$dpth + 1, $$cr), true) !== null
+                ) {
+                    $$res = {kind: ASTKinds.address_list_$0, };
+                }
+                return $$res;
+            });
+    }
+    public matchaddress_list_$0_$0($$dpth: number, $$cr?: ErrorTracker): Nullable<address_list_$0_$0> {
+        return this.run<address_list_$0_$0>($$dpth,
+            () => {
+                let $$res: Nullable<address_list_$0_$0> = null;
+                if (true
+                    && this.regexAccept(String.raw`(?:,)`, $$dpth + 1, $$cr) !== null
+                    && this.matchaddress($$dpth + 1, $$cr) !== null
+                ) {
+                    $$res = {kind: ASTKinds.address_list_$0_$0, };
+                }
+                return $$res;
+            });
+    }
+    public matchgroup_list($$dpth: number, $$cr?: ErrorTracker): Nullable<group_list> {
+        return this.choice<group_list>([
+            () => this.matchgroup_list_1($$dpth + 1, $$cr),
+            () => this.matchgroup_list_2($$dpth + 1, $$cr),
+            () => this.matchgroup_list_3($$dpth + 1, $$cr),
+        ]);
+    }
+    public matchgroup_list_1($$dpth: number, $$cr?: ErrorTracker): Nullable<group_list_1> {
+        return this.matchmailbox_list($$dpth + 1, $$cr);
+    }
+    public matchgroup_list_2($$dpth: number, $$cr?: ErrorTracker): Nullable<group_list_2> {
+        return this.matchCFWS($$dpth + 1, $$cr);
+    }
+    public matchgroup_list_3($$dpth: number, $$cr?: ErrorTracker): Nullable<group_list_3> {
+        return this.matchobs_group_list($$dpth + 1, $$cr);
+    }
     public matchaddr_spec($$dpth: number, $$cr?: ErrorTracker): Nullable<addr_spec> {
         return this.run<addr_spec>($$dpth,
             () => {
@@ -1069,6 +1416,35 @@ export class Parser {
     public matchobs_qp_$0_4($$dpth: number, $$cr?: ErrorTracker): Nullable<obs_qp_$0_4> {
         return this.matchCR($$dpth + 1, $$cr);
     }
+    public matchobs_phrase($$dpth: number, $$cr?: ErrorTracker): Nullable<obs_phrase> {
+        return this.run<obs_phrase>($$dpth,
+            () => {
+                let $$res: Nullable<obs_phrase> = null;
+                if (true
+                    && this.matchword($$dpth + 1, $$cr) !== null
+                    && this.matchobs_phrase_$0($$dpth + 1, $$cr) !== null
+                ) {
+                    $$res = {kind: ASTKinds.obs_phrase, };
+                }
+                return $$res;
+            });
+    }
+    public matchobs_phrase_$0($$dpth: number, $$cr?: ErrorTracker): Nullable<obs_phrase_$0> {
+        return this.choice<obs_phrase_$0>([
+            () => this.matchobs_phrase_$0_1($$dpth + 1, $$cr),
+            () => this.matchobs_phrase_$0_2($$dpth + 1, $$cr),
+            () => this.matchobs_phrase_$0_3($$dpth + 1, $$cr),
+        ]);
+    }
+    public matchobs_phrase_$0_1($$dpth: number, $$cr?: ErrorTracker): Nullable<obs_phrase_$0_1> {
+        return this.matchword($$dpth + 1, $$cr);
+    }
+    public matchobs_phrase_$0_2($$dpth: number, $$cr?: ErrorTracker): Nullable<obs_phrase_$0_2> {
+        return this.regexAccept(String.raw`(?:.)`, $$dpth + 1, $$cr);
+    }
+    public matchobs_phrase_$0_3($$dpth: number, $$cr?: ErrorTracker): Nullable<obs_phrase_$0_3> {
+        return this.matchCFWS($$dpth + 1, $$cr);
+    }
     public matchobs_FWS($$dpth: number, $$cr?: ErrorTracker): Nullable<obs_FWS> {
         return this.run<obs_FWS>($$dpth,
             () => {
@@ -1091,6 +1467,220 @@ export class Parser {
                     && this.loop<WSP>(() => this.matchWSP($$dpth + 1, $$cr), false) !== null
                 ) {
                     $$res = {kind: ASTKinds.obs_FWS_$0, };
+                }
+                return $$res;
+            });
+    }
+    public matchobs_angle_addr($$dpth: number, $$cr?: ErrorTracker): Nullable<obs_angle_addr> {
+        return this.run<obs_angle_addr>($$dpth,
+            () => {
+                let $$res: Nullable<obs_angle_addr> = null;
+                if (true
+                    && ((this.matchCFWS($$dpth + 1, $$cr)) || true)
+                    && this.regexAccept(String.raw`(?:<)`, $$dpth + 1, $$cr) !== null
+                    && this.matchobs_route($$dpth + 1, $$cr) !== null
+                    && this.matchaddr_spec($$dpth + 1, $$cr) !== null
+                    && this.regexAccept(String.raw`(?:>)`, $$dpth + 1, $$cr) !== null
+                    && ((this.matchCFWS($$dpth + 1, $$cr)) || true)
+                ) {
+                    $$res = {kind: ASTKinds.obs_angle_addr, };
+                }
+                return $$res;
+            });
+    }
+    public matchobs_route($$dpth: number, $$cr?: ErrorTracker): Nullable<obs_route> {
+        return this.run<obs_route>($$dpth,
+            () => {
+                let $$res: Nullable<obs_route> = null;
+                if (true
+                    && this.matchobs_domain_list($$dpth + 1, $$cr) !== null
+                    && this.regexAccept(String.raw`(?::)`, $$dpth + 1, $$cr) !== null
+                ) {
+                    $$res = {kind: ASTKinds.obs_route, };
+                }
+                return $$res;
+            });
+    }
+    public matchobs_domain_list($$dpth: number, $$cr?: ErrorTracker): Nullable<obs_domain_list> {
+        return this.run<obs_domain_list>($$dpth,
+            () => {
+                let $$res: Nullable<obs_domain_list> = null;
+                if (true
+                    && this.loop<obs_domain_list_$0>(() => this.matchobs_domain_list_$0($$dpth + 1, $$cr), true) !== null
+                    && this.regexAccept(String.raw`(?:@)`, $$dpth + 1, $$cr) !== null
+                    && this.matchdomain($$dpth + 1, $$cr) !== null
+                    && this.loop<obs_domain_list_$1>(() => this.matchobs_domain_list_$1($$dpth + 1, $$cr), true) !== null
+                ) {
+                    $$res = {kind: ASTKinds.obs_domain_list, };
+                }
+                return $$res;
+            });
+    }
+    public matchobs_domain_list_$0($$dpth: number, $$cr?: ErrorTracker): Nullable<obs_domain_list_$0> {
+        return this.choice<obs_domain_list_$0>([
+            () => this.matchobs_domain_list_$0_1($$dpth + 1, $$cr),
+            () => this.matchobs_domain_list_$0_2($$dpth + 1, $$cr),
+        ]);
+    }
+    public matchobs_domain_list_$0_1($$dpth: number, $$cr?: ErrorTracker): Nullable<obs_domain_list_$0_1> {
+        return this.matchCFWS($$dpth + 1, $$cr);
+    }
+    public matchobs_domain_list_$0_2($$dpth: number, $$cr?: ErrorTracker): Nullable<obs_domain_list_$0_2> {
+        return this.regexAccept(String.raw`(?:,)`, $$dpth + 1, $$cr);
+    }
+    public matchobs_domain_list_$1($$dpth: number, $$cr?: ErrorTracker): Nullable<obs_domain_list_$1> {
+        return this.run<obs_domain_list_$1>($$dpth,
+            () => {
+                let $$res: Nullable<obs_domain_list_$1> = null;
+                if (true
+                    && this.regexAccept(String.raw`(?:,)`, $$dpth + 1, $$cr) !== null
+                    && ((this.matchCFWS($$dpth + 1, $$cr)) || true)
+                    && ((this.matchobs_domain_list_$1_$0($$dpth + 1, $$cr)) || true)
+                ) {
+                    $$res = {kind: ASTKinds.obs_domain_list_$1, };
+                }
+                return $$res;
+            });
+    }
+    public matchobs_domain_list_$1_$0($$dpth: number, $$cr?: ErrorTracker): Nullable<obs_domain_list_$1_$0> {
+        return this.run<obs_domain_list_$1_$0>($$dpth,
+            () => {
+                let $$res: Nullable<obs_domain_list_$1_$0> = null;
+                if (true
+                    && this.regexAccept(String.raw`(?:@)`, $$dpth + 1, $$cr) !== null
+                    && this.matchdomain($$dpth + 1, $$cr) !== null
+                ) {
+                    $$res = {kind: ASTKinds.obs_domain_list_$1_$0, };
+                }
+                return $$res;
+            });
+    }
+    public matchobs_mbox_list($$dpth: number, $$cr?: ErrorTracker): Nullable<obs_mbox_list> {
+        return this.run<obs_mbox_list>($$dpth,
+            () => {
+                let $$res: Nullable<obs_mbox_list> = null;
+                if (true
+                    && this.loop<obs_mbox_list_$0>(() => this.matchobs_mbox_list_$0($$dpth + 1, $$cr), true) !== null
+                    && this.matchmailbox($$dpth + 1, $$cr) !== null
+                    && this.loop<obs_mbox_list_$1>(() => this.matchobs_mbox_list_$1($$dpth + 1, $$cr), true) !== null
+                ) {
+                    $$res = {kind: ASTKinds.obs_mbox_list, };
+                }
+                return $$res;
+            });
+    }
+    public matchobs_mbox_list_$0($$dpth: number, $$cr?: ErrorTracker): Nullable<obs_mbox_list_$0> {
+        return this.run<obs_mbox_list_$0>($$dpth,
+            () => {
+                let $$res: Nullable<obs_mbox_list_$0> = null;
+                if (true
+                    && ((this.matchCFWS($$dpth + 1, $$cr)) || true)
+                    && this.regexAccept(String.raw`(?:,)`, $$dpth + 1, $$cr) !== null
+                ) {
+                    $$res = {kind: ASTKinds.obs_mbox_list_$0, };
+                }
+                return $$res;
+            });
+    }
+    public matchobs_mbox_list_$1($$dpth: number, $$cr?: ErrorTracker): Nullable<obs_mbox_list_$1> {
+        return this.run<obs_mbox_list_$1>($$dpth,
+            () => {
+                let $$res: Nullable<obs_mbox_list_$1> = null;
+                if (true
+                    && this.regexAccept(String.raw`(?:,)`, $$dpth + 1, $$cr) !== null
+                    && ((this.matchobs_mbox_list_$1_$0($$dpth + 1, $$cr)) || true)
+                ) {
+                    $$res = {kind: ASTKinds.obs_mbox_list_$1, };
+                }
+                return $$res;
+            });
+    }
+    public matchobs_mbox_list_$1_$0($$dpth: number, $$cr?: ErrorTracker): Nullable<obs_mbox_list_$1_$0> {
+        return this.choice<obs_mbox_list_$1_$0>([
+            () => this.matchobs_mbox_list_$1_$0_1($$dpth + 1, $$cr),
+            () => this.matchobs_mbox_list_$1_$0_2($$dpth + 1, $$cr),
+        ]);
+    }
+    public matchobs_mbox_list_$1_$0_1($$dpth: number, $$cr?: ErrorTracker): Nullable<obs_mbox_list_$1_$0_1> {
+        return this.matchmailbox($$dpth + 1, $$cr);
+    }
+    public matchobs_mbox_list_$1_$0_2($$dpth: number, $$cr?: ErrorTracker): Nullable<obs_mbox_list_$1_$0_2> {
+        return this.matchCFWS($$dpth + 1, $$cr);
+    }
+    public matchobs_addr_list($$dpth: number, $$cr?: ErrorTracker): Nullable<obs_addr_list> {
+        return this.run<obs_addr_list>($$dpth,
+            () => {
+                let $$res: Nullable<obs_addr_list> = null;
+                if (true
+                    && this.loop<obs_addr_list_$0>(() => this.matchobs_addr_list_$0($$dpth + 1, $$cr), true) !== null
+                    && this.matchaddress($$dpth + 1, $$cr) !== null
+                    && this.loop<obs_addr_list_$1>(() => this.matchobs_addr_list_$1($$dpth + 1, $$cr), true) !== null
+                ) {
+                    $$res = {kind: ASTKinds.obs_addr_list, };
+                }
+                return $$res;
+            });
+    }
+    public matchobs_addr_list_$0($$dpth: number, $$cr?: ErrorTracker): Nullable<obs_addr_list_$0> {
+        return this.run<obs_addr_list_$0>($$dpth,
+            () => {
+                let $$res: Nullable<obs_addr_list_$0> = null;
+                if (true
+                    && ((this.matchCFWS($$dpth + 1, $$cr)) || true)
+                    && this.regexAccept(String.raw`(?:,)`, $$dpth + 1, $$cr) !== null
+                ) {
+                    $$res = {kind: ASTKinds.obs_addr_list_$0, };
+                }
+                return $$res;
+            });
+    }
+    public matchobs_addr_list_$1($$dpth: number, $$cr?: ErrorTracker): Nullable<obs_addr_list_$1> {
+        return this.run<obs_addr_list_$1>($$dpth,
+            () => {
+                let $$res: Nullable<obs_addr_list_$1> = null;
+                if (true
+                    && this.regexAccept(String.raw`(?:,)`, $$dpth + 1, $$cr) !== null
+                    && ((this.matchobs_addr_list_$1_$0($$dpth + 1, $$cr)) || true)
+                ) {
+                    $$res = {kind: ASTKinds.obs_addr_list_$1, };
+                }
+                return $$res;
+            });
+    }
+    public matchobs_addr_list_$1_$0($$dpth: number, $$cr?: ErrorTracker): Nullable<obs_addr_list_$1_$0> {
+        return this.choice<obs_addr_list_$1_$0>([
+            () => this.matchobs_addr_list_$1_$0_1($$dpth + 1, $$cr),
+            () => this.matchobs_addr_list_$1_$0_2($$dpth + 1, $$cr),
+        ]);
+    }
+    public matchobs_addr_list_$1_$0_1($$dpth: number, $$cr?: ErrorTracker): Nullable<obs_addr_list_$1_$0_1> {
+        return this.matchaddress($$dpth + 1, $$cr);
+    }
+    public matchobs_addr_list_$1_$0_2($$dpth: number, $$cr?: ErrorTracker): Nullable<obs_addr_list_$1_$0_2> {
+        return this.matchCFWS($$dpth + 1, $$cr);
+    }
+    public matchobs_group_list($$dpth: number, $$cr?: ErrorTracker): Nullable<obs_group_list> {
+        return this.run<obs_group_list>($$dpth,
+            () => {
+                let $$res: Nullable<obs_group_list> = null;
+                if (true
+                    && this.loop<obs_group_list_$0>(() => this.matchobs_group_list_$0($$dpth + 1, $$cr), false) !== null
+                    && ((this.matchCFWS($$dpth + 1, $$cr)) || true)
+                ) {
+                    $$res = {kind: ASTKinds.obs_group_list, };
+                }
+                return $$res;
+            });
+    }
+    public matchobs_group_list_$0($$dpth: number, $$cr?: ErrorTracker): Nullable<obs_group_list_$0> {
+        return this.run<obs_group_list_$0>($$dpth,
+            () => {
+                let $$res: Nullable<obs_group_list_$0> = null;
+                if (true
+                    && ((this.matchCFWS($$dpth + 1, $$cr)) || true)
+                    && this.regexAccept(String.raw`(?:,)`, $$dpth + 1, $$cr) !== null
+                ) {
+                    $$res = {kind: ASTKinds.obs_group_list_$0, };
                 }
                 return $$res;
             });
