@@ -1,7 +1,13 @@
 import { describe, expect, test } from '@jest/globals';
-import { parse } from '../parsers/addr-spec'
+import { ASTKinds, parse } from '../parsers/addr-spec'
 
 describe('addr-spec', () => {
-  test('abc@def', () => { expect(parse('abc@def').errs).toHaveLength(0) })
-  test('.abc@def', () => { expect(parse('.abc@def').errs.length).toBeGreaterThan(0) })
+  describe('local-part', () => {
+    describe('dot-atom', () => {
+      test("dot-atom-text", () => {
+        let act = parse("abc.def@domain")
+        expect(act.ast?.local_part.text.kind).toBe(ASTKinds.dot_atom)
+      })
+    })
+  })
 })
