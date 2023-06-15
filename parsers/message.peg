@@ -1,16 +1,3 @@
-# RFC5322 Email Parser (typescript)
-
-Parse [RFC5322](https://datatracker.ietf.org/doc/html/rfc5322#section-4.1) emails into typed objects.
-
-This project is new and currently in WIP. It is currently not tested very well. The strategy is to literally just take the specification, word for word more or less, and convert it into a PEG grammar. There are many tools that can take such a grammar and produce an AST. For this project I'm using [tsPEG](https://github.com/EoinDavey/tsPEG), which produces a parser that can be used in typescript.
-
-## Help Wanted
-
-I think the most useful help I could get at this point is writing more tests.
-
-## The Grammar
-
-```peg
 // RFC 5322
 // See: https://datatracker.ietf.org/doc/html/rfc5322
 // The following is the RFC5322 "Internet Message Format" specification
@@ -301,4 +288,3 @@ obs_received    :=    'Received'          WSP* ':' received_token* CRLF
 // § 4.5.8.  Obsolete optional fields
 // See: https://datatracker.ietf.org/doc/html/rfc5322#section-4.5.8
 obs_optional    :=    field_name WSP* ':' unstructured CRLF
-```
