@@ -4,13 +4,11 @@ import { ASTKinds, dot_atom, parse, quoted_string } from '../parsers/addr-spec.p
 describe('addr-spec', () => {
   describe('local-part', () => {
     describe('dot-atom', () => {
-      test("dot-atom-text", () => {
+      test('dot-atom-text', () => {
         let local_part = parse('abc.def@domain').ast!.local_part
         expect(local_part.token.kind).toBe(ASTKinds.dot_atom)
         let dot_atom = local_part.token as dot_atom
-        expect(dot_atom.head).toBe('abc')
-        expect(dot_atom.tail).toEqual(['def'])
-        expect(dot_atom.literal).toBe('abc.def')
+        expect(dot_atom.parts).toEqual(['abc', 'def'])
       })
       describe('CFWS', () => {
         test('a single space', () => {
@@ -47,6 +45,16 @@ describe('addr-spec', () => {
         test('Mixture of CFWS and FWS', () => {
           expect(parse('(comment)\r\n "\r\n abc "\r\n (comment)@domain').ast?.local_part.token.kind).toBe(ASTKinds.quoted_string)
         })
+      })
+    })
+  })
+  describe('domain', () => {
+    describe('dot-atom', () => {
+      test('dot-atom-text', () => {
+        let domain = parse('a@def.ghi.jkl').ast!.domain
+        expect(domain.token.kind).toBe(ASTKinds.dot_atom)
+        let dot_atom = domain.token as dot_atom
+        expect(dot_atom.parts).toEqual(['def', 'ghi', 'jkl'])
       })
     })
   })

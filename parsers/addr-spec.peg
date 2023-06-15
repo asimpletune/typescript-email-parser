@@ -43,6 +43,7 @@ dot_atom        :=    CFWS? _dot_atom_text = dot_atom_text CFWS?
                       .head = string { return this._dot_atom_text.head }
                       .tail = string[] { return this._dot_atom_text.tail }
                       .literal = string { return this._dot_atom_text.literal }
+                      .parts = string[] { return this.literal.split('.') }
 
 // (Special characters that do not appear in atext)
 specials        :=     '\(' |'\)' | '[<>]' | '\[' | '\]' | '[:;@]' | '\\' | ',' | '\.' | DQUOTE
@@ -64,7 +65,7 @@ word            :=    atom | quoted_string
 // See: https://datatracker.ietf.org/doc/html/rfc5322#section-3.4.1
 addr_spec       :=    local_part = local_part '@' domain = domain
 local_part      :=    token = dot_atom | token = quoted_string | token = obs_local_part
-domain          :=    dot_atom = dot_atom | domain_literal = domain_literal | obs_domain = obs_domain
+domain          :=    token = dot_atom | token = domain_literal | token = obs_domain
 domain_literal  :=    CFWS? '\[' { FWS? dtext = dtext }* FWS? '\]' CFWS?
 // (Printable US-ASCII characters not including '[', ']', or '\"')
 dtext           :=    '[\x21-\x5a]' | '[\x5e-\x7e]' | obs_dtext = obs_dtext

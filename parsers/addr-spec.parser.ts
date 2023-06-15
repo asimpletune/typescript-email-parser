@@ -39,6 +39,7 @@
 *                       .head = string { return this._dot_atom_text.head }
 *                       .tail = string[] { return this._dot_atom_text.tail }
 *                       .literal = string { return this._dot_atom_text.literal }
+*                       .parts = string[] { return this.literal.split('.') }
 * // (Special characters that do not appear in atext)
 * specials        :=     '\(' |'\)' | '[<>]' | '\[' | '\]' | '[:;@]' | '\\' | ',' | '\.' | DQUOTE
 * // § 3.2.4 Quoted Strings
@@ -56,7 +57,7 @@
 * // See: https://datatracker.ietf.org/doc/html/rfc5322#section-3.4.1
 * addr_spec       :=    local_part = local_part '@' domain = domain
 * local_part      :=    token = dot_atom | token = quoted_string | token = obs_local_part
-* domain          :=    dot_atom = dot_atom | domain_literal = domain_literal | obs_domain = obs_domain
+* domain          :=    token = dot_atom | token = domain_literal | token = obs_domain
 * domain_literal  :=    CFWS? '\[' { FWS? dtext = dtext }* FWS? '\]' CFWS?
 * // (Printable US-ASCII characters not including '[', ']', or '\"')
 * dtext           :=    '[\x21-\x5a]' | '[\x5e-\x7e]' | obs_dtext = obs_dtext
@@ -262,6 +263,7 @@ export class dot_atom {
     public head: string;
     public tail: string[];
     public literal: string;
+    public parts: string[];
     constructor(_dot_atom_text: dot_atom_text){
         this._dot_atom_text = _dot_atom_text;
         this.head = ((): string => {
@@ -272,6 +274,9 @@ export class dot_atom {
         })();
         this.literal = ((): string => {
         return this._dot_atom_text.literal
+        })();
+        this.parts = ((): string[] => {
+        return this.literal.split('.')
         })();
     }
 }
@@ -337,15 +342,15 @@ export interface local_part_3 {
 export type domain = domain_1 | domain_2 | domain_3;
 export interface domain_1 {
     kind: ASTKinds.domain_1;
-    dot_atom: dot_atom;
+    token: dot_atom;
 }
 export interface domain_2 {
     kind: ASTKinds.domain_2;
-    domain_literal: domain_literal;
+    token: domain_literal;
 }
 export interface domain_3 {
     kind: ASTKinds.domain_3;
-    obs_domain: obs_domain;
+    token: obs_domain;
 }
 export interface domain_literal {
     kind: ASTKinds.domain_literal;
@@ -893,12 +898,12 @@ export class Parser {
     public matchdomain_1($$dpth: number, $$cr?: ErrorTracker): Nullable<domain_1> {
         return this.run<domain_1>($$dpth,
             () => {
-                let $scope$dot_atom: Nullable<dot_atom>;
+                let $scope$token: Nullable<dot_atom>;
                 let $$res: Nullable<domain_1> = null;
                 if (true
-                    && ($scope$dot_atom = this.matchdot_atom($$dpth + 1, $$cr)) !== null
+                    && ($scope$token = this.matchdot_atom($$dpth + 1, $$cr)) !== null
                 ) {
-                    $$res = {kind: ASTKinds.domain_1, dot_atom: $scope$dot_atom};
+                    $$res = {kind: ASTKinds.domain_1, token: $scope$token};
                 }
                 return $$res;
             });
@@ -906,12 +911,12 @@ export class Parser {
     public matchdomain_2($$dpth: number, $$cr?: ErrorTracker): Nullable<domain_2> {
         return this.run<domain_2>($$dpth,
             () => {
-                let $scope$domain_literal: Nullable<domain_literal>;
+                let $scope$token: Nullable<domain_literal>;
                 let $$res: Nullable<domain_2> = null;
                 if (true
-                    && ($scope$domain_literal = this.matchdomain_literal($$dpth + 1, $$cr)) !== null
+                    && ($scope$token = this.matchdomain_literal($$dpth + 1, $$cr)) !== null
                 ) {
-                    $$res = {kind: ASTKinds.domain_2, domain_literal: $scope$domain_literal};
+                    $$res = {kind: ASTKinds.domain_2, token: $scope$token};
                 }
                 return $$res;
             });
@@ -919,12 +924,12 @@ export class Parser {
     public matchdomain_3($$dpth: number, $$cr?: ErrorTracker): Nullable<domain_3> {
         return this.run<domain_3>($$dpth,
             () => {
-                let $scope$obs_domain: Nullable<obs_domain>;
+                let $scope$token: Nullable<obs_domain>;
                 let $$res: Nullable<domain_3> = null;
                 if (true
-                    && ($scope$obs_domain = this.matchobs_domain($$dpth + 1, $$cr)) !== null
+                    && ($scope$token = this.matchobs_domain($$dpth + 1, $$cr)) !== null
                 ) {
-                    $$res = {kind: ASTKinds.domain_3, obs_domain: $scope$obs_domain};
+                    $$res = {kind: ASTKinds.domain_3, token: $scope$token};
                 }
                 return $$res;
             });
