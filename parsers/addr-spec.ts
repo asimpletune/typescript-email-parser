@@ -29,10 +29,16 @@
 * // § 3.2.3 Atom
 * // See: https://datatracker.ietf.org/doc/html/rfc5322#section-3.2.3
 * // (Printable US-ASCII characters not including specials. Used for atoms.)
-* atext           :=    atext='[A-Za-z0-9!#$%&\x27*+\-\/=?^_`{|}~]'
+* atext           :=    '[A-Za-z0-9!#$%&\x27*+\-\/=?^_`{|}~]'
 * atom            :=    CFWS? atext+ CFWS?
-* dot_atom_text   :=    head_atext = atext+ {'\.' tail_atext = atext+}*
-* dot_atom        :=    CFWS? dot_atom_text = dot_atom_text CFWS?
+* dot_atom_text   :=    _head_atext = atext+ _tail_atext={'\.' _atext = atext+}*
+* .head = string { return this._head_atext.join('')}
+* .tail = string[] { return this._tail_atext.map(a => a._atext.join('')) }
+* .literal = string { return this.head + this.tail.map(atext => '.' + atext).join('') }
+* dot_atom        :=    CFWS? _dot_atom_text = dot_atom_text CFWS?
+* .head = string { return this._dot_atom_text.head }
+* .tail = string[] { return this._dot_atom_text.tail }
+* .literal = string { return this._dot_atom_text.literal }
 * // (Special characters that do not appear in atext)
 * specials        :=     '\(' |'\)' | '[<>]' | '\[' | '\]' | '[:;@]' | '\\' | ',' | '\.' | DQUOTE
 * // § 3.2.4 Quoted Strings
@@ -47,7 +53,7 @@
 * // § 3.4.1 Addr-Spec Specification
 * // See: https://datatracker.ietf.org/doc/html/rfc5322#section-3.4.1
 * addr_spec       :=    local_part = local_part '@' domain = domain
-* local_part      :=    text=dot_atom | text=quoted_string | text=obs_local_part
+* local_part      :=    token = dot_atom | token = quoted_string | token = obs_local_part
 * domain          :=    dot_atom = dot_atom | domain_literal = domain_literal | obs_domain = obs_domain
 * domain_literal  :=    CFWS? '\[' {FWS? dtext=dtext}* FWS? '\]' CFWS?
 * // (Printable US-ASCII characters not including '[', ']', or '\"')
@@ -219,24 +225,53 @@ export interface CFWS_$0 {
 export interface CFWS_$0_$0 {
     kind: ASTKinds.CFWS_$0_$0;
 }
-export interface atext {
-    kind: ASTKinds.atext;
-    atext: string;
-}
+export type atext = string;
 export interface atom {
     kind: ASTKinds.atom;
 }
-export interface dot_atom_text {
-    kind: ASTKinds.dot_atom_text;
-    head_atext: atext[];
+export class dot_atom_text {
+    public kind: ASTKinds.dot_atom_text = ASTKinds.dot_atom_text;
+    public _head_atext: atext[];
+    public _tail_atext: dot_atom_text_$0[];
+    public head: string;
+    public tail: string[];
+    public literal: string;
+    constructor(_head_atext: atext[], _tail_atext: dot_atom_text_$0[]){
+        this._head_atext = _head_atext;
+        this._tail_atext = _tail_atext;
+        this.head = ((): string => {
+        return this._head_atext.join('')
+        })();
+        this.tail = ((): string[] => {
+        return this._tail_atext.map(a => a._atext.join(''))
+        })();
+        this.literal = ((): string => {
+        return this.head + this.tail.map(atext => '.' + atext).join('')
+        })();
+    }
 }
 export interface dot_atom_text_$0 {
     kind: ASTKinds.dot_atom_text_$0;
-    tail_atext: atext[];
+    _atext: atext[];
 }
-export interface dot_atom {
-    kind: ASTKinds.dot_atom;
-    dot_atom_text: dot_atom_text;
+export class dot_atom {
+    public kind: ASTKinds.dot_atom = ASTKinds.dot_atom;
+    public _dot_atom_text: dot_atom_text;
+    public head: string;
+    public tail: string[];
+    public literal: string;
+    constructor(_dot_atom_text: dot_atom_text){
+        this._dot_atom_text = _dot_atom_text;
+        this.head = ((): string => {
+        return this._dot_atom_text.head
+        })();
+        this.tail = ((): string[] => {
+        return this._dot_atom_text.tail
+        })();
+        this.literal = ((): string => {
+        return this._dot_atom_text.literal
+        })();
+    }
 }
 export type specials = specials_1 | specials_2 | specials_3 | specials_4 | specials_5 | specials_6 | specials_7 | specials_8 | specials_9 | specials_10;
 export type specials_1 = string;
@@ -275,15 +310,15 @@ export interface addr_spec {
 export type local_part = local_part_1 | local_part_2 | local_part_3;
 export interface local_part_1 {
     kind: ASTKinds.local_part_1;
-    text: dot_atom;
+    token: dot_atom;
 }
 export interface local_part_2 {
     kind: ASTKinds.local_part_2;
-    text: quoted_string;
+    token: quoted_string;
 }
 export interface local_part_3 {
     kind: ASTKinds.local_part_3;
-    text: obs_local_part;
+    token: obs_local_part;
 }
 export type domain = domain_1 | domain_2 | domain_3;
 export interface domain_1 {
@@ -592,17 +627,7 @@ export class Parser {
             });
     }
     public matchatext($$dpth: number, $$cr?: ErrorTracker): Nullable<atext> {
-        return this.run<atext>($$dpth,
-            () => {
-                let $scope$atext: Nullable<string>;
-                let $$res: Nullable<atext> = null;
-                if (true
-                    && ($scope$atext = this.regexAccept(String.raw`(?:[A-Za-z0-9!#$%&\x27*+\-\/=?^_\`{|}~])`, $$dpth + 1, $$cr)) !== null
-                ) {
-                    $$res = {kind: ASTKinds.atext, atext: $scope$atext};
-                }
-                return $$res;
-            });
+        return this.regexAccept(String.raw`(?:[A-Za-z0-9!#$%&\x27*+\-\/=?^_\`{|}~])`, $$dpth + 1, $$cr);
     }
     public matchatom($$dpth: number, $$cr?: ErrorTracker): Nullable<atom> {
         return this.run<atom>($$dpth,
@@ -621,13 +646,14 @@ export class Parser {
     public matchdot_atom_text($$dpth: number, $$cr?: ErrorTracker): Nullable<dot_atom_text> {
         return this.run<dot_atom_text>($$dpth,
             () => {
-                let $scope$head_atext: Nullable<atext[]>;
+                let $scope$_head_atext: Nullable<atext[]>;
+                let $scope$_tail_atext: Nullable<dot_atom_text_$0[]>;
                 let $$res: Nullable<dot_atom_text> = null;
                 if (true
-                    && ($scope$head_atext = this.loop<atext>(() => this.matchatext($$dpth + 1, $$cr), false)) !== null
-                    && this.loop<dot_atom_text_$0>(() => this.matchdot_atom_text_$0($$dpth + 1, $$cr), true) !== null
+                    && ($scope$_head_atext = this.loop<atext>(() => this.matchatext($$dpth + 1, $$cr), false)) !== null
+                    && ($scope$_tail_atext = this.loop<dot_atom_text_$0>(() => this.matchdot_atom_text_$0($$dpth + 1, $$cr), true)) !== null
                 ) {
-                    $$res = {kind: ASTKinds.dot_atom_text, head_atext: $scope$head_atext};
+                    $$res = new dot_atom_text($scope$_head_atext, $scope$_tail_atext);
                 }
                 return $$res;
             });
@@ -635,13 +661,13 @@ export class Parser {
     public matchdot_atom_text_$0($$dpth: number, $$cr?: ErrorTracker): Nullable<dot_atom_text_$0> {
         return this.run<dot_atom_text_$0>($$dpth,
             () => {
-                let $scope$tail_atext: Nullable<atext[]>;
+                let $scope$_atext: Nullable<atext[]>;
                 let $$res: Nullable<dot_atom_text_$0> = null;
                 if (true
                     && this.regexAccept(String.raw`(?:\.)`, $$dpth + 1, $$cr) !== null
-                    && ($scope$tail_atext = this.loop<atext>(() => this.matchatext($$dpth + 1, $$cr), false)) !== null
+                    && ($scope$_atext = this.loop<atext>(() => this.matchatext($$dpth + 1, $$cr), false)) !== null
                 ) {
-                    $$res = {kind: ASTKinds.dot_atom_text_$0, tail_atext: $scope$tail_atext};
+                    $$res = {kind: ASTKinds.dot_atom_text_$0, _atext: $scope$_atext};
                 }
                 return $$res;
             });
@@ -649,14 +675,14 @@ export class Parser {
     public matchdot_atom($$dpth: number, $$cr?: ErrorTracker): Nullable<dot_atom> {
         return this.run<dot_atom>($$dpth,
             () => {
-                let $scope$dot_atom_text: Nullable<dot_atom_text>;
+                let $scope$_dot_atom_text: Nullable<dot_atom_text>;
                 let $$res: Nullable<dot_atom> = null;
                 if (true
                     && ((this.matchCFWS($$dpth + 1, $$cr)) || true)
-                    && ($scope$dot_atom_text = this.matchdot_atom_text($$dpth + 1, $$cr)) !== null
+                    && ($scope$_dot_atom_text = this.matchdot_atom_text($$dpth + 1, $$cr)) !== null
                     && ((this.matchCFWS($$dpth + 1, $$cr)) || true)
                 ) {
-                    $$res = {kind: ASTKinds.dot_atom, dot_atom_text: $scope$dot_atom_text};
+                    $$res = new dot_atom($scope$_dot_atom_text);
                 }
                 return $$res;
             });
@@ -806,12 +832,12 @@ export class Parser {
     public matchlocal_part_1($$dpth: number, $$cr?: ErrorTracker): Nullable<local_part_1> {
         return this.run<local_part_1>($$dpth,
             () => {
-                let $scope$text: Nullable<dot_atom>;
+                let $scope$token: Nullable<dot_atom>;
                 let $$res: Nullable<local_part_1> = null;
                 if (true
-                    && ($scope$text = this.matchdot_atom($$dpth + 1, $$cr)) !== null
+                    && ($scope$token = this.matchdot_atom($$dpth + 1, $$cr)) !== null
                 ) {
-                    $$res = {kind: ASTKinds.local_part_1, text: $scope$text};
+                    $$res = {kind: ASTKinds.local_part_1, token: $scope$token};
                 }
                 return $$res;
             });
@@ -819,12 +845,12 @@ export class Parser {
     public matchlocal_part_2($$dpth: number, $$cr?: ErrorTracker): Nullable<local_part_2> {
         return this.run<local_part_2>($$dpth,
             () => {
-                let $scope$text: Nullable<quoted_string>;
+                let $scope$token: Nullable<quoted_string>;
                 let $$res: Nullable<local_part_2> = null;
                 if (true
-                    && ($scope$text = this.matchquoted_string($$dpth + 1, $$cr)) !== null
+                    && ($scope$token = this.matchquoted_string($$dpth + 1, $$cr)) !== null
                 ) {
-                    $$res = {kind: ASTKinds.local_part_2, text: $scope$text};
+                    $$res = {kind: ASTKinds.local_part_2, token: $scope$token};
                 }
                 return $$res;
             });
@@ -832,12 +858,12 @@ export class Parser {
     public matchlocal_part_3($$dpth: number, $$cr?: ErrorTracker): Nullable<local_part_3> {
         return this.run<local_part_3>($$dpth,
             () => {
-                let $scope$text: Nullable<obs_local_part>;
+                let $scope$token: Nullable<obs_local_part>;
                 let $$res: Nullable<local_part_3> = null;
                 if (true
-                    && ($scope$text = this.matchobs_local_part($$dpth + 1, $$cr)) !== null
+                    && ($scope$token = this.matchobs_local_part($$dpth + 1, $$cr)) !== null
                 ) {
-                    $$res = {kind: ASTKinds.local_part_3, text: $scope$text};
+                    $$res = {kind: ASTKinds.local_part_3, token: $scope$token};
                 }
                 return $$res;
             });
