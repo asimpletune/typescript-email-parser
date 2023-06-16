@@ -4,7 +4,7 @@
     "jest": "^29.5.0",
     "ts-jest": "^29.1.0",
     "ts-node": "^10.9.1",
-    "tspeg": "^3.2.2",
+    "tspeg": "github:asimpletune/tsPEG#b520937",
     "typescript": "^5.0.4"
   },
   "name": "rfc5322-headers-parser_ts",
@@ -13,8 +13,7 @@
   "main": "index.js",
   "scripts": {
     "test": "npm run gen && jest",
-    "opts": "tspeg --help",
-    "gen": "tspeg --enable-memo --include-grammar-comment=false --num-enums ./parsers/addr-spec.peg ./parsers/addr-spec.parser.ts"
+    "gen": "node ./node_modules/tspeg/tsbuild/cli.js --enable-memo --include-grammar-comment=false ./parsers/message.peg ./message.parser.ts && node ./node_modules/tspeg/tsbuild/cli.js --enable-memo --include-grammar-comment=false ./parsers/addr-spec.peg ./addr-spec.parser.ts"
   },
   "repository": {
     "type": "git",
