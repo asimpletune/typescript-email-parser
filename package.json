@@ -4,20 +4,20 @@
     "jest": "^29.5.0",
     "ts-jest": "^29.1.0",
     "ts-node": "^10.9.1",
-    "tspeg": "github:asimpletune/tsPEG#b520937",
+    "tspeg": "^3.2.3",
     "typescript": "^5.0.4"
   },
-  "name": "rfc5322-headers-parser_ts",
-  "description": "Parse rfc5322 email headers into typed objects",
+  "name": "rfc5322-email-parser_ts",
+  "description": "Parse RFC5322 emails into typed objects",
   "version": "0.1.0",
   "main": "index.js",
   "scripts": {
     "test": "npm run gen && jest",
-    "gen": "node ./node_modules/tspeg/tsbuild/cli.js --enable-memo --include-grammar-comment=false ./parsers/message.peg ./message.parser.ts && node ./node_modules/tspeg/tsbuild/cli.js --enable-memo --include-grammar-comment=false ./parsers/addr-spec.peg ./addr-spec.parser.ts"
+    "gen": "tspeg --enable-memo --include-grammar-comment=false ./parsers/message.peg ./message.parser.ts"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/asimpletune/rfc5322-headers-parser_ts.git"
+    "url": "git+https://github.com/asimpletune/rfc5322-email-parser_ts.git"
   },
   "keywords": [
     "rfc5322",
@@ -31,7 +31,7 @@
   "author": "Spencer Scorcelletti",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/asimpletune/rfc5322-headers-parser_ts/issues"
+    "url": "https://github.com/asimpletune/rfc5322-email-parser_ts/issues"
   },
-  "homepage": "https://github.com/asimpletune/rfc5322-headers-parser_ts#readme"
+  "homepage": "https://github.com/asimpletune/rfc5322-email-parser_ts#readme"
 }
