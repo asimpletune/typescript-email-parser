@@ -13,6 +13,8 @@
   "main": "index.js",
   "scripts": {
     "test": "npm run gen && jest",
+    "meta": "tspeg --enable-memo ./grammar/metagrammar.peg ./scratch/metagrammar.parser.ts",
+    "autofield": "ts-node ./experiment/foo.ts && tspeg --enable-memo ./experiment/message.fields.peg ./experiment/message.fields.ts",
     "gen": "tspeg --enable-memo --include-grammar-comment=false ./parsers/message.peg ./message.parser.ts"
   },
   "repository": {

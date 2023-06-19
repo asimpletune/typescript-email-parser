@@ -1,0 +1,295 @@
+---
+import { makeLiteral } from './foo'
+---
+start := a=message
+	.literal = string { return makeLiteral(this) }
+CR := a='\x0D'
+	.literal = string { return makeLiteral(this) }
+CRLF := a='\r\n'
+	.literal = string { return makeLiteral(this) }
+DIGIT := a='\d'
+	.literal = string { return makeLiteral(this) }
+TWO_DIGIT := a='\d\d'
+	.literal = string { return makeLiteral(this) }
+FOUR_DIGIT := a='\d\d\d\d'
+	.literal = string { return makeLiteral(this) }
+DQUOTE := a='\x22'
+	.literal = string { return makeLiteral(this) }
+HTAB := a='\x09'
+	.literal = string { return makeLiteral(this) }
+LF := a='\x0A'
+	.literal = string { return makeLiteral(this) }
+SP := a='\x20'
+	.literal = string { return makeLiteral(this) }
+VCHAR := a='[\x21-\x7E]'
+	.literal = string { return makeLiteral(this) }
+WSP := a=SP | b=HTAB
+	.literal = string { return makeLiteral(this) }
+quoted_pair := a={ a='\\' b={ a=VCHAR | b=WSP } } | b=obs_qp
+	.literal = string { return makeLiteral(this) }
+FWS := a={ a={ a=WSP* b=CRLF }? b=WSP+ } | b=obs_FWS
+	.literal = string { return makeLiteral(this) }
+ctext := a='[\x21-\x27]' | b='[\x2a-\x5b]' | c='[\x5d-\x7e]' | d=obs_ctext
+	.literal = string { return makeLiteral(this) }
+ccontent := a=ctext | b=quoted_pair | c=comment
+	.literal = string { return makeLiteral(this) }
+comment := a='\(' b={ a=FWS? b=ccontent }* c=FWS? d='\)'
+	.literal = string { return makeLiteral(this) }
+CFWS := a={ a={ a=FWS? b=comment }+ b=FWS? } | b=FWS
+	.literal = string { return makeLiteral(this) }
+atext := a='[A-Za-z0-9!#$%&\x27\*\+\-\/=?^_`{|}~]'
+	.literal = string { return makeLiteral(this) }
+atom := a=CFWS? b=atext+ c=CFWS?
+	.literal = string { return makeLiteral(this) }
+dot_atom_text := a=atext+ b={ a='\.' b=atext+ }*
+	.literal = string { return makeLiteral(this) }
+dot_atom := a=CFWS? b=dot_atom_text c=CFWS?
+	.literal = string { return makeLiteral(this) }
+specials := a='\(' | b='\)' | c='[<>]' | d='\[' | e='\]' | f='[:;@]' | g='\\' | h=',' | i='\.' | j=DQUOTE
+	.literal = string { return makeLiteral(this) }
+qtext := a='\x21' | b='[\x23-\x5b]' | c='[\x5d-\x7e]' | d=obs_qtext
+	.literal = string { return makeLiteral(this) }
+qcontent := a=qtext | b=quoted_pair
+	.literal = string { return makeLiteral(this) }
+quoted_string := a=CFWS? b=DQUOTE c={ a=FWS? b=qcontent }* d=FWS? e=DQUOTE f=CFWS?
+	.literal = string { return makeLiteral(this) }
+word := a=atom | b=quoted_string
+	.literal = string { return makeLiteral(this) }
+phrase := a=word+ | b=obs_phrase
+	.literal = string { return makeLiteral(this) }
+unstructured := a={ a={ a=FWS? b=VCHAR }* b=WSP* } | b=obs_unstruct
+	.literal = string { return makeLiteral(this) }
+date_time := a={ a=day_of_week b=',' }? b=date c=time d=CFWS?
+	.literal = string { return makeLiteral(this) }
+day_of_week := a={ a=FWS? b=day_name } | b=obs_day_of_week
+	.literal = string { return makeLiteral(this) }
+day_name := a='Mon' | b='Tue' | c='Wed' | d='Thu' | e='Fri' | f='Sat' | g='Sun'
+	.literal = string { return makeLiteral(this) }
+date := a=day b=month c=year
+	.literal = string { return makeLiteral(this) }
+day := a={ a=FWS? b=DIGIT c=DIGIT? d=FWS } | b=obs_day
+	.literal = string { return makeLiteral(this) }
+month := a='Jan' | b='Feb' | c='Mar' | d='Apr' | e='May' | f='Jun' | g='Jul' | h='Aug' | i='Sep' | j='Oct' | k='Nov' | l='Dec'
+	.literal = string { return makeLiteral(this) }
+year := a={ a=FWS b=FOUR_DIGIT c=DIGIT* d=FWS } | b=obs_year
+	.literal = string { return makeLiteral(this) }
+time := a=time_of_day b=zone
+	.literal = string { return makeLiteral(this) }
+time_of_day := a=hour b=':' c=minute d={ a=':' b=second }?
+	.literal = string { return makeLiteral(this) }
+hour := a=TWO_DIGIT | b=obs_hour
+	.literal = string { return makeLiteral(this) }
+minute := a=TWO_DIGIT | b=obs_minute
+	.literal = string { return makeLiteral(this) }
+second := a=TWO_DIGIT | b=obs_second
+	.literal = string { return makeLiteral(this) }
+zone := a={ a=FWS b={ a='\+' | b='\-' } c=FOUR_DIGIT } | b=obs_zone
+	.literal = string { return makeLiteral(this) }
+address := a=mailbox | b=group
+	.literal = string { return makeLiteral(this) }
+mailbox := a=name_addr | b=addr_spec
+	.literal = string { return makeLiteral(this) }
+name_addr := a=display_name? b=angle_addr
+	.literal = string { return makeLiteral(this) }
+angle_addr := a=CFWS? b='<' c=addr_spec d='>' e=CFWS? | f=obs_angle_addr
+	.literal = string { return makeLiteral(this) }
+group := a=display_name b=':' c=group_list? d=';' e=CFWS?
+	.literal = string { return makeLiteral(this) }
+display_name := a=phrase
+	.literal = string { return makeLiteral(this) }
+mailbox_list := a={ a=mailbox b={ a=',' b=mailbox }* } | b=obs_mbox_list
+	.literal = string { return makeLiteral(this) }
+address_list := a={ a=address b={ a=',' b=address }* } | b=obs_addr_list
+	.literal = string { return makeLiteral(this) }
+group_list := a=mailbox_list | b=CFWS | c=obs_group_list
+	.literal = string { return makeLiteral(this) }
+addr_spec := a=local_part b='@' c=domain
+	.literal = string { return makeLiteral(this) }
+local_part := a=dot_atom | b=quoted_string | c=obs_local_part
+	.literal = string { return makeLiteral(this) }
+domain := a=dot_atom | b=domain_literal | c=obs_domain
+	.literal = string { return makeLiteral(this) }
+domain_literal := a=CFWS? b='\[' c={ a=FWS? b=dtext }* d=FWS? e='\]' f=CFWS?
+	.literal = string { return makeLiteral(this) }
+dtext := a='[\x21-\x5a]' | b='[\x5e-\x7e]' | c=obs_dtext
+	.literal = string { return makeLiteral(this) }
+message := a={ a=fields | b=obs_fields } b={ a=CRLF b=body }?
+	.literal = string { return makeLiteral(this) }
+body := a={ a={ a=_998text b=CRLF }* b=_998text } | b=obs_body
+	.literal = string { return makeLiteral(this) }
+text := a='[\x01-\x09]' | b='\x0B' | c='\x0C' | d='[\x0E-\x7f]'
+	.literal = string { return makeLiteral(this) }
+_998text := a='[\x01-\x09\x0B\x0C\x0E-\x7F]{998,}'
+	.literal = string { return makeLiteral(this) }
+fields := a={ a=trace b=optional_field* | c={ a=resent_date | b=resent_from | c=resent_sender | d=resent_to | e=resent_cc | f=resent_bcc | g=resent_msg_id }* }* b={ a=orig_date | b=from | c=sender | d=reply_to | e=to | f=cc | g=bcc | h=message_id | i=in_reply_to | j=references | k=subject | l=comments | m=keywords | n=optional_field }*
+	.literal = string { return makeLiteral(this) }
+orig_date := a='Date:' b=date_time c=CRLF
+	.literal = string { return makeLiteral(this) }
+from := a='From:' b=mailbox_list c=CRLF
+	.literal = string { return makeLiteral(this) }
+sender := a='Sender:' b=mailbox c=CRLF
+	.literal = string { return makeLiteral(this) }
+reply_to := a='Reply_To:' b=address_list c=CRLF
+	.literal = string { return makeLiteral(this) }
+to := a='To:' b=address_list c=CRLF
+	.literal = string { return makeLiteral(this) }
+cc := a='Cc:' b=address_list c=CRLF
+	.literal = string { return makeLiteral(this) }
+bcc := a='Bcc:' b={ a=address_list | b=CFWS }? c=CRLF
+	.literal = string { return makeLiteral(this) }
+message_id := a='Message-ID:' b=msg_id c=CRLF
+	.literal = string { return makeLiteral(this) }
+in_reply_to := a='In-Reply-To:' b=msg_id+ c=CRLF
+	.literal = string { return makeLiteral(this) }
+references := a='References:' b=msg_id+ c=CRLF
+	.literal = string { return makeLiteral(this) }
+msg_id := a=CFWS? b='<' c=id_left d='@' e=id_right f='>' g=CFWS?
+	.literal = string { return makeLiteral(this) }
+id_left := a=dot_atom_text | b=obs_id_left
+	.literal = string { return makeLiteral(this) }
+id_right := a=dot_atom_text | b=no_fold_literal | c=obs_id_right
+	.literal = string { return makeLiteral(this) }
+no_fold_literal := a='\[' b=dtext* c='\]'
+	.literal = string { return makeLiteral(this) }
+subject := a='Subject:' b=unstructured c=CRLF
+	.literal = string { return makeLiteral(this) }
+comments := a='Comments:' b=unstructured c=CRLF
+	.literal = string { return makeLiteral(this) }
+keywords := a='Keywords:' b=phrase c={ a=',' b=phrase }* d=CRLF
+	.literal = string { return makeLiteral(this) }
+resent_date := a='Resent-Date:' b=date_time c=CRLF
+	.literal = string { return makeLiteral(this) }
+resent_from := a='Resent-From:' b=mailbox_list c=CRLF
+	.literal = string { return makeLiteral(this) }
+resent_sender := a='Resent-Sender:' b=mailbox c=CRLF
+	.literal = string { return makeLiteral(this) }
+resent_to := a='Resent-To:' b=address_list c=CRLF
+	.literal = string { return makeLiteral(this) }
+resent_cc := a='Resent-Cc:' b=address_list c=CRLF
+	.literal = string { return makeLiteral(this) }
+resent_bcc := a='Resent-Bcc:' b={ a=address_list | b=CFWS }? c=CRLF
+	.literal = string { return makeLiteral(this) }
+resent_msg_id := a='Resent-Message_ID:' b=msg_id c=CRLF
+	.literal = string { return makeLiteral(this) }
+trace := a=return_path? b=received+
+	.literal = string { return makeLiteral(this) }
+return_path := a='Return-Path:' b=path c=CRLF
+	.literal = string { return makeLiteral(this) }
+path := a=angle_addr | b={ a=CFWS? b='<' c=CFWS d='>' e=CFWS? }
+	.literal = string { return makeLiteral(this) }
+received := a='Received:' b=received_token* c=';' d=date_time e=CRLF
+	.literal = string { return makeLiteral(this) }
+received_token := a=word | b=angle_addr | c=addr_spec | d=domain
+	.literal = string { return makeLiteral(this) }
+optional_field := a=field_name b=':' c=unstructured d=CRLF
+	.literal = string { return makeLiteral(this) }
+field_name := a=ftext+
+	.literal = string { return makeLiteral(this) }
+ftext := a='[\x21-\x39]' | b='[\x3b-\x7e]'
+	.literal = string { return makeLiteral(this) }
+obs_NO_WS_CTL := a='[\x01-\x08]' | b='\x0B' | c='\x0C' | d='[\x0E-\x1F]' | e='\x7F'
+	.literal = string { return makeLiteral(this) }
+obs_ctext := a=obs_NO_WS_CTL
+	.literal = string { return makeLiteral(this) }
+obs_qtext := a=obs_NO_WS_CTL
+	.literal = string { return makeLiteral(this) }
+obs_utext := a='\x00' | b=obs_NO_WS_CTL | c=VCHAR
+	.literal = string { return makeLiteral(this) }
+obs_qp := a='\\' b={ a='\x00' | b=obs_NO_WS_CTL | c=LF | d=CR }
+	.literal = string { return makeLiteral(this) }
+obs_body := a={ a={ a=LF* b=CR* c={ a={ a='\x00' | b=text } b=LF* c=CR* }* } | b=CRLF }*
+	.literal = string { return makeLiteral(this) }
+obs_unstruct := a={ a={ a=LF* b=CR* c={ a=obs_utext b=LF* c=CR* }* } | b=FWS }*
+	.literal = string { return makeLiteral(this) }
+obs_phrase := a=word b={ a=word | b='.' | c=CFWS }
+	.literal = string { return makeLiteral(this) }
+obs_phrase_list := a={ a=phrase | b=CFWS } b={ a=',' b={ a=phrase | b=CFWS }? }*
+	.literal = string { return makeLiteral(this) }
+obs_FWS := a=WSP+ b={ a=CRLF b=WSP+ }*
+	.literal = string { return makeLiteral(this) }
+obs_day_of_week := a=CFWS? b=day_name c=CFWS?
+	.literal = string { return makeLiteral(this) }
+obs_day := a=CFWS? b=DIGIT c=DIGIT? d=CFWS?
+	.literal = string { return makeLiteral(this) }
+obs_year := a=CFWS? b=TWO_DIGIT c=DIGIT* d=CFWS?
+	.literal = string { return makeLiteral(this) }
+obs_hour := a=CFWS? b=TWO_DIGIT c=CFWS?
+	.literal = string { return makeLiteral(this) }
+obs_minute := a=CFWS? b=TWO_DIGIT c=CFWS?
+	.literal = string { return makeLiteral(this) }
+obs_second := a=CFWS? b=TWO_DIGIT c=CFWS?
+	.literal = string { return makeLiteral(this) }
+obs_zone := a='UT' | b='GMT' | c='EST' | d='EDT' | e='CST' | f='CDT' | g='MST' | h='MDT' | i='PST' | j='PDT' | k='[\x41-\x49]' | l='[\x4b-\x5a]' | m='[\x61-\x69]' | n='[\x6b-\x7a]'
+	.literal = string { return makeLiteral(this) }
+obs_angle_addr := a=CFWS? b='<' c=obs_route d=addr_spec e='>' f=CFWS?
+	.literal = string { return makeLiteral(this) }
+obs_route := a=obs_domain_list b=':'
+	.literal = string { return makeLiteral(this) }
+obs_domain_list := a={ a=CFWS | b=',' }* b='@' c=domain d={ a=',' b=CFWS? c={ a='@' b=domain }? }*
+	.literal = string { return makeLiteral(this) }
+obs_mbox_list := a={ a=CFWS? b=',' }* b=mailbox c={ a=',' b={ a=mailbox | b=CFWS }? }*
+	.literal = string { return makeLiteral(this) }
+obs_addr_list := a={ a=CFWS? b=',' }* b=address c={ a=',' b={ a=address | b=CFWS }? }*
+	.literal = string { return makeLiteral(this) }
+obs_group_list := a={ a=CFWS? b=',' }+ b=CFWS?
+	.literal = string { return makeLiteral(this) }
+obs_local_part := a=word b={ a='\.' b=word }*
+	.literal = string { return makeLiteral(this) }
+obs_domain := a=atom b={ a='\.' b=atom }*
+	.literal = string { return makeLiteral(this) }
+obs_dtext := a=obs_NO_WS_CTL | b=quoted_pair
+	.literal = string { return makeLiteral(this) }
+obs_fields := a={ a=obs_return | b=obs_received | c=obs_orig_date | d=obs_from | e=obs_sender | f=obs_reply_to | g=obs_to | h=obs_cc | i=obs_bcc | j=obs_message_id | k=obs_in_reply_to | l=obs_references | m=obs_subject | n=obs_comments | o=obs_keywords | p=obs_resent_date | q=obs_resent_from | r=obs_resent_send | s=obs_resent_rply | t=obs_resent_to | u=obs_resent_cc | v=obs_resent_bcc | w=obs_resent_mid | x=obs_optional }*
+	.literal = string { return makeLiteral(this) }
+obs_orig_date := a='Date' b=WSP* c=':' d=date_time e=CRLF
+	.literal = string { return makeLiteral(this) }
+obs_from := a='From' b=WSP* c=':' d=mailbox_list e=CRLF
+	.literal = string { return makeLiteral(this) }
+obs_sender := a='Sender' b=WSP* c=':' d=mailbox e=CRLF
+	.literal = string { return makeLiteral(this) }
+obs_reply_to := a='Reply-To' b=WSP* c=':' d=address_list e=CRLF
+	.literal = string { return makeLiteral(this) }
+obs_to := a='To' b=WSP* c=':' d=address_list e=CRLF
+	.literal = string { return makeLiteral(this) }
+obs_cc := a='Cc' b=WSP* c=':' d=address_list e=CRLF
+	.literal = string { return makeLiteral(this) }
+obs_bcc := a='Bcc' b=WSP* c=':' d={ a=address_list | b={ a={ a=CFWS? b=',' }* b=CFWS? } } e=CRLF
+	.literal = string { return makeLiteral(this) }
+obs_message_id := a='Message-ID' b=WSP* c=':' d=msg_id e=CRLF
+	.literal = string { return makeLiteral(this) }
+obs_in_reply_to := a='In-Reply-To' b=WSP* c=':' d={ a=phrase | b=msg_id }* e=CRLF
+	.literal = string { return makeLiteral(this) }
+obs_references := a='References' b=WSP* c=':' d={ a=phrase | b=msg_id }* e=CRLF
+	.literal = string { return makeLiteral(this) }
+obs_id_left := a=local_part
+	.literal = string { return makeLiteral(this) }
+obs_id_right := a=domain
+	.literal = string { return makeLiteral(this) }
+obs_subject := a='Subject' b=WSP* c=':' d=unstructured e=CRLF
+	.literal = string { return makeLiteral(this) }
+obs_comments := a='Comments' b=WSP* c=':' d=unstructured e=CRLF
+	.literal = string { return makeLiteral(this) }
+obs_keywords := a='Keywords' b=WSP* c=':' d=obs_phrase_list e=CRLF
+	.literal = string { return makeLiteral(this) }
+obs_resent_from := a='Resent-From' b=WSP* c=':' d=mailbox_list e=CRLF
+	.literal = string { return makeLiteral(this) }
+obs_resent_send := a='Resent-Sender' b=WSP* c=':' d=mailbox e=CRLF
+	.literal = string { return makeLiteral(this) }
+obs_resent_date := a='Resent-Date' b=WSP* c=':' d=date_time e=CRLF
+	.literal = string { return makeLiteral(this) }
+obs_resent_to := a='Resent-To' b=WSP* c=':' d=address_list e=CRLF
+	.literal = string { return makeLiteral(this) }
+obs_resent_cc := a='Resent-Cc' b=WSP* c=':' d=address_list e=CRLF
+	.literal = string { return makeLiteral(this) }
+obs_resent_bcc := a='Resent-Bcc' b=WSP* c=':' d={ a=address_list | b={ a={ a=CFWS? b=',' }* b=CFWS? } } e=CRLF
+	.literal = string { return makeLiteral(this) }
+obs_resent_mid := a='Resent-Message-ID' b=WSP* c=':' d=msg_id e=CRLF
+	.literal = string { return makeLiteral(this) }
+obs_resent_rply := a='Resent-Reply-To' b=WSP* c=':' d=address_list e=CRLF
+	.literal = string { return makeLiteral(this) }
+obs_return := a='Return-Path' b=WSP* c=':' d=path e=CRLF
+	.literal = string { return makeLiteral(this) }
+obs_received := a='Received' b=WSP* c=':' d=received_token* e=CRLF
+	.literal = string { return makeLiteral(this) }
+obs_optional := a=field_name b=WSP* c=':' d=unstructured e=CRLF
+	.literal = string { return makeLiteral(this) }
