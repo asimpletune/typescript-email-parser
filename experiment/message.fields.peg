@@ -1,295 +1,149 @@
 ---
 import { makeLiteral } from './foo'
 ---
-start := a=message
-	.literal = string { return makeLiteral(this) }
-CR := a='\x0D'
-	.literal = string { return makeLiteral(this) }
-CRLF := a='\r\n'
-	.literal = string { return makeLiteral(this) }
-DIGIT := a='\d'
-	.literal = string { return makeLiteral(this) }
-TWO_DIGIT := a='\d\d'
-	.literal = string { return makeLiteral(this) }
-FOUR_DIGIT := a='\d\d\d\d'
-	.literal = string { return makeLiteral(this) }
-DQUOTE := a='\x22'
-	.literal = string { return makeLiteral(this) }
-HTAB := a='\x09'
-	.literal = string { return makeLiteral(this) }
-LF := a='\x0A'
-	.literal = string { return makeLiteral(this) }
-SP := a='\x20'
-	.literal = string { return makeLiteral(this) }
-VCHAR := a='[\x21-\x7E]'
-	.literal = string { return makeLiteral(this) }
-WSP := a=SP | b=HTAB
-	.literal = string { return makeLiteral(this) }
-quoted_pair := a={ a='\\' b={ a=VCHAR | b=WSP } } | b=obs_qp
-	.literal = string { return makeLiteral(this) }
-FWS := a={ a={ a=WSP* b=CRLF }? b=WSP+ } | b=obs_FWS
-	.literal = string { return makeLiteral(this) }
-ctext := a='[\x21-\x27]' | b='[\x2a-\x5b]' | c='[\x5d-\x7e]' | d=obs_ctext
-	.literal = string { return makeLiteral(this) }
-ccontent := a=ctext | b=quoted_pair | c=comment
-	.literal = string { return makeLiteral(this) }
-comment := a='\(' b={ a=FWS? b=ccontent }* c=FWS? d='\)'
-	.literal = string { return makeLiteral(this) }
-CFWS := a={ a={ a=FWS? b=comment }+ b=FWS? } | b=FWS
-	.literal = string { return makeLiteral(this) }
-atext := a='[A-Za-z0-9!#$%&\x27\*\+\-\/=?^_`{|}~]'
-	.literal = string { return makeLiteral(this) }
-atom := a=CFWS? b=atext+ c=CFWS?
-	.literal = string { return makeLiteral(this) }
-dot_atom_text := a=atext+ b={ a='\.' b=atext+ }*
-	.literal = string { return makeLiteral(this) }
-dot_atom := a=CFWS? b=dot_atom_text c=CFWS?
-	.literal = string { return makeLiteral(this) }
-specials := a='\(' | b='\)' | c='[<>]' | d='\[' | e='\]' | f='[:;@]' | g='\\' | h=',' | i='\.' | j=DQUOTE
-	.literal = string { return makeLiteral(this) }
-qtext := a='\x21' | b='[\x23-\x5b]' | c='[\x5d-\x7e]' | d=obs_qtext
-	.literal = string { return makeLiteral(this) }
-qcontent := a=qtext | b=quoted_pair
-	.literal = string { return makeLiteral(this) }
-quoted_string := a=CFWS? b=DQUOTE c={ a=FWS? b=qcontent }* d=FWS? e=DQUOTE f=CFWS?
-	.literal = string { return makeLiteral(this) }
-word := a=atom | b=quoted_string
-	.literal = string { return makeLiteral(this) }
-phrase := a=word+ | b=obs_phrase
-	.literal = string { return makeLiteral(this) }
-unstructured := a={ a={ a=FWS? b=VCHAR }* b=WSP* } | b=obs_unstruct
-	.literal = string { return makeLiteral(this) }
-date_time := a={ a=day_of_week b=',' }? b=date c=time d=CFWS?
-	.literal = string { return makeLiteral(this) }
-day_of_week := a={ a=FWS? b=day_name } | b=obs_day_of_week
-	.literal = string { return makeLiteral(this) }
-day_name := a='Mon' | b='Tue' | c='Wed' | d='Thu' | e='Fri' | f='Sat' | g='Sun'
-	.literal = string { return makeLiteral(this) }
-date := a=day b=month c=year
-	.literal = string { return makeLiteral(this) }
-day := a={ a=FWS? b=DIGIT c=DIGIT? d=FWS } | b=obs_day
-	.literal = string { return makeLiteral(this) }
-month := a='Jan' | b='Feb' | c='Mar' | d='Apr' | e='May' | f='Jun' | g='Jul' | h='Aug' | i='Sep' | j='Oct' | k='Nov' | l='Dec'
-	.literal = string { return makeLiteral(this) }
-year := a={ a=FWS b=FOUR_DIGIT c=DIGIT* d=FWS } | b=obs_year
-	.literal = string { return makeLiteral(this) }
-time := a=time_of_day b=zone
-	.literal = string { return makeLiteral(this) }
-time_of_day := a=hour b=':' c=minute d={ a=':' b=second }?
-	.literal = string { return makeLiteral(this) }
-hour := a=TWO_DIGIT | b=obs_hour
-	.literal = string { return makeLiteral(this) }
-minute := a=TWO_DIGIT | b=obs_minute
-	.literal = string { return makeLiteral(this) }
-second := a=TWO_DIGIT | b=obs_second
-	.literal = string { return makeLiteral(this) }
-zone := a={ a=FWS b={ a='\+' | b='\-' } c=FOUR_DIGIT } | b=obs_zone
-	.literal = string { return makeLiteral(this) }
-address := a=mailbox | b=group
-	.literal = string { return makeLiteral(this) }
-mailbox := a=name_addr | b=addr_spec
-	.literal = string { return makeLiteral(this) }
-name_addr := a=display_name? b=angle_addr
-	.literal = string { return makeLiteral(this) }
-angle_addr := a=CFWS? b='<' c=addr_spec d='>' e=CFWS? | f=obs_angle_addr
-	.literal = string { return makeLiteral(this) }
-group := a=display_name b=':' c=group_list? d=';' e=CFWS?
-	.literal = string { return makeLiteral(this) }
-display_name := a=phrase
-	.literal = string { return makeLiteral(this) }
-mailbox_list := a={ a=mailbox b={ a=',' b=mailbox }* } | b=obs_mbox_list
-	.literal = string { return makeLiteral(this) }
-address_list := a={ a=address b={ a=',' b=address }* } | b=obs_addr_list
-	.literal = string { return makeLiteral(this) }
-group_list := a=mailbox_list | b=CFWS | c=obs_group_list
-	.literal = string { return makeLiteral(this) }
-addr_spec := a=local_part b='@' c=domain
-	.literal = string { return makeLiteral(this) }
-local_part := a=dot_atom | b=quoted_string | c=obs_local_part
-	.literal = string { return makeLiteral(this) }
-domain := a=dot_atom | b=domain_literal | c=obs_domain
-	.literal = string { return makeLiteral(this) }
-domain_literal := a=CFWS? b='\[' c={ a=FWS? b=dtext }* d=FWS? e='\]' f=CFWS?
-	.literal = string { return makeLiteral(this) }
-dtext := a='[\x21-\x5a]' | b='[\x5e-\x7e]' | c=obs_dtext
-	.literal = string { return makeLiteral(this) }
-message := a={ a=fields | b=obs_fields } b={ a=CRLF b=body }?
-	.literal = string { return makeLiteral(this) }
-body := a={ a={ a=_998text b=CRLF }* b=_998text } | b=obs_body
-	.literal = string { return makeLiteral(this) }
-text := a='[\x01-\x09]' | b='\x0B' | c='\x0C' | d='[\x0E-\x7f]'
-	.literal = string { return makeLiteral(this) }
-_998text := a='[\x01-\x09\x0B\x0C\x0E-\x7F]{998,}'
-	.literal = string { return makeLiteral(this) }
-fields := a={ a=trace b=optional_field* | c={ a=resent_date | b=resent_from | c=resent_sender | d=resent_to | e=resent_cc | f=resent_bcc | g=resent_msg_id }* }* b={ a=orig_date | b=from | c=sender | d=reply_to | e=to | f=cc | g=bcc | h=message_id | i=in_reply_to | j=references | k=subject | l=comments | m=keywords | n=optional_field }*
-	.literal = string { return makeLiteral(this) }
-orig_date := a='Date:' b=date_time c=CRLF
-	.literal = string { return makeLiteral(this) }
-from := a='From:' b=mailbox_list c=CRLF
-	.literal = string { return makeLiteral(this) }
-sender := a='Sender:' b=mailbox c=CRLF
-	.literal = string { return makeLiteral(this) }
-reply_to := a='Reply_To:' b=address_list c=CRLF
-	.literal = string { return makeLiteral(this) }
-to := a='To:' b=address_list c=CRLF
-	.literal = string { return makeLiteral(this) }
-cc := a='Cc:' b=address_list c=CRLF
-	.literal = string { return makeLiteral(this) }
-bcc := a='Bcc:' b={ a=address_list | b=CFWS }? c=CRLF
-	.literal = string { return makeLiteral(this) }
-message_id := a='Message-ID:' b=msg_id c=CRLF
-	.literal = string { return makeLiteral(this) }
-in_reply_to := a='In-Reply-To:' b=msg_id+ c=CRLF
-	.literal = string { return makeLiteral(this) }
-references := a='References:' b=msg_id+ c=CRLF
-	.literal = string { return makeLiteral(this) }
-msg_id := a=CFWS? b='<' c=id_left d='@' e=id_right f='>' g=CFWS?
-	.literal = string { return makeLiteral(this) }
-id_left := a=dot_atom_text | b=obs_id_left
-	.literal = string { return makeLiteral(this) }
-id_right := a=dot_atom_text | b=no_fold_literal | c=obs_id_right
-	.literal = string { return makeLiteral(this) }
-no_fold_literal := a='\[' b=dtext* c='\]'
-	.literal = string { return makeLiteral(this) }
-subject := a='Subject:' b=unstructured c=CRLF
-	.literal = string { return makeLiteral(this) }
-comments := a='Comments:' b=unstructured c=CRLF
-	.literal = string { return makeLiteral(this) }
-keywords := a='Keywords:' b=phrase c={ a=',' b=phrase }* d=CRLF
-	.literal = string { return makeLiteral(this) }
-resent_date := a='Resent-Date:' b=date_time c=CRLF
-	.literal = string { return makeLiteral(this) }
-resent_from := a='Resent-From:' b=mailbox_list c=CRLF
-	.literal = string { return makeLiteral(this) }
-resent_sender := a='Resent-Sender:' b=mailbox c=CRLF
-	.literal = string { return makeLiteral(this) }
-resent_to := a='Resent-To:' b=address_list c=CRLF
-	.literal = string { return makeLiteral(this) }
-resent_cc := a='Resent-Cc:' b=address_list c=CRLF
-	.literal = string { return makeLiteral(this) }
-resent_bcc := a='Resent-Bcc:' b={ a=address_list | b=CFWS }? c=CRLF
-	.literal = string { return makeLiteral(this) }
-resent_msg_id := a='Resent-Message_ID:' b=msg_id c=CRLF
-	.literal = string { return makeLiteral(this) }
-trace := a=return_path? b=received+
-	.literal = string { return makeLiteral(this) }
-return_path := a='Return-Path:' b=path c=CRLF
-	.literal = string { return makeLiteral(this) }
-path := a=angle_addr | b={ a=CFWS? b='<' c=CFWS d='>' e=CFWS? }
-	.literal = string { return makeLiteral(this) }
-received := a='Received:' b=received_token* c=';' d=date_time e=CRLF
-	.literal = string { return makeLiteral(this) }
-received_token := a=word | b=angle_addr | c=addr_spec | d=domain
-	.literal = string { return makeLiteral(this) }
-optional_field := a=field_name b=':' c=unstructured d=CRLF
-	.literal = string { return makeLiteral(this) }
-field_name := a=ftext+
-	.literal = string { return makeLiteral(this) }
-ftext := a='[\x21-\x39]' | b='[\x3b-\x7e]'
-	.literal = string { return makeLiteral(this) }
-obs_NO_WS_CTL := a='[\x01-\x08]' | b='\x0B' | c='\x0C' | d='[\x0E-\x1F]' | e='\x7F'
-	.literal = string { return makeLiteral(this) }
-obs_ctext := a=obs_NO_WS_CTL
-	.literal = string { return makeLiteral(this) }
-obs_qtext := a=obs_NO_WS_CTL
-	.literal = string { return makeLiteral(this) }
-obs_utext := a='\x00' | b=obs_NO_WS_CTL | c=VCHAR
-	.literal = string { return makeLiteral(this) }
-obs_qp := a='\\' b={ a='\x00' | b=obs_NO_WS_CTL | c=LF | d=CR }
-	.literal = string { return makeLiteral(this) }
-obs_body := a={ a={ a=LF* b=CR* c={ a={ a='\x00' | b=text } b=LF* c=CR* }* } | b=CRLF }*
-	.literal = string { return makeLiteral(this) }
-obs_unstruct := a={ a={ a=LF* b=CR* c={ a=obs_utext b=LF* c=CR* }* } | b=FWS }*
-	.literal = string { return makeLiteral(this) }
-obs_phrase := a=word b={ a=word | b='.' | c=CFWS }
-	.literal = string { return makeLiteral(this) }
-obs_phrase_list := a={ a=phrase | b=CFWS } b={ a=',' b={ a=phrase | b=CFWS }? }*
-	.literal = string { return makeLiteral(this) }
-obs_FWS := a=WSP+ b={ a=CRLF b=WSP+ }*
-	.literal = string { return makeLiteral(this) }
-obs_day_of_week := a=CFWS? b=day_name c=CFWS?
-	.literal = string { return makeLiteral(this) }
-obs_day := a=CFWS? b=DIGIT c=DIGIT? d=CFWS?
-	.literal = string { return makeLiteral(this) }
-obs_year := a=CFWS? b=TWO_DIGIT c=DIGIT* d=CFWS?
-	.literal = string { return makeLiteral(this) }
-obs_hour := a=CFWS? b=TWO_DIGIT c=CFWS?
-	.literal = string { return makeLiteral(this) }
-obs_minute := a=CFWS? b=TWO_DIGIT c=CFWS?
-	.literal = string { return makeLiteral(this) }
-obs_second := a=CFWS? b=TWO_DIGIT c=CFWS?
-	.literal = string { return makeLiteral(this) }
-obs_zone := a='UT' | b='GMT' | c='EST' | d='EDT' | e='CST' | f='CDT' | g='MST' | h='MDT' | i='PST' | j='PDT' | k='[\x41-\x49]' | l='[\x4b-\x5a]' | m='[\x61-\x69]' | n='[\x6b-\x7a]'
-	.literal = string { return makeLiteral(this) }
-obs_angle_addr := a=CFWS? b='<' c=obs_route d=addr_spec e='>' f=CFWS?
-	.literal = string { return makeLiteral(this) }
-obs_route := a=obs_domain_list b=':'
-	.literal = string { return makeLiteral(this) }
-obs_domain_list := a={ a=CFWS | b=',' }* b='@' c=domain d={ a=',' b=CFWS? c={ a='@' b=domain }? }*
-	.literal = string { return makeLiteral(this) }
-obs_mbox_list := a={ a=CFWS? b=',' }* b=mailbox c={ a=',' b={ a=mailbox | b=CFWS }? }*
-	.literal = string { return makeLiteral(this) }
-obs_addr_list := a={ a=CFWS? b=',' }* b=address c={ a=',' b={ a=address | b=CFWS }? }*
-	.literal = string { return makeLiteral(this) }
-obs_group_list := a={ a=CFWS? b=',' }+ b=CFWS?
-	.literal = string { return makeLiteral(this) }
-obs_local_part := a=word b={ a='\.' b=word }*
-	.literal = string { return makeLiteral(this) }
-obs_domain := a=atom b={ a='\.' b=atom }*
-	.literal = string { return makeLiteral(this) }
-obs_dtext := a=obs_NO_WS_CTL | b=quoted_pair
-	.literal = string { return makeLiteral(this) }
-obs_fields := a={ a=obs_return | b=obs_received | c=obs_orig_date | d=obs_from | e=obs_sender | f=obs_reply_to | g=obs_to | h=obs_cc | i=obs_bcc | j=obs_message_id | k=obs_in_reply_to | l=obs_references | m=obs_subject | n=obs_comments | o=obs_keywords | p=obs_resent_date | q=obs_resent_from | r=obs_resent_send | s=obs_resent_rply | t=obs_resent_to | u=obs_resent_cc | v=obs_resent_bcc | w=obs_resent_mid | x=obs_optional }*
-	.literal = string { return makeLiteral(this) }
-obs_orig_date := a='Date' b=WSP* c=':' d=date_time e=CRLF
-	.literal = string { return makeLiteral(this) }
-obs_from := a='From' b=WSP* c=':' d=mailbox_list e=CRLF
-	.literal = string { return makeLiteral(this) }
-obs_sender := a='Sender' b=WSP* c=':' d=mailbox e=CRLF
-	.literal = string { return makeLiteral(this) }
-obs_reply_to := a='Reply-To' b=WSP* c=':' d=address_list e=CRLF
-	.literal = string { return makeLiteral(this) }
-obs_to := a='To' b=WSP* c=':' d=address_list e=CRLF
-	.literal = string { return makeLiteral(this) }
-obs_cc := a='Cc' b=WSP* c=':' d=address_list e=CRLF
-	.literal = string { return makeLiteral(this) }
-obs_bcc := a='Bcc' b=WSP* c=':' d={ a=address_list | b={ a={ a=CFWS? b=',' }* b=CFWS? } } e=CRLF
-	.literal = string { return makeLiteral(this) }
-obs_message_id := a='Message-ID' b=WSP* c=':' d=msg_id e=CRLF
-	.literal = string { return makeLiteral(this) }
-obs_in_reply_to := a='In-Reply-To' b=WSP* c=':' d={ a=phrase | b=msg_id }* e=CRLF
-	.literal = string { return makeLiteral(this) }
-obs_references := a='References' b=WSP* c=':' d={ a=phrase | b=msg_id }* e=CRLF
-	.literal = string { return makeLiteral(this) }
-obs_id_left := a=local_part
-	.literal = string { return makeLiteral(this) }
-obs_id_right := a=domain
-	.literal = string { return makeLiteral(this) }
-obs_subject := a='Subject' b=WSP* c=':' d=unstructured e=CRLF
-	.literal = string { return makeLiteral(this) }
-obs_comments := a='Comments' b=WSP* c=':' d=unstructured e=CRLF
-	.literal = string { return makeLiteral(this) }
-obs_keywords := a='Keywords' b=WSP* c=':' d=obs_phrase_list e=CRLF
-	.literal = string { return makeLiteral(this) }
-obs_resent_from := a='Resent-From' b=WSP* c=':' d=mailbox_list e=CRLF
-	.literal = string { return makeLiteral(this) }
-obs_resent_send := a='Resent-Sender' b=WSP* c=':' d=mailbox e=CRLF
-	.literal = string { return makeLiteral(this) }
-obs_resent_date := a='Resent-Date' b=WSP* c=':' d=date_time e=CRLF
-	.literal = string { return makeLiteral(this) }
-obs_resent_to := a='Resent-To' b=WSP* c=':' d=address_list e=CRLF
-	.literal = string { return makeLiteral(this) }
-obs_resent_cc := a='Resent-Cc' b=WSP* c=':' d=address_list e=CRLF
-	.literal = string { return makeLiteral(this) }
-obs_resent_bcc := a='Resent-Bcc' b=WSP* c=':' d={ a=address_list | b={ a={ a=CFWS? b=',' }* b=CFWS? } } e=CRLF
-	.literal = string { return makeLiteral(this) }
-obs_resent_mid := a='Resent-Message-ID' b=WSP* c=':' d=msg_id e=CRLF
-	.literal = string { return makeLiteral(this) }
-obs_resent_rply := a='Resent-Reply-To' b=WSP* c=':' d=address_list e=CRLF
-	.literal = string { return makeLiteral(this) }
-obs_return := a='Return-Path' b=WSP* c=':' d=path e=CRLF
-	.literal = string { return makeLiteral(this) }
-obs_received := a='Received' b=WSP* c=':' d=received_token* e=CRLF
-	.literal = string { return makeLiteral(this) }
-obs_optional := a=field_name b=WSP* c=':' d=unstructured e=CRLF
-	.literal = string { return makeLiteral(this) }
+start := message
+CR := '\x0D'
+CRLF := '\r\n'
+DIGIT := '\d'
+TWO_DIGIT := '\d\d'
+FOUR_DIGIT := '\d\d\d\d'
+DQUOTE := '\x22'
+HTAB := '\x09'
+LF := '\x0A'
+SP := '\x20'
+VCHAR := '[\x21-\x7E]'
+WSP := SP | HTAB
+quoted_pair := A={ B='\\' C={ D=VCHAR | WSP } } | F=obs_qp
+FWS := { { WSP* CRLF }? WSP+ } | obs_FWS
+ctext := A='[\x21-\x27]' | B='[\x2a-\x5b]' | C='[\x5d-\x7e]' | D=obs_ctext
+ccontent := A=ctext | B=quoted_pair | C=comment
+comment := A='\(' B={ FWS? D=ccontent }* FWS? F='\)'
+CFWS := A={ B={ FWS? D=comment }+ FWS? } | FWS
+atext := '[A-Za-z0-9!#$%&\x27\*\+\-\/=?^_`{|}~]'
+atom := CFWS? B=atext+ CFWS?
+dot_atom_text := A=atext+ B={ C='\.' D=atext+ }*
+dot_atom := A=CFWS? B=dot_atom_text C=CFWS?
+specials := '\(' | '\)' | '[<>]' | '\[' | '\]' | '[:;@]' | '\\' | ',' | '\.' | DQUOTE
+qtext := '\x21' | '[\x23-\x5b]' | '[\x5d-\x7e]' | obs_qtext
+qcontent := qtext | quoted_pair
+quoted_string := CFWS? B=DQUOTE C={ FWS? E=qcontent }* FWS? G=DQUOTE CFWS?
+word := atom | quoted_string
+phrase := word+ | obs_phrase
+unstructured := A={ B={ FWS? D=VCHAR }* WSP* } | F=obs_unstruct
+date_time := A={ B=day_of_week C=',' }? D=date E=time CFWS?
+day_of_week := A={ FWS? C=day_name } | D=obs_day_of_week
+day_name := 'Mon' | 'Tue' | 'Wed' | 'Thu' | 'Fri' | 'Sat' | 'Sun'
+date := A=day B=month C=year
+day := A={ FWS? C=DIGIT D=DIGIT? FWS } | F=obs_day
+month := 'Jan' | 'Feb' | 'Mar' | 'Apr' | 'May' | 'Jun' | 'Jul' | 'Aug' | 'Sep' | 'Oct' | 'Nov' | 'Dec'
+year := A={ B=FWS C=FOUR_DIGIT D=DIGIT* E=FWS } | F=obs_year
+time := A=time_of_day B=zone
+time_of_day := A=hour B=':' C=minute D={ E=':' F=second }?
+hour := A=TWO_DIGIT | B=obs_hour
+minute := A=TWO_DIGIT | B=obs_minute
+second := A=TWO_DIGIT | B=obs_second
+zone := A={ FWS C={ D='\+' | E='\-' } F=FOUR_DIGIT } | G=obs_zone
+address := mailbox | group
+mailbox := name_addr | addr_spec
+name_addr := A=display_name? B=angle_addr
+angle_addr := CFWS? B='<' C=addr_spec D='>' CFWS? | F=obs_angle_addr
+group := A=display_name B=':' C=group_list? D=';' CFWS?
+display_name := phrase
+mailbox_list := A={ B=mailbox C={ D=',' E=mailbox }* } | F=obs_mbox_list
+address_list := A={ B=address C={ D=',' E=address }* } | F=obs_addr_list
+group_list := mailbox_list | CFWS | obs_group_list
+addr_spec := A=local_part B='@' C=domain
+local_part := dot_atom | quoted_string | obs_local_part
+domain := dot_atom | domain_literal | obs_domain
+domain_literal := CFWS? B='\[' C={ FWS? E=dtext }* FWS? G='\]' CFWS?
+dtext := '[\x21-\x5a]' | '[\x5e-\x7e]' | obs_dtext
+message := A={ fields | obs_fields } D={ CRLF F=body }?
+body := A={ B={ C=_998text CRLF }* E=_998text } | F=obs_body
+text := '[\x01-\x09]' | '\x0B' | '\x0C' | '[\x0E-\x7f]'
+_998text := '[\x01-\x09\x0B\x0C\x0E-\x7F]{998,}'
+fields := A={ B=trace C=optional_field* | D={ resent_date | resent_from | resent_sender | resent_to | resent_cc | resent_bcc | resent_msg_id }* }* L={ orig_date | from | sender | reply_to | to | cc | bcc | message_id | in_reply_to | references | subject | comments | keywords | optional_field }*
+orig_date := A='Date' B=':' C=date_time CRLF
+from := A='From' B=':' C=mailbox_list CRLF
+sender := A='Sender' B=':' C=mailbox CRLF
+reply_to := A='Reply_To' B=':' C=address_list CRLF
+to := A='To' B=':' C=address_list CRLF
+cc := A='Cc' B=':' C=address_list CRLF
+bcc := A='Bcc' B=':' C={ address_list | CFWS }? CRLF
+message_id := A='Message-ID' B=':' C=msg_id CRLF
+in_reply_to := A='In-Reply-To' B=':' C=msg_id+ CRLF
+references := A='References' B=':' C=msg_id+ CRLF
+msg_id := CFWS? B='<' C=id_left D='@' E=id_right '>' G=CFWS?
+id_left := dot_atom_text | obs_id_left
+id_right := dot_atom_text | no_fold_literal | obs_id_right
+no_fold_literal := A='\[' B=dtext* C='\]'
+subject := A='Subject' B=':' C=unstructured CRLF
+comments := A='Comments' B=':' C=unstructured CRLF
+keywords := A='Keywords' B=':' C=phrase D={ E=',' F=phrase }* CRLF
+resent_date := A='Resent-Date' B=':' C=date_time CRLF
+resent_from := A='Resent-From' B=':' C=mailbox_list CRLF
+resent_sender := A='Resent-Sender' B=':' C=mailbox CRLF
+resent_to := A='Resent-To' B=':' C=address_list CRLF
+resent_cc := A='Resent-Cc' B=':' C=address_list CRLF
+resent_bcc := A='Resent-Bcc' B=':' C={ D=address_list | CFWS }? CRLF
+resent_msg_id := A='Resent-Message_ID' B=':' C=msg_id CRLF
+trace := A=return_path? B=received+
+return_path := A='Return-Path' B=':' C=path CRLF
+path := angle_addr | { CFWS? '<' CFWS '>' CFWS? }
+received := A='Received' B=':' C=received_token* D=';' E=date_time CRLF
+received_token := word | angle_addr | addr_spec | domain
+optional_field := A=field_name B=':' C=unstructured CRLF
+field_name := ftext+
+ftext := '[\x21-\x39]' | '[\x3b-\x7e]'
+obs_NO_WS_CTL := '[\x01-\x08]' | '\x0B' | C='\x0C' | D='[\x0E-\x1F]' | E='\x7F'
+obs_ctext := obs_NO_WS_CTL
+obs_qtext := obs_NO_WS_CTL
+obs_utext := '\x00' | obs_NO_WS_CTL | VCHAR
+obs_qp := A='\\' B={ '\x00' | obs_NO_WS_CTL | LF | CR }
+obs_body := A={ B={ LF* CR* E={ F={ G='\x00' | H=text } LF* CR* }* } | CRLF }*
+obs_unstruct := A={ B={ LF* CR* E={ F=obs_utext LF* CR* }* } | FWS }*
+obs_phrase := A=word B={ word | '.' | CFWS }
+obs_phrase_list := A={ phrase | CFWS } D={ E=',' F={ phrase | CFWS }? }*
+obs_FWS := A=WSP+ { CRLF WSP+ }*
+obs_day_of_week := CFWS? B=day_name CFWS?
+obs_day := A=CFWS? B=DIGIT C=DIGIT? CFWS?
+obs_year := A=CFWS? B=TWO_DIGIT C=DIGIT* CFWS?
+obs_hour := CFWS? B=TWO_DIGIT CFWS?
+obs_minute := CFWS? B=TWO_DIGIT CFWS?
+obs_second := CFWS? B=TWO_DIGIT CFWS?
+obs_zone := 'UT' | 'GMT' | 'EST' | 'EDT' | 'CST' | 'CDT' | 'MST' | 'MDT' | 'PST' | 'PDT' | '[\x41-\x49]' | '[\x4b-\x5a]' | '[\x61-\x69]' | '[\x6b-\x7a]'
+obs_angle_addr := CFWS? B='<' C=obs_route D=addr_spec E='>' CFWS?
+obs_route := obs_domain_list B=':'
+obs_domain_list := A={ B=CFWS | C=',' }* D='@' E=domain F={ G=',' CFWS? I={ J='@' K=domain }? }*
+obs_mbox_list := A={ B=CFWS? C=',' }* D=mailbox E={ F=',' G={ mailbox | I=CFWS }? }*
+obs_addr_list := A={ B=CFWS? C=',' }* D=address E={ F=',' G={ address | I=CFWS }? }*
+obs_group_list := A={ B=CFWS? C=',' }+ CFWS?
+obs_local_part := A=word B={ C='\.' D=word }*
+obs_domain := A=atom B={ C='\.' D=atom }*
+obs_dtext := obs_NO_WS_CTL | B=quoted_pair
+obs_fields := A={ B=obs_return | C=obs_received | D=obs_orig_date | obs_from | obs_sender | obs_reply_to | obs_to | obs_cc | obs_bcc | obs_message_id | L=obs_in_reply_to | obs_references | obs_subject | obs_comments | obs_keywords | obs_resent_date | obs_resent_from | obs_resent_send | obs_resent_rply | obs_resent_to | obs_resent_cc | obs_resent_bcc | obs_resent_mid | obs_optional }*
+obs_orig_date := A='Date' WSP* C=':' D=date_time CRLF
+obs_from := A='From' WSP* C=':' D=mailbox_list CRLF
+obs_sender := A='Sender' WSP* C=':' D=mailbox CRLF
+obs_reply_to := A='Reply-To' WSP* C=':' D=address_list CRLF
+obs_to := A='To' WSP* C=':' D=address_list CRLF
+obs_cc := A='Cc' WSP* C=':' D=address_list CRLF
+obs_bcc := A='Bcc' WSP* C=':' D={ E=address_list | F={ G={ H=CFWS? I=',' }* CFWS? } } CRLF
+obs_message_id := A='Message-ID' WSP* C=':' D=msg_id CRLF
+obs_in_reply_to := A='In-Reply-To' WSP* C=':' D={ phrase | msg_id }* CRLF
+obs_references := A='References' WSP* C=':' D={ phrase | msg_id }* CRLF
+obs_id_left := local_part
+obs_id_right := domain
+obs_subject := A='Subject' WSP* C=':' D=unstructured CRLF
+obs_comments := A='Comments' WSP* C=':' D=unstructured CRLF
+obs_keywords := A='Keywords' WSP* C=':' D=obs_phrase_list CRLF
+obs_resent_from := A='Resent-From' WSP* C=':' D=mailbox_list CRLF
+obs_resent_send := A='Resent-Sender' WSP* C=':' D=mailbox CRLF
+obs_resent_date := A='Resent-Date' WSP* C=':' D=date_time CRLF
+obs_resent_to := A='Resent-To' WSP* C=':' D=address_list E=CRLF
+obs_resent_cc := A='Resent-Cc' WSP* C=':' D=address_list CRLF
+obs_resent_bcc := A='Resent-Bcc' WSP* C=':' D={ E=address_list | F={ G={ H=CFWS? I=',' }* CFWS? } } CRLF
+obs_resent_mid := A='Resent-Message-ID' WSP* C=':' D=msg_id CRLF
+obs_resent_rply := A='Resent-Reply-To' WSP* C=':' D=address_list CRLF
+obs_return := A='Return-Path' WSP* C=':' D=path CRLF
+obs_received := A='Received' WSP* C=':' D=received_token* E=CRLF
+obs_optional := A=field_name WSP* C=':' D=unstructured CRLF

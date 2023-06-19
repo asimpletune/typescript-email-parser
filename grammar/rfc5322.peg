@@ -113,25 +113,25 @@ fields          :=    {
 
 // § 3.6.1. The Origination Date Field
 // See: https://datatracker.ietf.org/doc/html/rfc5322#section-3.6.1
-orig_date       :=   'Date:' date_time CRLF
+orig_date       :=   'Date' ':' date_time CRLF
 
 // § 3.6.2 Originator Fields
 // See: https://datatracker.ietf.org/doc/html/rfc5322#section-3.6.2
-from            :=    'From:' mailbox_list CRLF
-sender          :=    'Sender:' mailbox CRLF
-reply_to        :=    'Reply_To:' address_list CRLF
+from            :=    'From' ':' mailbox_list CRLF
+sender          :=    'Sender' ':' mailbox CRLF
+reply_to        :=    'Reply_To' ':' address_list CRLF
 
 // § 3.6.3 Destination Address Fields
 // See: https://datatracker.ietf.org/doc/html/rfc5322#section-3.6.3
-to              :=    'To:' address_list CRLF
-cc              :=    'Cc:' address_list CRLF
-bcc             :=    'Bcc:' { address_list | CFWS }? CRLF
+to              :=    'To' ':' address_list CRLF
+cc              :=    'Cc' ':' address_list CRLF
+bcc             :=    'Bcc' ':' { address_list | CFWS }? CRLF
 
 // § 3.6.4 Identification Fields
 // See: https://datatracker.ietf.org/doc/html/rfc5322#section-3.6.4
-message_id      :=    'Message-ID:' msg_id CRLF
-in_reply_to     :=    'In-Reply-To:' msg_id+ CRLF
-references      :=    'References:' msg_id+ CRLF
+message_id      :=    'Message-ID' ':' msg_id CRLF
+in_reply_to     :=    'In-Reply-To' ':' msg_id+ CRLF
+references      :=    'References' ':' msg_id+ CRLF
 msg_id          :=    CFWS? '<' id_left '@' id_right '>' CFWS?
 id_left         :=    dot_atom_text | obs_id_left
 id_right        :=    dot_atom_text | no_fold_literal | obs_id_right
@@ -139,26 +139,26 @@ no_fold_literal :=    '\[' dtext* '\]'
 
 // § 3.6.5 Informational Fields
 // See: https://datatracker.ietf.org/doc/html/rfc5322#section-3.6.5
-subject         :=    'Subject:' unstructured CRLF
-comments        :=    'Comments:' unstructured CRLF
-keywords        :=    'Keywords:' phrase { ',' phrase }* CRLF
+subject         :=    'Subject' ':' unstructured CRLF
+comments        :=    'Comments' ':' unstructured CRLF
+keywords        :=    'Keywords' ':' phrase { ',' phrase }* CRLF
 
 // § 3.6.6 Resent Fields
 // See: https://datatracker.ietf.org/doc/html/rfc5322#section-3.6.6
-resent_date     :=    'Resent-Date:' date_time CRLF
-resent_from     :=    'Resent-From:' mailbox_list CRLF
-resent_sender   :=    'Resent-Sender:' mailbox CRLF
-resent_to       :=    'Resent-To:' address_list CRLF
-resent_cc       :=    'Resent-Cc:' address_list CRLF
-resent_bcc      :=    'Resent-Bcc:' {address_list | CFWS }? CRLF
-resent_msg_id   :=    'Resent-Message_ID:' msg_id CRLF
+resent_date     :=    'Resent-Date' ':' date_time CRLF
+resent_from     :=    'Resent-From' ':' mailbox_list CRLF
+resent_sender   :=    'Resent-Sender' ':' mailbox CRLF
+resent_to       :=    'Resent-To' ':' address_list CRLF
+resent_cc       :=    'Resent-Cc' ':' address_list CRLF
+resent_bcc      :=    'Resent-Bcc' ':' {address_list | CFWS }? CRLF
+resent_msg_id   :=    'Resent-Message_ID' ':' msg_id CRLF
 
 // § 3.6.7 Trace Fields
 // See: https://datatracker.ietf.org/doc/html/rfc5322#section-3.6.7
 trace           :=    return_path? received+
-return_path     :=    'Return-Path:' path CRLF
+return_path     :=    'Return-Path' ':' path CRLF
 path            :=    angle_addr | { CFWS? '<' CFWS '>' CFWS? }
-received        :=    'Received:' received_token* ';' date_time CRLF
+received        :=    'Received' ':' received_token* ';' date_time CRLF
 received_token  :=    word | angle_addr | addr_spec | domain
 
 // § 3.6.8 Optional Fields
