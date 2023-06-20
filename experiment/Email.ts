@@ -1,7 +1,7 @@
 import { ASTKinds, addr_spec, address, address_list, angle_addr_1, from, group, group_list, mailbox, mailbox_list, message, name_addr, obs_addr_list_$1, obs_addr_list_$1_$0, obs_angle_addr, obs_fields_$0, obs_from, obs_subject, obs_to, parse, subject, to } from './message.fields'
 import { concat } from './util'
 export class Email {
-  to: AddressList | undefined
+  to: NonemptyList<Address> | undefined
   subject: string | undefined
   from: NonemptyList<Mailbox> | undefined
 
@@ -22,16 +22,16 @@ export class Email {
     }
   }
 
-  static to(ast: message): AddressList | undefined {
+  static to(ast: message): NonemptyList<Address> | undefined {
     let fields = ast.fields
     switch (fields.kind) {
       case ASTKinds.fields: {
         let toField = fields.L.find((field): field is to => field.kind === ASTKinds.to)
-        return toField ? new AddressList(toField.address_list) : undefined
+        return toField ? Util.fromAddressList(toField.address_list) : undefined
       }
       case ASTKinds.obs_fields: {
         let toField = fields.A.find((el): el is obs_to => el.kind === ASTKinds.obs_to)
-        return toField ? new AddressList(toField.address_list) : undefined
+        return toField ? Util.fromAddressList(toField.address_list) : undefined
       }
       default: { const exhaustive: never = fields; throw new Error(exhaustive) }
     }
@@ -53,39 +53,7 @@ export class Email {
   }
 }
 
-type Address = Mailbox
-
-class AddressList {
-  head: Address
-  tail: Address[]
-  constructor(address_list: address_list) {
-    switch (address_list.kind) {
-      case ASTKinds.address_list_1:
-        return {
-          head: AddressList.fromAddress(address_list.head),
-          tail: address_list.tail.map(el => AddressList.fromAddress(el.address))
-        }
-      case ASTKinds.obs_addr_list:
-        return {
-          head: AddressList.fromAddress(address_list.head),
-          tail: address_list.tail
-            .map(el => el.address)
-            .filter((el): el is address => el !== null && !('I' in el))
-            .map(address => AddressList.fromAddress(address))
-        }
-      default: throw new Error("There should only be 2 types of address_list")
-    }
-  }
-
-  static fromAddress(address: address): Address {
-    switch (address.kind) {
-      case ASTKinds.addr_spec: return new Mailbox(address)
-      case ASTKinds.name_addr: return new Mailbox(address)
-      case ASTKinds.group: throw new Error("not implemented")
-      default: { const exhaustive: never = address; throw new Error(exhaustive) }
-    }
-  }
-}
+type Address = Mailbox | Group
 
 type NonemptyList<T> = [T, ...T[]]
 
@@ -102,26 +70,48 @@ class Util {
       default: { const exhaustive: never = mailbox_list; throw new Error(exhaustive) }
     }
   }
+  static fromAddressList(address_list: address_list): NonemptyList<Address> {
+    switch (address_list.kind) {
+      case ASTKinds.address_list_1:
+        return [Util.fromAddress(address_list.head),
+        ...address_list.tail.map(el => Util.fromAddress(el.address))]
+      case ASTKinds.obs_addr_list:
+        return [Util.fromAddress(address_list.head),
+        ...address_list.tail
+          .map(el => el.address)
+          .filter((el): el is address => el !== null && !('I' in el))
+          .map(address => Util.fromAddress(address))]
+      default: throw new Error("There should only be 2 types of address_list")
+    }
+  }
+  static fromAddress(address: address): Address {
+    switch (address.kind) {
+      case ASTKinds.addr_spec: return new Mailbox(address)
+      case ASTKinds.name_addr: return new Mailbox(address)
+      case ASTKinds.group: return new Group(address)
+      default: { const exhaustive: never = address; throw new Error(exhaustive) }
+    }
+  }
 }
 
 class Group {
   display_name: string
-  group_list?: Mailbox[]
+  group_list?: NonemptyList<Mailbox>
   constructor(group: group) {
-    let gl = (() => {
+    let gl = ((): NonemptyList<Mailbox> | undefined => {
       if (group.group_list !== null) {
         let group_list = group.group_list
         switch (group_list.kind) {
           // mailbox list, with head/tail
           case ASTKinds.mailbox_list_1:
-            return this.group_list = [new Mailbox(group_list.head)]
-              .concat(group_list.tail.map(el => new Mailbox(el.mailbox)))
+            return [new Mailbox(group_list.head), ...group_list.tail.map(el => new Mailbox(el.mailbox))]
           // obsolete mailbox list, with head/tail
           case ASTKinds.obs_mbox_list:
-            return this.group_list = [new Mailbox(group_list.head)]
-              .concat(group_list.tail.map(el => el.mailbox)
-                .filter((el): el is mailbox => el !== null)
-                .map(mb => new Mailbox(mb)))
+            let head = new Mailbox(group_list.head)
+            let tail = group_list.tail.map(el => el.mailbox)
+              .filter((el): el is mailbox => el !== null)
+              .map(mb => new Mailbox(mb))
+            return [head, ...tail]
           // obsolete group list is just CFWS
           case ASTKinds.obs_group_list: return undefined
           case ASTKinds.CFWS_1: return undefined
@@ -130,7 +120,6 @@ class Group {
         }
       }
     })()
-
     return {
       display_name: concat(group.display_name),
       group_list: gl

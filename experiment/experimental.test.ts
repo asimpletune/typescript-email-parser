@@ -9,8 +9,8 @@ let email = new Email(ast)
 
 describe('fields', () => {
   test('to', () => {
-    expect(email.to?.head).toEqual({ "email": "bob@example.com", "name": undefined })
-    expect(email.to?.tail).toEqual([{ "email": "alice@example.com", "name": "Alice" }])
+    expect(email.to?.[0]).toEqual({ "email": "bob@example.com", "name": undefined })
+    expect(email.to?.slice(1)).toEqual([{ "email": "alice@example.com", "name": "Alice" }])
   })
   test('from', () => {
     expect(email.from).toEqual([{ "email": "test@example.com", "name": undefined }])
