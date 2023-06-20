@@ -55,7 +55,11 @@ modifyRules.set('message', { skipFields: new Set('BCE'.split('')), mapFields: { 
 modifyRules.set('body', { skipFields: new Set('D'.split('')), mapFields: {}, computed: [] })
 modifyRules.set('text', { skipFields: new Set('ABCD'.split('')), mapFields: {}, computed: [] })
 modifyRules.set('_998text', { skipFields: new Set('A'.split('')), mapFields: {}, computed: [] })
-modifyRules.set('fields', { skipFields: new Set('EFGHIJKMNOPQRSTUVWXYZ'.split('')), mapFields: {}, computed: [] })
+modifyRules.set('fields', {
+  skipFields: new Set('EFGHIJKMNOPQRSTUVWXYZ'.split('')), mapFields: {}, computed: [
+    '.subject = subject | undefined { return this.L.find(field => field.kind === "subject") as subject }'
+  ]
+})
 modifyRules.set('orig_date', { skipFields: new Set('D'.split('')), mapFields: {}, computed: [] })
 modifyRules.set('from', { skipFields: new Set('D'.split('')), mapFields: {}, computed: [] })
 modifyRules.set('sender', { skipFields: new Set('D'.split('')), mapFields: {}, computed: [] })
@@ -193,8 +197,8 @@ function enumerateFieldsOfAtoms(rule: RULE, modify: RuleAugmentation): string {
       }).join(' ')
       return matches
     }).join(' | ')
-    return altList + modify.computed.map(fn => `\n\t${fn}`).join('')
+    return altList
   }
-  let results = assignNamesToAtoms(rule)
+  let results = assignNamesToAtoms(rule) + modify.computed.map(fn => `\n\t${fn}`).join('')
   return results
 }

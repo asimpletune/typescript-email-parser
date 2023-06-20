@@ -64,6 +64,7 @@
 * text := '[\x01-\x09]' | '\x0B' | '\x0C' | '[\x0E-\x7f]'
 * _998text := '[\x01-\x09\x0B\x0C\x0E-\x7F]{998,}'
 * fields := A={ B=trace C=optional_field* | D={ resent_date | resent_from | resent_sender | resent_to | resent_cc | resent_bcc | resent_msg_id }* }* L={ orig_date | from | sender | reply_to | to | cc | bcc | message_id | in_reply_to | references | subject | comments | keywords | optional_field }*
+* 	.subject = subject | undefined { return this.L.find(field => field.kind === "subject") as subject }
 * orig_date := A='Date' B=':' C=date_time CRLF
 * from := A='From' B=':' C=mailbox_list CRLF
 * sender := A='Sender' B=':' C=mailbox CRLF
@@ -999,10 +1000,18 @@ export type text_2 = string;
 export type text_3 = string;
 export type text_4 = string;
 export type _998text = string;
-export interface fields {
-    kind: ASTKinds.fields;
-    A: fields_$0[];
-    L: fields_$1[];
+export class fields {
+    public kind: ASTKinds.fields = ASTKinds.fields;
+    public A: fields_$0[];
+    public L: fields_$1[];
+    public subject: subject | undefined;
+    constructor(A: fields_$0[], L: fields_$1[]){
+        this.A = A;
+        this.L = L;
+        this.subject = ((): subject | undefined => {
+        return this.L.find(field => field.kind === "subject") as subject
+        })();
+    }
 }
 export type fields_$0 = fields_$0_1 | fields_$0_2;
 export interface fields_$0_1 {
@@ -4227,7 +4236,7 @@ export class Parser {
                             && ($scope$A = this.loop<fields_$0>(() => this.matchfields_$0($$dpth + 1, $$cr), true)) !== null
                             && ($scope$L = this.loop<fields_$1>(() => this.matchfields_$1($$dpth + 1, $$cr), true)) !== null
                         ) {
-                            $$res = {kind: ASTKinds.fields, A: $scope$A, L: $scope$L};
+                            $$res = new fields($scope$A, $scope$L);
                         }
                         return $$res;
                     });

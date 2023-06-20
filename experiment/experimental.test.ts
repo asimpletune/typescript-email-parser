@@ -8,7 +8,7 @@ let ast = parse(input).ast!
 describe('fields', () => {
   test('subject', () => {
     let f: fields = ast.fields as fields
-    let s: subject = f.L.find(field => field.kind === 'subject')! as subject
+    let s: subject = f.subject!
     let val = s.value
     expect(s.name).toBe('Subject')
     expect(val).toBe('Re: ASDASDAS')

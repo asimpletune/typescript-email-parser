@@ -62,6 +62,7 @@ body := A={ B={ C=_998text CRLF }* E=_998text } | F=obs_body
 text := '[\x01-\x09]' | '\x0B' | '\x0C' | '[\x0E-\x7f]'
 _998text := '[\x01-\x09\x0B\x0C\x0E-\x7F]{998,}'
 fields := A={ B=trace C=optional_field* | D={ resent_date | resent_from | resent_sender | resent_to | resent_cc | resent_bcc | resent_msg_id }* }* L={ orig_date | from | sender | reply_to | to | cc | bcc | message_id | in_reply_to | references | subject | comments | keywords | optional_field }*
+	.subject = subject | undefined { return this.L.find(field => field.kind === "subject") as subject }
 orig_date := A='Date' B=':' C=date_time CRLF
 from := A='From' B=':' C=mailbox_list CRLF
 sender := A='Sender' B=':' C=mailbox CRLF
