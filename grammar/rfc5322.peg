@@ -4,9 +4,6 @@
 // using tspeg to represent the grammar and to generate a parser in TS
 // This file is intended purely to document (without computed fields)
 
-// Note: this first token is the entrypoint for the rest of the grammar
-start           :=    message
-
 // "Core Rules" from RFC5234
 // See: https://datatracker.ietf.org/doc/html/rfc5234#appendix-B.1
 CR              :=    '\x0D'              // carriage return, i.e. '\r'

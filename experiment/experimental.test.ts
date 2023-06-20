@@ -1,16 +1,16 @@
 import { describe, expect, test } from '@jest/globals';
-import { Parser, parse, dot_atom as dot_atom2, fields, subject, unstructured_1, FWS_1, FWS_2 } from './message.fields';
+import { Parser, parse, dot_atom as dot_atom2, fields, subject, local_part, addr_spec } from './message.fields';
 import { readFileSync } from 'fs'
+import { Email } from './Email';
 
 let input = readFileSync('../test/resources/hello.eml', 'ascii')
 let ast = parse(input).ast!
+let email = new Email(ast)
 
 describe('fields', () => {
-  test('subject', () => {
-    let f: fields = ast.fields as fields
-    let s: subject = f.subject!
-    let val = s.value
-    expect(s.name).toBe('Subject')
-    expect(val).toBe('Re: ASDASDAS')
+
+  test('to', () => {
+    // TODO
   })
+  test('subject', () => { expect(email.subject()).toBe("Re: ASDASDAS") })
 })

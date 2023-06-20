@@ -4,153 +4,151 @@
 * import { concat } from './util'
 * ---
 * start := message
+* CFWS := A={ B={ FWS? D=comment }+ FWS? } | FWS
 * CR := '\x0D'
 * CRLF := '\r\n'
 * DIGIT := '\d'
-* TWO_DIGIT := '\d\d'
-* FOUR_DIGIT := '\d\d\d\d'
 * DQUOTE := '\x22'
+* FOUR_DIGIT := '\d\d\d\d'
+* FWS := A={ B={ C=WSP* D=CRLF }? E=WSP+ } | F=obs_FWS
 * HTAB := '\x09'
 * LF := '\x0A'
 * SP := '\x20'
+* TWO_DIGIT := '\d\d'
 * VCHAR := '[\x21-\x7E]'
 * WSP := SP | HTAB
-* quoted_pair := A={ B='\\' C={ D=VCHAR | WSP } } | F=obs_qp
-* FWS := A={ B={ C=WSP* D=CRLF }? E=WSP+ } | F=obs_FWS
-* ctext := A='[\x21-\x27]' | B='[\x2a-\x5b]' | C='[\x5d-\x7e]' | D=obs_ctext
+* _998text := '[\x01-\x09\x0B\x0C\x0E-\x7F]{998,}'
+* addr_spec := A=local_part B='@' C=domain
+* address := mailbox | group
+* address_list := A={ B=address C={ D=',' E=address }* } | F=obs_addr_list
+* angle_addr := CFWS? B='<' C=addr_spec D='>' CFWS? | F=obs_angle_addr
+* atext := '[A-Za-z0-9!#$%&\x27\*\+\-\/=?^_`{|}~]'
+* atom := A=CFWS? B=atext+ C=CFWS?
+* bcc := A='Bcc' B=':' C={ address_list | CFWS }? CRLF
+* body := A={ B={ C=_998text CRLF }* E=_998text } | F=obs_body
+* cc := A='Cc' B=':' C=address_list CRLF
 * ccontent := A=ctext | B=quoted_pair | C=comment
 * comment := A='\(' B={ FWS? D=ccontent }* FWS? F='\)'
-* CFWS := A={ B={ FWS? D=comment }+ FWS? } | FWS
-* atext := '[A-Za-z0-9!#$%&\x27\*\+\-\/=?^_`{|}~]'
-* atom := CFWS? B=atext+ CFWS?
-* dot_atom_text := A=atext+ B={ C='\.' D=atext+ }*
-* dot_atom := A=CFWS? B=dot_atom_text C=CFWS?
-* specials := '\(' | '\)' | '[<>]' | '\[' | '\]' | '[:;@]' | '\\' | ',' | '\.' | DQUOTE
-* qtext := '\x21' | '[\x23-\x5b]' | '[\x5d-\x7e]' | obs_qtext
-* qcontent := qtext | quoted_pair
-* quoted_string := CFWS? B=DQUOTE C={ FWS? E=qcontent }* FWS? G=DQUOTE CFWS?
-* word := atom | quoted_string
-* phrase := word+ | obs_phrase
-* unstructured := A={ B={ C=FWS? D=VCHAR }* WSP* } | F=obs_unstruct
-* date_time := A={ B=day_of_week C=',' }? D=date E=time CFWS?
-* day_of_week := A={ FWS? C=day_name } | D=obs_day_of_week
-* day_name := 'Mon' | 'Tue' | 'Wed' | 'Thu' | 'Fri' | 'Sat' | 'Sun'
+* comments := A='Comments' B=':' C=unstructured CRLF
+* ctext := A='[\x21-\x27]' | B='[\x2a-\x5b]' | C='[\x5d-\x7e]' | D=obs_ctext
 * date := A=day B=month C=year
+* date_time := A={ B=day_of_week C=',' }? D=date E=time CFWS?
 * day := A={ FWS? C=DIGIT D=DIGIT? FWS } | F=obs_day
-* month := 'Jan' | 'Feb' | 'Mar' | 'Apr' | 'May' | 'Jun' | 'Jul' | 'Aug' | 'Sep' | 'Oct' | 'Nov' | 'Dec'
-* year := A={ B=FWS C=FOUR_DIGIT D=DIGIT* E=FWS } | F=obs_year
-* time := A=time_of_day B=zone
-* time_of_day := A=hour B=':' C=minute D={ E=':' F=second }?
-* hour := A=TWO_DIGIT | B=obs_hour
-* minute := A=TWO_DIGIT | B=obs_minute
-* second := A=TWO_DIGIT | B=obs_second
-* zone := A={ FWS C={ D='\+' | E='\-' } F=FOUR_DIGIT } | G=obs_zone
-* address := mailbox | group
-* mailbox := name_addr | addr_spec
-* name_addr := A=display_name? B=angle_addr
-* angle_addr := CFWS? B='<' C=addr_spec D='>' CFWS? | F=obs_angle_addr
-* group := A=display_name B=':' C=group_list? D=';' CFWS?
+* day_name := 'Mon' | 'Tue' | 'Wed' | 'Thu' | 'Fri' | 'Sat' | 'Sun'
+* day_of_week := A={ FWS? C=day_name } | D=obs_day_of_week
 * display_name := phrase
-* mailbox_list := A={ B=mailbox C={ D=',' E=mailbox }* } | F=obs_mbox_list
-* address_list := A={ B=address C={ D=',' E=address }* } | F=obs_addr_list
-* group_list := mailbox_list | CFWS | obs_group_list
-* addr_spec := A=local_part B='@' C=domain
-* local_part := dot_atom | quoted_string | obs_local_part
 * domain := dot_atom | domain_literal | obs_domain
 * domain_literal := CFWS? B='\[' C={ FWS? E=dtext }* FWS? G='\]' CFWS?
+* dot_atom := A=CFWS? B=dot_atom_text C=CFWS?
+* dot_atom_text := A=atext+ B={ C='\.' D=atext+ }*
 * dtext := '[\x21-\x5a]' | '[\x5e-\x7e]' | obs_dtext
-* message := fields={ fields | obs_fields } D={ CRLF F=body }?
-* body := A={ B={ C=_998text CRLF }* E=_998text } | F=obs_body
-* text := '[\x01-\x09]' | '\x0B' | '\x0C' | '[\x0E-\x7f]'
-* _998text := '[\x01-\x09\x0B\x0C\x0E-\x7F]{998,}'
+* field_name := ftext+
 * fields := A={ B=trace C=optional_field* | D={ resent_date | resent_from | resent_sender | resent_to | resent_cc | resent_bcc | resent_msg_id }* }* L={ orig_date | from | sender | reply_to | to | cc | bcc | message_id | in_reply_to | references | subject | comments | keywords | optional_field }*
-* 	.subject = subject | undefined { return this.L.find(field => field.kind === "subject") as subject }
-* orig_date := A='Date' B=':' C=date_time CRLF
 * from := A='From' B=':' C=mailbox_list CRLF
-* sender := A='Sender' B=':' C=mailbox CRLF
-* reply_to := A='Reply_To' B=':' C=address_list CRLF
-* to := A='To' B=':' C=address_list CRLF
-* cc := A='Cc' B=':' C=address_list CRLF
-* bcc := A='Bcc' B=':' C={ address_list | CFWS }? CRLF
-* message_id := A='Message-ID' B=':' C=msg_id CRLF
-* in_reply_to := A='In-Reply-To' B=':' C=msg_id+ CRLF
-* references := A='References' B=':' C=msg_id+ CRLF
-* msg_id := CFWS? B='<' C=id_left D='@' E=id_right '>' G=CFWS?
+* ftext := '[\x21-\x39]' | '[\x3b-\x7e]'
+* group := A=display_name B=':' C=group_list? D=';' CFWS?
+* group_list := mailbox_list | CFWS | obs_group_list
+* hour := A=TWO_DIGIT | B=obs_hour
 * id_left := dot_atom_text | obs_id_left
 * id_right := dot_atom_text | no_fold_literal | obs_id_right
-* no_fold_literal := A='\[' B=dtext* C='\]'
-* subject := name='Subject' B=':' _value=unstructured D=CRLF
-* 	.value = string { return concat(this._value).trim() }
-* comments := A='Comments' B=':' C=unstructured CRLF
+* in_reply_to := A='In-Reply-To' B=':' C=msg_id+ CRLF
 * keywords := A='Keywords' B=':' C=phrase D={ E=',' F=phrase }* CRLF
-* resent_date := A='Resent-Date' B=':' C=date_time CRLF
-* resent_from := A='Resent-From' B=':' C=mailbox_list CRLF
-* resent_sender := A='Resent-Sender' B=':' C=mailbox CRLF
-* resent_to := A='Resent-To' B=':' C=address_list CRLF
-* resent_cc := A='Resent-Cc' B=':' C=address_list CRLF
-* resent_bcc := A='Resent-Bcc' B=':' C={ D=address_list | CFWS }? CRLF
-* resent_msg_id := A='Resent-Message_ID' B=':' C=msg_id CRLF
-* trace := A=return_path? B=received+
-* return_path := A='Return-Path' B=':' C=path CRLF
-* path := angle_addr | { CFWS? '<' CFWS '>' CFWS? }
-* received := A='Received' B=':' C=received_token* D=';' E=date_time CRLF
-* received_token := word | angle_addr | addr_spec | domain
-* optional_field := A=field_name B=':' C=unstructured CRLF
-* field_name := ftext+
-* ftext := '[\x21-\x39]' | '[\x3b-\x7e]'
-* obs_NO_WS_CTL := '[\x01-\x08]' | '\x0B' | C='\x0C' | D='[\x0E-\x1F]' | E='\x7F'
-* obs_ctext := obs_NO_WS_CTL
-* obs_qtext := obs_NO_WS_CTL
-* obs_utext := '\x00' | obs_NO_WS_CTL | VCHAR
-* obs_qp := A='\\' B={ '\x00' | obs_NO_WS_CTL | LF | CR }
-* obs_body := A={ B={ LF* CR* E={ F={ G='\x00' | H=text } LF* CR* }* } | CRLF }*
-* obs_unstruct := A={ B={ LF* CR* E={ F=obs_utext LF* CR* }* } | FWS }*
-* obs_phrase := A=word B={ word | '.' | CFWS }
-* obs_phrase_list := A={ phrase | CFWS } D={ E=',' F={ phrase | CFWS }? }*
+* local_part := dot_atom | quoted_string | obs_local_part
+* mailbox := name_addr | addr_spec
+* mailbox_list := A={ B=mailbox C={ D=',' E=mailbox }* } | F=obs_mbox_list
+* message := fields={ fields | obs_fields } D={ CRLF F=body }?
+* message_id := A='Message-ID' B=':' C=msg_id CRLF
+* minute := A=TWO_DIGIT | B=obs_minute
+* month := 'Jan' | 'Feb' | 'Mar' | 'Apr' | 'May' | 'Jun' | 'Jul' | 'Aug' | 'Sep' | 'Oct' | 'Nov' | 'Dec'
+* msg_id := CFWS? B='<' C=id_left D='@' E=id_right '>' G=CFWS?
+* name_addr := A=display_name? B=angle_addr
+* no_fold_literal := A='\[' B=dtext* C='\]'
 * obs_FWS := A=WSP+ { CRLF WSP+ }*
-* obs_day_of_week := CFWS? B=day_name CFWS?
-* obs_day := A=CFWS? B=DIGIT C=DIGIT? CFWS?
-* obs_year := A=CFWS? B=TWO_DIGIT C=DIGIT* CFWS?
-* obs_hour := CFWS? B=TWO_DIGIT CFWS?
-* obs_minute := CFWS? B=TWO_DIGIT CFWS?
-* obs_second := CFWS? B=TWO_DIGIT CFWS?
-* obs_zone := 'UT' | 'GMT' | 'EST' | 'EDT' | 'CST' | 'CDT' | 'MST' | 'MDT' | 'PST' | 'PDT' | '[\x41-\x49]' | '[\x4b-\x5a]' | '[\x61-\x69]' | '[\x6b-\x7a]'
-* obs_angle_addr := CFWS? B='<' C=obs_route D=addr_spec E='>' CFWS?
-* obs_route := obs_domain_list B=':'
-* obs_domain_list := A={ B=CFWS | C=',' }* D='@' E=domain F={ G=',' CFWS? I={ J='@' K=domain }? }*
-* obs_mbox_list := A={ B=CFWS? C=',' }* D=mailbox E={ F=',' G={ mailbox | I=CFWS }? }*
+* obs_NO_WS_CTL := '[\x01-\x08]' | '\x0B' | C='\x0C' | D='[\x0E-\x1F]' | E='\x7F'
 * obs_addr_list := A={ B=CFWS? C=',' }* D=address E={ F=',' G={ address | I=CFWS }? }*
-* obs_group_list := A={ B=CFWS? C=',' }+ CFWS?
-* obs_local_part := A=word B={ C='\.' D=word }*
+* obs_angle_addr := CFWS? B='<' C=obs_route D=addr_spec E='>' CFWS?
+* obs_bcc := A='Bcc' WSP* C=':' D={ E=address_list | F={ G={ H=CFWS? I=',' }* CFWS? } } CRLF
+* obs_body := A={ B={ LF* CR* E={ F={ G='\x00' | H=text } LF* CR* }* } | CRLF }*
+* obs_cc := A='Cc' WSP* C=':' D=address_list CRLF
+* obs_comments := A='Comments' WSP* C=':' D=unstructured CRLF
+* obs_ctext := obs_NO_WS_CTL
+* obs_day := A=CFWS? B=DIGIT C=DIGIT? CFWS?
+* obs_day_of_week := CFWS? B=day_name CFWS?
 * obs_domain := A=atom B={ C='\.' D=atom }*
+* obs_domain_list := A={ B=CFWS | C=',' }* D='@' E=domain F={ G=',' CFWS? I={ J='@' K=domain }? }*
 * obs_dtext := obs_NO_WS_CTL | B=quoted_pair
 * obs_fields := A={ B=obs_return | C=obs_received | D=obs_orig_date | obs_from | obs_sender | obs_reply_to | obs_to | obs_cc | obs_bcc | obs_message_id | L=obs_in_reply_to | obs_references | obs_subject | obs_comments | obs_keywords | obs_resent_date | obs_resent_from | obs_resent_send | obs_resent_rply | obs_resent_to | obs_resent_cc | obs_resent_bcc | obs_resent_mid | obs_optional }*
-* obs_orig_date := A='Date' WSP* C=':' D=date_time CRLF
 * obs_from := A='From' WSP* C=':' D=mailbox_list CRLF
-* obs_sender := A='Sender' WSP* C=':' D=mailbox CRLF
-* obs_reply_to := A='Reply-To' WSP* C=':' D=address_list CRLF
-* obs_to := A='To' WSP* C=':' D=address_list CRLF
-* obs_cc := A='Cc' WSP* C=':' D=address_list CRLF
-* obs_bcc := A='Bcc' WSP* C=':' D={ E=address_list | F={ G={ H=CFWS? I=',' }* CFWS? } } CRLF
-* obs_message_id := A='Message-ID' WSP* C=':' D=msg_id CRLF
-* obs_in_reply_to := A='In-Reply-To' WSP* C=':' D={ phrase | msg_id }* CRLF
-* obs_references := A='References' WSP* C=':' D={ phrase | msg_id }* CRLF
+* obs_group_list := A={ B=CFWS? C=',' }+ CFWS?
+* obs_hour := CFWS? B=TWO_DIGIT CFWS?
 * obs_id_left := local_part
 * obs_id_right := domain
-* obs_subject := A='Subject' WSP* C=':' D=unstructured CRLF
-* obs_comments := A='Comments' WSP* C=':' D=unstructured CRLF
+* obs_in_reply_to := A='In-Reply-To' WSP* C=':' D={ phrase | msg_id }* CRLF
 * obs_keywords := A='Keywords' WSP* C=':' D=obs_phrase_list CRLF
-* obs_resent_from := A='Resent-From' WSP* C=':' D=mailbox_list CRLF
-* obs_resent_send := A='Resent-Sender' WSP* C=':' D=mailbox CRLF
-* obs_resent_date := A='Resent-Date' WSP* C=':' D=date_time CRLF
-* obs_resent_to := A='Resent-To' WSP* C=':' D=address_list E=CRLF
-* obs_resent_cc := A='Resent-Cc' WSP* C=':' D=address_list CRLF
+* obs_local_part := A=word B={ C='\.' D=word }*
+* obs_mbox_list := A={ B=CFWS? C=',' }* D=mailbox E={ F=',' G={ mailbox | I=CFWS }? }*
+* obs_message_id := A='Message-ID' WSP* C=':' D=msg_id CRLF
+* obs_minute := CFWS? B=TWO_DIGIT CFWS?
+* obs_optional := A=field_name WSP* C=':' D=unstructured CRLF
+* obs_orig_date := A='Date' WSP* C=':' D=date_time CRLF
+* obs_phrase := A=word B={ word | '.' | CFWS }
+* obs_phrase_list := A={ phrase | CFWS } D={ E=',' F={ phrase | CFWS }? }*
+* obs_qp := A='\\' B={ '\x00' | obs_NO_WS_CTL | LF | CR }
+* obs_qtext := obs_NO_WS_CTL
+* obs_received := A='Received' WSP* C=':' D=received_token* E=CRLF
+* obs_references := A='References' WSP* C=':' D={ phrase | msg_id }* CRLF
+* obs_reply_to := A='Reply-To' WSP* C=':' D=address_list CRLF
 * obs_resent_bcc := A='Resent-Bcc' WSP* C=':' D={ E=address_list | F={ G={ H=CFWS? I=',' }* CFWS? } } CRLF
+* obs_resent_cc := A='Resent-Cc' WSP* C=':' D=address_list CRLF
+* obs_resent_date := A='Resent-Date' WSP* C=':' D=date_time CRLF
+* obs_resent_from := A='Resent-From' WSP* C=':' D=mailbox_list CRLF
 * obs_resent_mid := A='Resent-Message-ID' WSP* C=':' D=msg_id CRLF
 * obs_resent_rply := A='Resent-Reply-To' WSP* C=':' D=address_list CRLF
+* obs_resent_send := A='Resent-Sender' WSP* C=':' D=mailbox CRLF
+* obs_resent_to := A='Resent-To' WSP* C=':' D=address_list E=CRLF
 * obs_return := A='Return-Path' WSP* C=':' D=path CRLF
-* obs_received := A='Received' WSP* C=':' D=received_token* E=CRLF
-* obs_optional := A=field_name WSP* C=':' D=unstructured CRLF
+* obs_route := obs_domain_list B=':'
+* obs_second := CFWS? B=TWO_DIGIT CFWS?
+* obs_sender := A='Sender' WSP* C=':' D=mailbox CRLF
+* obs_subject := _name='Subject' WSP* C=':' _value=unstructured CRLF
+* obs_to := A='To' WSP* C=':' D=address_list CRLF
+* obs_unstruct := A={ B={ LF* CR* E={ F=obs_utext LF* CR* }* } | FWS }*
+* obs_utext := '\x00' | obs_NO_WS_CTL | VCHAR
+* obs_year := A=CFWS? B=TWO_DIGIT C=DIGIT* CFWS?
+* obs_zone := 'UT' | 'GMT' | 'EST' | 'EDT' | 'CST' | 'CDT' | 'MST' | 'MDT' | 'PST' | 'PDT' | '[\x41-\x49]' | '[\x4b-\x5a]' | '[\x61-\x69]' | '[\x6b-\x7a]'
+* optional_field := A=field_name B=':' C=unstructured CRLF
+* orig_date := A='Date' B=':' C=date_time CRLF
+* path := angle_addr | { CFWS? '<' CFWS '>' CFWS? }
+* phrase := word+ | obs_phrase
+* qcontent := qtext | quoted_pair
+* qtext := '\x21' | '[\x23-\x5b]' | '[\x5d-\x7e]' | obs_qtext
+* quoted_pair := A={ B='\\' C={ D=VCHAR | WSP } } | F=obs_qp
+* quoted_string := CFWS? B=DQUOTE C={ FWS? E=qcontent }* FWS? G=DQUOTE CFWS?
+* received := A='Received' B=':' C=received_token* D=';' E=date_time CRLF
+* received_token := word | angle_addr | addr_spec | domain
+* references := A='References' B=':' C=msg_id+ CRLF
+* reply_to := A='Reply_To' B=':' C=address_list CRLF
+* resent_bcc := A='Resent-Bcc' B=':' C={ D=address_list | CFWS }? CRLF
+* resent_cc := A='Resent-Cc' B=':' C=address_list CRLF
+* resent_date := A='Resent-Date' B=':' C=date_time CRLF
+* resent_from := A='Resent-From' B=':' C=mailbox_list CRLF
+* resent_msg_id := A='Resent-Message_ID' B=':' C=msg_id CRLF
+* resent_sender := A='Resent-Sender' B=':' C=mailbox CRLF
+* resent_to := A='Resent-To' B=':' C=address_list CRLF
+* return_path := A='Return-Path' B=':' C=path CRLF
+* second := A=TWO_DIGIT | B=obs_second
+* sender := A='Sender' B=':' C=mailbox CRLF
+* specials := '\(' | '\)' | '[<>]' | '\[' | '\]' | '[:;@]' | '\\' | ',' | '\.' | DQUOTE
+* subject := _name='Subject' B=':' _value=unstructured CRLF
+* text := '[\x01-\x09]' | '\x0B' | '\x0C' | '[\x0E-\x7f]'
+* time := A=time_of_day B=zone
+* time_of_day := A=hour B=':' C=minute D={ E=':' F=second }?
+* to := name='To' B=':' _address_list=address_list CRLF
+* trace := A=return_path? B=received+
+* unstructured := A={ B={ C=FWS? D=VCHAR }* WSP* } | F=obs_unstruct
+* word := atom | quoted_string
+* year := A={ B=FWS C=FOUR_DIGIT D=DIGIT* E=FWS } | F=obs_year
+* zone := A={ FWS C={ D='\+' | E='\-' } F=FOUR_DIGIT } | G=obs_zone
 */
 
 import { concat } from './util'
@@ -162,76 +160,62 @@ export interface ASTNodeIntf {
 }
 export enum ASTKinds {
     start = "start",
+    CFWS_1 = "CFWS_1",
+    CFWS_2 = "CFWS_2",
+    CFWS_$0 = "CFWS_$0",
+    CFWS_$0_$0 = "CFWS_$0_$0",
     CR = "CR",
     CRLF = "CRLF",
     DIGIT = "DIGIT",
-    TWO_DIGIT = "TWO_DIGIT",
-    FOUR_DIGIT = "FOUR_DIGIT",
     DQUOTE = "DQUOTE",
-    HTAB = "HTAB",
-    LF = "LF",
-    SP = "SP",
-    VCHAR = "VCHAR",
-    WSP_1 = "WSP_1",
-    WSP_2 = "WSP_2",
-    quoted_pair_1 = "quoted_pair_1",
-    quoted_pair_2 = "quoted_pair_2",
-    quoted_pair_$0 = "quoted_pair_$0",
-    quoted_pair_$0_$0_1 = "quoted_pair_$0_$0_1",
-    quoted_pair_$0_$0_2 = "quoted_pair_$0_$0_2",
+    FOUR_DIGIT = "FOUR_DIGIT",
     FWS_1 = "FWS_1",
     FWS_2 = "FWS_2",
     FWS_$0 = "FWS_$0",
     FWS_$0_$0 = "FWS_$0_$0",
-    ctext_1 = "ctext_1",
-    ctext_2 = "ctext_2",
-    ctext_3 = "ctext_3",
-    ctext_4 = "ctext_4",
+    HTAB = "HTAB",
+    LF = "LF",
+    SP = "SP",
+    TWO_DIGIT = "TWO_DIGIT",
+    VCHAR = "VCHAR",
+    WSP_1 = "WSP_1",
+    WSP_2 = "WSP_2",
+    _998text = "_998text",
+    addr_spec = "addr_spec",
+    address_1 = "address_1",
+    address_2 = "address_2",
+    address_list_1 = "address_list_1",
+    address_list_2 = "address_list_2",
+    address_list_$0 = "address_list_$0",
+    address_list_$0_$0 = "address_list_$0_$0",
+    angle_addr_1 = "angle_addr_1",
+    angle_addr_2 = "angle_addr_2",
+    atext = "atext",
+    atom = "atom",
+    bcc = "bcc",
+    bcc_$0_1 = "bcc_$0_1",
+    bcc_$0_2 = "bcc_$0_2",
+    body_1 = "body_1",
+    body_2 = "body_2",
+    body_$0 = "body_$0",
+    body_$0_$0 = "body_$0_$0",
+    cc = "cc",
     ccontent_1 = "ccontent_1",
     ccontent_2 = "ccontent_2",
     ccontent_3 = "ccontent_3",
     comment = "comment",
     comment_$0 = "comment_$0",
-    CFWS_1 = "CFWS_1",
-    CFWS_2 = "CFWS_2",
-    CFWS_$0 = "CFWS_$0",
-    CFWS_$0_$0 = "CFWS_$0_$0",
-    atext = "atext",
-    atom = "atom",
-    dot_atom_text = "dot_atom_text",
-    dot_atom_text_$0 = "dot_atom_text_$0",
-    dot_atom = "dot_atom",
-    specials_1 = "specials_1",
-    specials_2 = "specials_2",
-    specials_3 = "specials_3",
-    specials_4 = "specials_4",
-    specials_5 = "specials_5",
-    specials_6 = "specials_6",
-    specials_7 = "specials_7",
-    specials_8 = "specials_8",
-    specials_9 = "specials_9",
-    specials_10 = "specials_10",
-    qtext_1 = "qtext_1",
-    qtext_2 = "qtext_2",
-    qtext_3 = "qtext_3",
-    qtext_4 = "qtext_4",
-    qcontent_1 = "qcontent_1",
-    qcontent_2 = "qcontent_2",
-    quoted_string = "quoted_string",
-    quoted_string_$0 = "quoted_string_$0",
-    word_1 = "word_1",
-    word_2 = "word_2",
-    phrase_1 = "phrase_1",
-    phrase_2 = "phrase_2",
-    unstructured_1 = "unstructured_1",
-    unstructured_2 = "unstructured_2",
-    unstructured_$0 = "unstructured_$0",
-    unstructured_$0_$0 = "unstructured_$0_$0",
+    comments = "comments",
+    ctext_1 = "ctext_1",
+    ctext_2 = "ctext_2",
+    ctext_3 = "ctext_3",
+    ctext_4 = "ctext_4",
+    date = "date",
     date_time = "date_time",
     date_time_$0 = "date_time_$0",
-    day_of_week_1 = "day_of_week_1",
-    day_of_week_2 = "day_of_week_2",
-    day_of_week_$0 = "day_of_week_$0",
+    day_1 = "day_1",
+    day_2 = "day_2",
+    day_$0 = "day_$0",
     day_name_1 = "day_name_1",
     day_name_2 = "day_name_2",
     day_name_3 = "day_name_3",
@@ -239,84 +223,22 @@ export enum ASTKinds {
     day_name_5 = "day_name_5",
     day_name_6 = "day_name_6",
     day_name_7 = "day_name_7",
-    date = "date",
-    day_1 = "day_1",
-    day_2 = "day_2",
-    day_$0 = "day_$0",
-    month_1 = "month_1",
-    month_2 = "month_2",
-    month_3 = "month_3",
-    month_4 = "month_4",
-    month_5 = "month_5",
-    month_6 = "month_6",
-    month_7 = "month_7",
-    month_8 = "month_8",
-    month_9 = "month_9",
-    month_10 = "month_10",
-    month_11 = "month_11",
-    month_12 = "month_12",
-    year_1 = "year_1",
-    year_2 = "year_2",
-    year_$0 = "year_$0",
-    time = "time",
-    time_of_day = "time_of_day",
-    time_of_day_$0 = "time_of_day_$0",
-    hour_1 = "hour_1",
-    hour_2 = "hour_2",
-    minute_1 = "minute_1",
-    minute_2 = "minute_2",
-    second_1 = "second_1",
-    second_2 = "second_2",
-    zone_1 = "zone_1",
-    zone_2 = "zone_2",
-    zone_$0 = "zone_$0",
-    zone_$0_$0_1 = "zone_$0_$0_1",
-    zone_$0_$0_2 = "zone_$0_$0_2",
-    address_1 = "address_1",
-    address_2 = "address_2",
-    mailbox_1 = "mailbox_1",
-    mailbox_2 = "mailbox_2",
-    name_addr = "name_addr",
-    angle_addr_1 = "angle_addr_1",
-    angle_addr_2 = "angle_addr_2",
-    group = "group",
+    day_of_week_1 = "day_of_week_1",
+    day_of_week_2 = "day_of_week_2",
+    day_of_week_$0 = "day_of_week_$0",
     display_name = "display_name",
-    mailbox_list_1 = "mailbox_list_1",
-    mailbox_list_2 = "mailbox_list_2",
-    mailbox_list_$0 = "mailbox_list_$0",
-    mailbox_list_$0_$0 = "mailbox_list_$0_$0",
-    address_list_1 = "address_list_1",
-    address_list_2 = "address_list_2",
-    address_list_$0 = "address_list_$0",
-    address_list_$0_$0 = "address_list_$0_$0",
-    group_list_1 = "group_list_1",
-    group_list_2 = "group_list_2",
-    group_list_3 = "group_list_3",
-    addr_spec = "addr_spec",
-    local_part_1 = "local_part_1",
-    local_part_2 = "local_part_2",
-    local_part_3 = "local_part_3",
     domain_1 = "domain_1",
     domain_2 = "domain_2",
     domain_3 = "domain_3",
     domain_literal = "domain_literal",
     domain_literal_$0 = "domain_literal_$0",
+    dot_atom = "dot_atom",
+    dot_atom_text = "dot_atom_text",
+    dot_atom_text_$0 = "dot_atom_text_$0",
     dtext_1 = "dtext_1",
     dtext_2 = "dtext_2",
     dtext_3 = "dtext_3",
-    message = "message",
-    message_$0_1 = "message_$0_1",
-    message_$0_2 = "message_$0_2",
-    message_$1 = "message_$1",
-    body_1 = "body_1",
-    body_2 = "body_2",
-    body_$0 = "body_$0",
-    body_$0_$0 = "body_$0_$0",
-    text_1 = "text_1",
-    text_2 = "text_2",
-    text_3 = "text_3",
-    text_4 = "text_4",
-    _998text = "_998text",
+    field_name = "field_name",
     fields = "fields",
     fields_$0_1 = "fields_$0_1",
     fields_$0_2 = "fields_$0_2",
@@ -341,67 +263,72 @@ export enum ASTKinds {
     fields_$1_12 = "fields_$1_12",
     fields_$1_13 = "fields_$1_13",
     fields_$1_14 = "fields_$1_14",
-    orig_date = "orig_date",
     from = "from",
-    sender = "sender",
-    reply_to = "reply_to",
-    to = "to",
-    cc = "cc",
-    bcc = "bcc",
-    bcc_$0_1 = "bcc_$0_1",
-    bcc_$0_2 = "bcc_$0_2",
-    message_id = "message_id",
-    in_reply_to = "in_reply_to",
-    references = "references",
-    msg_id = "msg_id",
+    ftext_1 = "ftext_1",
+    ftext_2 = "ftext_2",
+    group = "group",
+    group_list_1 = "group_list_1",
+    group_list_2 = "group_list_2",
+    group_list_3 = "group_list_3",
+    hour_1 = "hour_1",
+    hour_2 = "hour_2",
     id_left_1 = "id_left_1",
     id_left_2 = "id_left_2",
     id_right_1 = "id_right_1",
     id_right_2 = "id_right_2",
     id_right_3 = "id_right_3",
-    no_fold_literal = "no_fold_literal",
-    subject = "subject",
-    comments = "comments",
+    in_reply_to = "in_reply_to",
     keywords = "keywords",
     keywords_$0 = "keywords_$0",
-    resent_date = "resent_date",
-    resent_from = "resent_from",
-    resent_sender = "resent_sender",
-    resent_to = "resent_to",
-    resent_cc = "resent_cc",
-    resent_bcc = "resent_bcc",
-    resent_bcc_$0_1 = "resent_bcc_$0_1",
-    resent_bcc_$0_2 = "resent_bcc_$0_2",
-    resent_msg_id = "resent_msg_id",
-    trace = "trace",
-    return_path = "return_path",
-    path_1 = "path_1",
-    path_2 = "path_2",
-    path_$0 = "path_$0",
-    received = "received",
-    received_token_1 = "received_token_1",
-    received_token_2 = "received_token_2",
-    received_token_3 = "received_token_3",
-    received_token_4 = "received_token_4",
-    optional_field = "optional_field",
-    field_name = "field_name",
-    ftext_1 = "ftext_1",
-    ftext_2 = "ftext_2",
+    local_part_1 = "local_part_1",
+    local_part_2 = "local_part_2",
+    local_part_3 = "local_part_3",
+    mailbox_1 = "mailbox_1",
+    mailbox_2 = "mailbox_2",
+    mailbox_list_1 = "mailbox_list_1",
+    mailbox_list_2 = "mailbox_list_2",
+    mailbox_list_$0 = "mailbox_list_$0",
+    mailbox_list_$0_$0 = "mailbox_list_$0_$0",
+    message = "message",
+    message_$0_1 = "message_$0_1",
+    message_$0_2 = "message_$0_2",
+    message_$1 = "message_$1",
+    message_id = "message_id",
+    minute_1 = "minute_1",
+    minute_2 = "minute_2",
+    month_1 = "month_1",
+    month_2 = "month_2",
+    month_3 = "month_3",
+    month_4 = "month_4",
+    month_5 = "month_5",
+    month_6 = "month_6",
+    month_7 = "month_7",
+    month_8 = "month_8",
+    month_9 = "month_9",
+    month_10 = "month_10",
+    month_11 = "month_11",
+    month_12 = "month_12",
+    msg_id = "msg_id",
+    name_addr = "name_addr",
+    no_fold_literal = "no_fold_literal",
+    obs_FWS = "obs_FWS",
+    obs_FWS_$0 = "obs_FWS_$0",
     obs_NO_WS_CTL_1 = "obs_NO_WS_CTL_1",
     obs_NO_WS_CTL_2 = "obs_NO_WS_CTL_2",
     obs_NO_WS_CTL_3 = "obs_NO_WS_CTL_3",
     obs_NO_WS_CTL_4 = "obs_NO_WS_CTL_4",
     obs_NO_WS_CTL_5 = "obs_NO_WS_CTL_5",
-    obs_ctext = "obs_ctext",
-    obs_qtext = "obs_qtext",
-    obs_utext_1 = "obs_utext_1",
-    obs_utext_2 = "obs_utext_2",
-    obs_utext_3 = "obs_utext_3",
-    obs_qp = "obs_qp",
-    obs_qp_$0_1 = "obs_qp_$0_1",
-    obs_qp_$0_2 = "obs_qp_$0_2",
-    obs_qp_$0_3 = "obs_qp_$0_3",
-    obs_qp_$0_4 = "obs_qp_$0_4",
+    obs_addr_list = "obs_addr_list",
+    obs_addr_list_$0 = "obs_addr_list_$0",
+    obs_addr_list_$1 = "obs_addr_list_$1",
+    obs_addr_list_$1_$0_1 = "obs_addr_list_$1_$0_1",
+    obs_addr_list_$1_$0_2 = "obs_addr_list_$1_$0_2",
+    obs_angle_addr = "obs_angle_addr",
+    obs_bcc = "obs_bcc",
+    obs_bcc_$0_1 = "obs_bcc_$0_1",
+    obs_bcc_$0_2 = "obs_bcc_$0_2",
+    obs_bcc_$0_$0 = "obs_bcc_$0_$0",
+    obs_bcc_$0_$0_$0 = "obs_bcc_$0_$0_$0",
     obs_body = "obs_body",
     obs_body_$0_1 = "obs_body_$0_1",
     obs_body_$0_2 = "obs_body_$0_2",
@@ -409,66 +336,18 @@ export enum ASTKinds {
     obs_body_$0_$0_$0 = "obs_body_$0_$0_$0",
     obs_body_$0_$0_$0_$0_1 = "obs_body_$0_$0_$0_$0_1",
     obs_body_$0_$0_$0_$0_2 = "obs_body_$0_$0_$0_$0_2",
-    obs_unstruct = "obs_unstruct",
-    obs_unstruct_$0_1 = "obs_unstruct_$0_1",
-    obs_unstruct_$0_2 = "obs_unstruct_$0_2",
-    obs_unstruct_$0_$0 = "obs_unstruct_$0_$0",
-    obs_unstruct_$0_$0_$0 = "obs_unstruct_$0_$0_$0",
-    obs_phrase = "obs_phrase",
-    obs_phrase_$0_1 = "obs_phrase_$0_1",
-    obs_phrase_$0_2 = "obs_phrase_$0_2",
-    obs_phrase_$0_3 = "obs_phrase_$0_3",
-    obs_phrase_list = "obs_phrase_list",
-    obs_phrase_list_$0_1 = "obs_phrase_list_$0_1",
-    obs_phrase_list_$0_2 = "obs_phrase_list_$0_2",
-    obs_phrase_list_$1 = "obs_phrase_list_$1",
-    obs_phrase_list_$1_$0_1 = "obs_phrase_list_$1_$0_1",
-    obs_phrase_list_$1_$0_2 = "obs_phrase_list_$1_$0_2",
-    obs_FWS = "obs_FWS",
-    obs_FWS_$0 = "obs_FWS_$0",
-    obs_day_of_week = "obs_day_of_week",
+    obs_cc = "obs_cc",
+    obs_comments = "obs_comments",
+    obs_ctext = "obs_ctext",
     obs_day = "obs_day",
-    obs_year = "obs_year",
-    obs_hour = "obs_hour",
-    obs_minute = "obs_minute",
-    obs_second = "obs_second",
-    obs_zone_1 = "obs_zone_1",
-    obs_zone_2 = "obs_zone_2",
-    obs_zone_3 = "obs_zone_3",
-    obs_zone_4 = "obs_zone_4",
-    obs_zone_5 = "obs_zone_5",
-    obs_zone_6 = "obs_zone_6",
-    obs_zone_7 = "obs_zone_7",
-    obs_zone_8 = "obs_zone_8",
-    obs_zone_9 = "obs_zone_9",
-    obs_zone_10 = "obs_zone_10",
-    obs_zone_11 = "obs_zone_11",
-    obs_zone_12 = "obs_zone_12",
-    obs_zone_13 = "obs_zone_13",
-    obs_zone_14 = "obs_zone_14",
-    obs_angle_addr = "obs_angle_addr",
-    obs_route = "obs_route",
+    obs_day_of_week = "obs_day_of_week",
+    obs_domain = "obs_domain",
+    obs_domain_$0 = "obs_domain_$0",
     obs_domain_list = "obs_domain_list",
     obs_domain_list_$0_1 = "obs_domain_list_$0_1",
     obs_domain_list_$0_2 = "obs_domain_list_$0_2",
     obs_domain_list_$1 = "obs_domain_list_$1",
     obs_domain_list_$1_$0 = "obs_domain_list_$1_$0",
-    obs_mbox_list = "obs_mbox_list",
-    obs_mbox_list_$0 = "obs_mbox_list_$0",
-    obs_mbox_list_$1 = "obs_mbox_list_$1",
-    obs_mbox_list_$1_$0_1 = "obs_mbox_list_$1_$0_1",
-    obs_mbox_list_$1_$0_2 = "obs_mbox_list_$1_$0_2",
-    obs_addr_list = "obs_addr_list",
-    obs_addr_list_$0 = "obs_addr_list_$0",
-    obs_addr_list_$1 = "obs_addr_list_$1",
-    obs_addr_list_$1_$0_1 = "obs_addr_list_$1_$0_1",
-    obs_addr_list_$1_$0_2 = "obs_addr_list_$1_$0_2",
-    obs_group_list = "obs_group_list",
-    obs_group_list_$0 = "obs_group_list_$0",
-    obs_local_part = "obs_local_part",
-    obs_local_part_$0 = "obs_local_part_$0",
-    obs_domain = "obs_domain",
-    obs_domain_$0 = "obs_domain_$0",
     obs_dtext_1 = "obs_dtext_1",
     obs_dtext_2 = "obs_dtext_2",
     obs_fields = "obs_fields",
@@ -496,79 +375,184 @@ export enum ASTKinds {
     obs_fields_$0_22 = "obs_fields_$0_22",
     obs_fields_$0_23 = "obs_fields_$0_23",
     obs_fields_$0_24 = "obs_fields_$0_24",
-    obs_orig_date = "obs_orig_date",
     obs_from = "obs_from",
-    obs_sender = "obs_sender",
-    obs_reply_to = "obs_reply_to",
-    obs_to = "obs_to",
-    obs_cc = "obs_cc",
-    obs_bcc = "obs_bcc",
-    obs_bcc_$0_1 = "obs_bcc_$0_1",
-    obs_bcc_$0_2 = "obs_bcc_$0_2",
-    obs_bcc_$0_$0 = "obs_bcc_$0_$0",
-    obs_bcc_$0_$0_$0 = "obs_bcc_$0_$0_$0",
-    obs_message_id = "obs_message_id",
+    obs_group_list = "obs_group_list",
+    obs_group_list_$0 = "obs_group_list_$0",
+    obs_hour = "obs_hour",
+    obs_id_left = "obs_id_left",
+    obs_id_right = "obs_id_right",
     obs_in_reply_to = "obs_in_reply_to",
     obs_in_reply_to_$0_1 = "obs_in_reply_to_$0_1",
     obs_in_reply_to_$0_2 = "obs_in_reply_to_$0_2",
+    obs_keywords = "obs_keywords",
+    obs_local_part = "obs_local_part",
+    obs_local_part_$0 = "obs_local_part_$0",
+    obs_mbox_list = "obs_mbox_list",
+    obs_mbox_list_$0 = "obs_mbox_list_$0",
+    obs_mbox_list_$1 = "obs_mbox_list_$1",
+    obs_mbox_list_$1_$0_1 = "obs_mbox_list_$1_$0_1",
+    obs_mbox_list_$1_$0_2 = "obs_mbox_list_$1_$0_2",
+    obs_message_id = "obs_message_id",
+    obs_minute = "obs_minute",
+    obs_optional = "obs_optional",
+    obs_orig_date = "obs_orig_date",
+    obs_phrase = "obs_phrase",
+    obs_phrase_$0_1 = "obs_phrase_$0_1",
+    obs_phrase_$0_2 = "obs_phrase_$0_2",
+    obs_phrase_$0_3 = "obs_phrase_$0_3",
+    obs_phrase_list = "obs_phrase_list",
+    obs_phrase_list_$0_1 = "obs_phrase_list_$0_1",
+    obs_phrase_list_$0_2 = "obs_phrase_list_$0_2",
+    obs_phrase_list_$1 = "obs_phrase_list_$1",
+    obs_phrase_list_$1_$0_1 = "obs_phrase_list_$1_$0_1",
+    obs_phrase_list_$1_$0_2 = "obs_phrase_list_$1_$0_2",
+    obs_qp = "obs_qp",
+    obs_qp_$0_1 = "obs_qp_$0_1",
+    obs_qp_$0_2 = "obs_qp_$0_2",
+    obs_qp_$0_3 = "obs_qp_$0_3",
+    obs_qp_$0_4 = "obs_qp_$0_4",
+    obs_qtext = "obs_qtext",
+    obs_received = "obs_received",
     obs_references = "obs_references",
     obs_references_$0_1 = "obs_references_$0_1",
     obs_references_$0_2 = "obs_references_$0_2",
-    obs_id_left = "obs_id_left",
-    obs_id_right = "obs_id_right",
-    obs_subject = "obs_subject",
-    obs_comments = "obs_comments",
-    obs_keywords = "obs_keywords",
-    obs_resent_from = "obs_resent_from",
-    obs_resent_send = "obs_resent_send",
-    obs_resent_date = "obs_resent_date",
-    obs_resent_to = "obs_resent_to",
-    obs_resent_cc = "obs_resent_cc",
+    obs_reply_to = "obs_reply_to",
     obs_resent_bcc = "obs_resent_bcc",
     obs_resent_bcc_$0_1 = "obs_resent_bcc_$0_1",
     obs_resent_bcc_$0_2 = "obs_resent_bcc_$0_2",
     obs_resent_bcc_$0_$0 = "obs_resent_bcc_$0_$0",
     obs_resent_bcc_$0_$0_$0 = "obs_resent_bcc_$0_$0_$0",
+    obs_resent_cc = "obs_resent_cc",
+    obs_resent_date = "obs_resent_date",
+    obs_resent_from = "obs_resent_from",
     obs_resent_mid = "obs_resent_mid",
     obs_resent_rply = "obs_resent_rply",
+    obs_resent_send = "obs_resent_send",
+    obs_resent_to = "obs_resent_to",
     obs_return = "obs_return",
-    obs_received = "obs_received",
-    obs_optional = "obs_optional",
+    obs_route = "obs_route",
+    obs_second = "obs_second",
+    obs_sender = "obs_sender",
+    obs_subject = "obs_subject",
+    obs_to = "obs_to",
+    obs_unstruct = "obs_unstruct",
+    obs_unstruct_$0_1 = "obs_unstruct_$0_1",
+    obs_unstruct_$0_2 = "obs_unstruct_$0_2",
+    obs_unstruct_$0_$0 = "obs_unstruct_$0_$0",
+    obs_unstruct_$0_$0_$0 = "obs_unstruct_$0_$0_$0",
+    obs_utext_1 = "obs_utext_1",
+    obs_utext_2 = "obs_utext_2",
+    obs_utext_3 = "obs_utext_3",
+    obs_year = "obs_year",
+    obs_zone_1 = "obs_zone_1",
+    obs_zone_2 = "obs_zone_2",
+    obs_zone_3 = "obs_zone_3",
+    obs_zone_4 = "obs_zone_4",
+    obs_zone_5 = "obs_zone_5",
+    obs_zone_6 = "obs_zone_6",
+    obs_zone_7 = "obs_zone_7",
+    obs_zone_8 = "obs_zone_8",
+    obs_zone_9 = "obs_zone_9",
+    obs_zone_10 = "obs_zone_10",
+    obs_zone_11 = "obs_zone_11",
+    obs_zone_12 = "obs_zone_12",
+    obs_zone_13 = "obs_zone_13",
+    obs_zone_14 = "obs_zone_14",
+    optional_field = "optional_field",
+    orig_date = "orig_date",
+    path_1 = "path_1",
+    path_2 = "path_2",
+    path_$0 = "path_$0",
+    phrase_1 = "phrase_1",
+    phrase_2 = "phrase_2",
+    qcontent_1 = "qcontent_1",
+    qcontent_2 = "qcontent_2",
+    qtext_1 = "qtext_1",
+    qtext_2 = "qtext_2",
+    qtext_3 = "qtext_3",
+    qtext_4 = "qtext_4",
+    quoted_pair_1 = "quoted_pair_1",
+    quoted_pair_2 = "quoted_pair_2",
+    quoted_pair_$0 = "quoted_pair_$0",
+    quoted_pair_$0_$0_1 = "quoted_pair_$0_$0_1",
+    quoted_pair_$0_$0_2 = "quoted_pair_$0_$0_2",
+    quoted_string = "quoted_string",
+    quoted_string_$0 = "quoted_string_$0",
+    received = "received",
+    received_token_1 = "received_token_1",
+    received_token_2 = "received_token_2",
+    received_token_3 = "received_token_3",
+    received_token_4 = "received_token_4",
+    references = "references",
+    reply_to = "reply_to",
+    resent_bcc = "resent_bcc",
+    resent_bcc_$0_1 = "resent_bcc_$0_1",
+    resent_bcc_$0_2 = "resent_bcc_$0_2",
+    resent_cc = "resent_cc",
+    resent_date = "resent_date",
+    resent_from = "resent_from",
+    resent_msg_id = "resent_msg_id",
+    resent_sender = "resent_sender",
+    resent_to = "resent_to",
+    return_path = "return_path",
+    second_1 = "second_1",
+    second_2 = "second_2",
+    sender = "sender",
+    specials_1 = "specials_1",
+    specials_2 = "specials_2",
+    specials_3 = "specials_3",
+    specials_4 = "specials_4",
+    specials_5 = "specials_5",
+    specials_6 = "specials_6",
+    specials_7 = "specials_7",
+    specials_8 = "specials_8",
+    specials_9 = "specials_9",
+    specials_10 = "specials_10",
+    subject = "subject",
+    text_1 = "text_1",
+    text_2 = "text_2",
+    text_3 = "text_3",
+    text_4 = "text_4",
+    time = "time",
+    time_of_day = "time_of_day",
+    time_of_day_$0 = "time_of_day_$0",
+    to = "to",
+    trace = "trace",
+    unstructured_1 = "unstructured_1",
+    unstructured_2 = "unstructured_2",
+    unstructured_$0 = "unstructured_$0",
+    unstructured_$0_$0 = "unstructured_$0_$0",
+    word_1 = "word_1",
+    word_2 = "word_2",
+    year_1 = "year_1",
+    year_2 = "year_2",
+    year_$0 = "year_$0",
+    zone_1 = "zone_1",
+    zone_2 = "zone_2",
+    zone_$0 = "zone_$0",
+    zone_$0_$0_1 = "zone_$0_$0_1",
+    zone_$0_$0_2 = "zone_$0_$0_2",
 }
 export type start = message;
+export type CFWS = CFWS_1 | CFWS_2;
+export interface CFWS_1 {
+    kind: ASTKinds.CFWS_1;
+    A: CFWS_$0;
+}
+export type CFWS_2 = FWS;
+export interface CFWS_$0 {
+    kind: ASTKinds.CFWS_$0;
+    B: CFWS_$0_$0[];
+}
+export interface CFWS_$0_$0 {
+    kind: ASTKinds.CFWS_$0_$0;
+    D: comment;
+}
 export type CR = string;
 export type CRLF = string;
 export type DIGIT = string;
-export type TWO_DIGIT = string;
-export type FOUR_DIGIT = string;
 export type DQUOTE = string;
-export type HTAB = string;
-export type LF = string;
-export type SP = string;
-export type VCHAR = string;
-export type WSP = WSP_1 | WSP_2;
-export type WSP_1 = SP;
-export type WSP_2 = HTAB;
-export type quoted_pair = quoted_pair_1 | quoted_pair_2;
-export interface quoted_pair_1 {
-    kind: ASTKinds.quoted_pair_1;
-    A: quoted_pair_$0;
-}
-export interface quoted_pair_2 {
-    kind: ASTKinds.quoted_pair_2;
-    F: obs_qp;
-}
-export interface quoted_pair_$0 {
-    kind: ASTKinds.quoted_pair_$0;
-    B: string;
-    C: quoted_pair_$0_$0;
-}
-export type quoted_pair_$0_$0 = quoted_pair_$0_$0_1 | quoted_pair_$0_$0_2;
-export interface quoted_pair_$0_$0_1 {
-    kind: ASTKinds.quoted_pair_$0_$0_1;
-    D: VCHAR;
-}
-export type quoted_pair_$0_$0_2 = WSP;
+export type FOUR_DIGIT = string;
 export type FWS = FWS_1 | FWS_2;
 export interface FWS_1 {
     kind: ASTKinds.FWS_1;
@@ -588,22 +572,93 @@ export interface FWS_$0_$0 {
     C: WSP[];
     D: CRLF;
 }
-export type ctext = ctext_1 | ctext_2 | ctext_3 | ctext_4;
-export interface ctext_1 {
-    kind: ASTKinds.ctext_1;
-    A: string;
-}
-export interface ctext_2 {
-    kind: ASTKinds.ctext_2;
+export type HTAB = string;
+export type LF = string;
+export type SP = string;
+export type TWO_DIGIT = string;
+export type VCHAR = string;
+export type WSP = WSP_1 | WSP_2;
+export type WSP_1 = SP;
+export type WSP_2 = HTAB;
+export type _998text = string;
+export interface addr_spec {
+    kind: ASTKinds.addr_spec;
+    A: local_part;
     B: string;
+    C: domain;
 }
-export interface ctext_3 {
-    kind: ASTKinds.ctext_3;
-    C: string;
+export type address = address_1 | address_2;
+export type address_1 = mailbox;
+export type address_2 = group;
+export type address_list = address_list_1 | address_list_2;
+export interface address_list_1 {
+    kind: ASTKinds.address_list_1;
+    A: address_list_$0;
 }
-export interface ctext_4 {
-    kind: ASTKinds.ctext_4;
-    D: obs_ctext;
+export interface address_list_2 {
+    kind: ASTKinds.address_list_2;
+    F: obs_addr_list;
+}
+export interface address_list_$0 {
+    kind: ASTKinds.address_list_$0;
+    B: address;
+    C: address_list_$0_$0[];
+}
+export interface address_list_$0_$0 {
+    kind: ASTKinds.address_list_$0_$0;
+    D: string;
+    E: address;
+}
+export type angle_addr = angle_addr_1 | angle_addr_2;
+export interface angle_addr_1 {
+    kind: ASTKinds.angle_addr_1;
+    B: string;
+    C: addr_spec;
+    D: string;
+}
+export interface angle_addr_2 {
+    kind: ASTKinds.angle_addr_2;
+    F: obs_angle_addr;
+}
+export type atext = string;
+export interface atom {
+    kind: ASTKinds.atom;
+    A: Nullable<CFWS>;
+    B: atext[];
+    C: Nullable<CFWS>;
+}
+export interface bcc {
+    kind: ASTKinds.bcc;
+    A: string;
+    B: string;
+    C: Nullable<bcc_$0>;
+}
+export type bcc_$0 = bcc_$0_1 | bcc_$0_2;
+export type bcc_$0_1 = address_list;
+export type bcc_$0_2 = CFWS;
+export type body = body_1 | body_2;
+export interface body_1 {
+    kind: ASTKinds.body_1;
+    A: body_$0;
+}
+export interface body_2 {
+    kind: ASTKinds.body_2;
+    F: obs_body;
+}
+export interface body_$0 {
+    kind: ASTKinds.body_$0;
+    B: body_$0_$0[];
+    E: _998text;
+}
+export interface body_$0_$0 {
+    kind: ASTKinds.body_$0_$0;
+    C: _998text;
+}
+export interface cc {
+    kind: ASTKinds.cc;
+    A: string;
+    B: string;
+    C: address_list;
 }
 export type ccontent = ccontent_1 | ccontent_2 | ccontent_3;
 export interface ccontent_1 {
@@ -628,93 +683,34 @@ export interface comment_$0 {
     kind: ASTKinds.comment_$0;
     D: ccontent;
 }
-export type CFWS = CFWS_1 | CFWS_2;
-export interface CFWS_1 {
-    kind: ASTKinds.CFWS_1;
-    A: CFWS_$0;
+export interface comments {
+    kind: ASTKinds.comments;
+    A: string;
+    B: string;
+    C: unstructured;
 }
-export type CFWS_2 = FWS;
-export interface CFWS_$0 {
-    kind: ASTKinds.CFWS_$0;
-    B: CFWS_$0_$0[];
+export type ctext = ctext_1 | ctext_2 | ctext_3 | ctext_4;
+export interface ctext_1 {
+    kind: ASTKinds.ctext_1;
+    A: string;
 }
-export interface CFWS_$0_$0 {
-    kind: ASTKinds.CFWS_$0_$0;
-    D: comment;
+export interface ctext_2 {
+    kind: ASTKinds.ctext_2;
+    B: string;
 }
-export type atext = string;
-export interface atom {
-    kind: ASTKinds.atom;
-    B: atext[];
-}
-export interface dot_atom_text {
-    kind: ASTKinds.dot_atom_text;
-    A: atext[];
-    B: dot_atom_text_$0[];
-}
-export interface dot_atom_text_$0 {
-    kind: ASTKinds.dot_atom_text_$0;
+export interface ctext_3 {
+    kind: ASTKinds.ctext_3;
     C: string;
-    D: atext[];
 }
-export interface dot_atom {
-    kind: ASTKinds.dot_atom;
-    A: Nullable<CFWS>;
-    B: dot_atom_text;
-    C: Nullable<CFWS>;
+export interface ctext_4 {
+    kind: ASTKinds.ctext_4;
+    D: obs_ctext;
 }
-export type specials = specials_1 | specials_2 | specials_3 | specials_4 | specials_5 | specials_6 | specials_7 | specials_8 | specials_9 | specials_10;
-export type specials_1 = string;
-export type specials_2 = string;
-export type specials_3 = string;
-export type specials_4 = string;
-export type specials_5 = string;
-export type specials_6 = string;
-export type specials_7 = string;
-export type specials_8 = string;
-export type specials_9 = string;
-export type specials_10 = DQUOTE;
-export type qtext = qtext_1 | qtext_2 | qtext_3 | qtext_4;
-export type qtext_1 = string;
-export type qtext_2 = string;
-export type qtext_3 = string;
-export type qtext_4 = obs_qtext;
-export type qcontent = qcontent_1 | qcontent_2;
-export type qcontent_1 = qtext;
-export type qcontent_2 = quoted_pair;
-export interface quoted_string {
-    kind: ASTKinds.quoted_string;
-    B: DQUOTE;
-    C: quoted_string_$0[];
-    G: DQUOTE;
-}
-export interface quoted_string_$0 {
-    kind: ASTKinds.quoted_string_$0;
-    E: qcontent;
-}
-export type word = word_1 | word_2;
-export type word_1 = atom;
-export type word_2 = quoted_string;
-export type phrase = phrase_1 | phrase_2;
-export type phrase_1 = word[];
-export type phrase_2 = obs_phrase;
-export type unstructured = unstructured_1 | unstructured_2;
-export interface unstructured_1 {
-    kind: ASTKinds.unstructured_1;
-    A: unstructured_$0;
-}
-export interface unstructured_2 {
-    kind: ASTKinds.unstructured_2;
-    F: obs_unstruct;
-}
-export interface unstructured_$0 {
-    kind: ASTKinds.unstructured_$0;
-    B: unstructured_$0_$0[];
-}
-export interface unstructured_$0_$0 {
-    kind: ASTKinds.unstructured_$0_$0;
-    C: Nullable<FWS>;
-    D: VCHAR;
+export interface date {
+    kind: ASTKinds.date;
+    A: day;
+    B: month;
+    C: year;
 }
 export interface date_time {
     kind: ASTKinds.date_time;
@@ -726,33 +722,6 @@ export interface date_time_$0 {
     kind: ASTKinds.date_time_$0;
     B: day_of_week;
     C: string;
-}
-export type day_of_week = day_of_week_1 | day_of_week_2;
-export interface day_of_week_1 {
-    kind: ASTKinds.day_of_week_1;
-    A: day_of_week_$0;
-}
-export interface day_of_week_2 {
-    kind: ASTKinds.day_of_week_2;
-    D: obs_day_of_week;
-}
-export interface day_of_week_$0 {
-    kind: ASTKinds.day_of_week_$0;
-    C: day_name;
-}
-export type day_name = day_name_1 | day_name_2 | day_name_3 | day_name_4 | day_name_5 | day_name_6 | day_name_7;
-export type day_name_1 = string;
-export type day_name_2 = string;
-export type day_name_3 = string;
-export type day_name_4 = string;
-export type day_name_5 = string;
-export type day_name_6 = string;
-export type day_name_7 = string;
-export interface date {
-    kind: ASTKinds.date;
-    A: day;
-    B: month;
-    C: year;
 }
 export type day = day_1 | day_2;
 export interface day_1 {
@@ -768,184 +737,28 @@ export interface day_$0 {
     C: DIGIT;
     D: Nullable<DIGIT>;
 }
-export type month = month_1 | month_2 | month_3 | month_4 | month_5 | month_6 | month_7 | month_8 | month_9 | month_10 | month_11 | month_12;
-export type month_1 = string;
-export type month_2 = string;
-export type month_3 = string;
-export type month_4 = string;
-export type month_5 = string;
-export type month_6 = string;
-export type month_7 = string;
-export type month_8 = string;
-export type month_9 = string;
-export type month_10 = string;
-export type month_11 = string;
-export type month_12 = string;
-export type year = year_1 | year_2;
-export interface year_1 {
-    kind: ASTKinds.year_1;
-    A: year_$0;
+export type day_name = day_name_1 | day_name_2 | day_name_3 | day_name_4 | day_name_5 | day_name_6 | day_name_7;
+export type day_name_1 = string;
+export type day_name_2 = string;
+export type day_name_3 = string;
+export type day_name_4 = string;
+export type day_name_5 = string;
+export type day_name_6 = string;
+export type day_name_7 = string;
+export type day_of_week = day_of_week_1 | day_of_week_2;
+export interface day_of_week_1 {
+    kind: ASTKinds.day_of_week_1;
+    A: day_of_week_$0;
 }
-export interface year_2 {
-    kind: ASTKinds.year_2;
-    F: obs_year;
+export interface day_of_week_2 {
+    kind: ASTKinds.day_of_week_2;
+    D: obs_day_of_week;
 }
-export interface year_$0 {
-    kind: ASTKinds.year_$0;
-    B: FWS;
-    C: FOUR_DIGIT;
-    D: DIGIT[];
-    E: FWS;
-}
-export interface time {
-    kind: ASTKinds.time;
-    A: time_of_day;
-    B: zone;
-}
-export interface time_of_day {
-    kind: ASTKinds.time_of_day;
-    A: hour;
-    B: string;
-    C: minute;
-    D: Nullable<time_of_day_$0>;
-}
-export interface time_of_day_$0 {
-    kind: ASTKinds.time_of_day_$0;
-    E: string;
-    F: second;
-}
-export type hour = hour_1 | hour_2;
-export interface hour_1 {
-    kind: ASTKinds.hour_1;
-    A: TWO_DIGIT;
-}
-export interface hour_2 {
-    kind: ASTKinds.hour_2;
-    B: obs_hour;
-}
-export type minute = minute_1 | minute_2;
-export interface minute_1 {
-    kind: ASTKinds.minute_1;
-    A: TWO_DIGIT;
-}
-export interface minute_2 {
-    kind: ASTKinds.minute_2;
-    B: obs_minute;
-}
-export type second = second_1 | second_2;
-export interface second_1 {
-    kind: ASTKinds.second_1;
-    A: TWO_DIGIT;
-}
-export interface second_2 {
-    kind: ASTKinds.second_2;
-    B: obs_second;
-}
-export type zone = zone_1 | zone_2;
-export interface zone_1 {
-    kind: ASTKinds.zone_1;
-    A: zone_$0;
-}
-export interface zone_2 {
-    kind: ASTKinds.zone_2;
-    G: obs_zone;
-}
-export interface zone_$0 {
-    kind: ASTKinds.zone_$0;
-    C: zone_$0_$0;
-    F: FOUR_DIGIT;
-}
-export type zone_$0_$0 = zone_$0_$0_1 | zone_$0_$0_2;
-export interface zone_$0_$0_1 {
-    kind: ASTKinds.zone_$0_$0_1;
-    D: string;
-}
-export interface zone_$0_$0_2 {
-    kind: ASTKinds.zone_$0_$0_2;
-    E: string;
-}
-export type address = address_1 | address_2;
-export type address_1 = mailbox;
-export type address_2 = group;
-export type mailbox = mailbox_1 | mailbox_2;
-export type mailbox_1 = name_addr;
-export type mailbox_2 = addr_spec;
-export interface name_addr {
-    kind: ASTKinds.name_addr;
-    A: Nullable<display_name>;
-    B: angle_addr;
-}
-export type angle_addr = angle_addr_1 | angle_addr_2;
-export interface angle_addr_1 {
-    kind: ASTKinds.angle_addr_1;
-    B: string;
-    C: addr_spec;
-    D: string;
-}
-export interface angle_addr_2 {
-    kind: ASTKinds.angle_addr_2;
-    F: obs_angle_addr;
-}
-export interface group {
-    kind: ASTKinds.group;
-    A: display_name;
-    B: string;
-    C: Nullable<group_list>;
-    D: string;
+export interface day_of_week_$0 {
+    kind: ASTKinds.day_of_week_$0;
+    C: day_name;
 }
 export type display_name = phrase;
-export type mailbox_list = mailbox_list_1 | mailbox_list_2;
-export interface mailbox_list_1 {
-    kind: ASTKinds.mailbox_list_1;
-    A: mailbox_list_$0;
-}
-export interface mailbox_list_2 {
-    kind: ASTKinds.mailbox_list_2;
-    F: obs_mbox_list;
-}
-export interface mailbox_list_$0 {
-    kind: ASTKinds.mailbox_list_$0;
-    B: mailbox;
-    C: mailbox_list_$0_$0[];
-}
-export interface mailbox_list_$0_$0 {
-    kind: ASTKinds.mailbox_list_$0_$0;
-    D: string;
-    E: mailbox;
-}
-export type address_list = address_list_1 | address_list_2;
-export interface address_list_1 {
-    kind: ASTKinds.address_list_1;
-    A: address_list_$0;
-}
-export interface address_list_2 {
-    kind: ASTKinds.address_list_2;
-    F: obs_addr_list;
-}
-export interface address_list_$0 {
-    kind: ASTKinds.address_list_$0;
-    B: address;
-    C: address_list_$0_$0[];
-}
-export interface address_list_$0_$0 {
-    kind: ASTKinds.address_list_$0_$0;
-    D: string;
-    E: address;
-}
-export type group_list = group_list_1 | group_list_2 | group_list_3;
-export type group_list_1 = mailbox_list;
-export type group_list_2 = CFWS;
-export type group_list_3 = obs_group_list;
-export interface addr_spec {
-    kind: ASTKinds.addr_spec;
-    A: local_part;
-    B: string;
-    C: domain;
-}
-export type local_part = local_part_1 | local_part_2 | local_part_3;
-export type local_part_1 = dot_atom;
-export type local_part_2 = quoted_string;
-export type local_part_3 = obs_local_part;
 export type domain = domain_1 | domain_2 | domain_3;
 export type domain_1 = dot_atom;
 export type domain_2 = domain_literal;
@@ -960,58 +773,31 @@ export interface domain_literal_$0 {
     kind: ASTKinds.domain_literal_$0;
     E: dtext;
 }
+export interface dot_atom {
+    kind: ASTKinds.dot_atom;
+    A: Nullable<CFWS>;
+    B: dot_atom_text;
+    C: Nullable<CFWS>;
+}
+export interface dot_atom_text {
+    kind: ASTKinds.dot_atom_text;
+    A: atext[];
+    B: dot_atom_text_$0[];
+}
+export interface dot_atom_text_$0 {
+    kind: ASTKinds.dot_atom_text_$0;
+    C: string;
+    D: atext[];
+}
 export type dtext = dtext_1 | dtext_2 | dtext_3;
 export type dtext_1 = string;
 export type dtext_2 = string;
 export type dtext_3 = obs_dtext;
-export interface message {
-    kind: ASTKinds.message;
-    fields: message_$0;
-    D: Nullable<message_$1>;
-}
-export type message_$0 = message_$0_1 | message_$0_2;
-export type message_$0_1 = fields;
-export type message_$0_2 = obs_fields;
-export interface message_$1 {
-    kind: ASTKinds.message_$1;
-    F: body;
-}
-export type body = body_1 | body_2;
-export interface body_1 {
-    kind: ASTKinds.body_1;
-    A: body_$0;
-}
-export interface body_2 {
-    kind: ASTKinds.body_2;
-    F: obs_body;
-}
-export interface body_$0 {
-    kind: ASTKinds.body_$0;
-    B: body_$0_$0[];
-    E: _998text;
-}
-export interface body_$0_$0 {
-    kind: ASTKinds.body_$0_$0;
-    C: _998text;
-}
-export type text = text_1 | text_2 | text_3 | text_4;
-export type text_1 = string;
-export type text_2 = string;
-export type text_3 = string;
-export type text_4 = string;
-export type _998text = string;
-export class fields {
-    public kind: ASTKinds.fields = ASTKinds.fields;
-    public A: fields_$0[];
-    public L: fields_$1[];
-    public subject: subject | undefined;
-    constructor(A: fields_$0[], L: fields_$1[]){
-        this.A = A;
-        this.L = L;
-        this.subject = ((): subject | undefined => {
-        return this.L.find(field => field.kind === "subject") as subject
-        })();
-    }
+export type field_name = ftext[];
+export interface fields {
+    kind: ASTKinds.fields;
+    A: fields_$0[];
+    L: fields_$1[];
 }
 export type fields_$0 = fields_$0_1 | fields_$0_2;
 export interface fields_$0_1 {
@@ -1046,76 +832,34 @@ export type fields_$1_11 = subject;
 export type fields_$1_12 = comments;
 export type fields_$1_13 = keywords;
 export type fields_$1_14 = optional_field;
-export interface orig_date {
-    kind: ASTKinds.orig_date;
-    A: string;
-    B: string;
-    C: date_time;
-}
 export interface from {
     kind: ASTKinds.from;
     A: string;
     B: string;
     C: mailbox_list;
 }
-export interface sender {
-    kind: ASTKinds.sender;
-    A: string;
+export type ftext = ftext_1 | ftext_2;
+export type ftext_1 = string;
+export type ftext_2 = string;
+export interface group {
+    kind: ASTKinds.group;
+    A: display_name;
     B: string;
-    C: mailbox;
-}
-export interface reply_to {
-    kind: ASTKinds.reply_to;
-    A: string;
-    B: string;
-    C: address_list;
-}
-export interface to {
-    kind: ASTKinds.to;
-    A: string;
-    B: string;
-    C: address_list;
-}
-export interface cc {
-    kind: ASTKinds.cc;
-    A: string;
-    B: string;
-    C: address_list;
-}
-export interface bcc {
-    kind: ASTKinds.bcc;
-    A: string;
-    B: string;
-    C: Nullable<bcc_$0>;
-}
-export type bcc_$0 = bcc_$0_1 | bcc_$0_2;
-export type bcc_$0_1 = address_list;
-export type bcc_$0_2 = CFWS;
-export interface message_id {
-    kind: ASTKinds.message_id;
-    A: string;
-    B: string;
-    C: msg_id;
-}
-export interface in_reply_to {
-    kind: ASTKinds.in_reply_to;
-    A: string;
-    B: string;
-    C: msg_id[];
-}
-export interface references {
-    kind: ASTKinds.references;
-    A: string;
-    B: string;
-    C: msg_id[];
-}
-export interface msg_id {
-    kind: ASTKinds.msg_id;
-    B: string;
-    C: id_left;
+    C: Nullable<group_list>;
     D: string;
-    E: id_right;
-    G: Nullable<CFWS>;
+}
+export type group_list = group_list_1 | group_list_2 | group_list_3;
+export type group_list_1 = mailbox_list;
+export type group_list_2 = CFWS;
+export type group_list_3 = obs_group_list;
+export type hour = hour_1 | hour_2;
+export interface hour_1 {
+    kind: ASTKinds.hour_1;
+    A: TWO_DIGIT;
+}
+export interface hour_2 {
+    kind: ASTKinds.hour_2;
+    B: obs_hour;
 }
 export type id_left = id_left_1 | id_left_2;
 export type id_left_1 = dot_atom_text;
@@ -1124,34 +868,11 @@ export type id_right = id_right_1 | id_right_2 | id_right_3;
 export type id_right_1 = dot_atom_text;
 export type id_right_2 = no_fold_literal;
 export type id_right_3 = obs_id_right;
-export interface no_fold_literal {
-    kind: ASTKinds.no_fold_literal;
-    A: string;
-    B: dtext[];
-    C: string;
-}
-export class subject {
-    public kind: ASTKinds.subject = ASTKinds.subject;
-    public name: string;
-    public B: string;
-    public _value: unstructured;
-    public D: CRLF;
-    public value: string;
-    constructor(name: string, B: string, _value: unstructured, D: CRLF){
-        this.name = name;
-        this.B = B;
-        this._value = _value;
-        this.D = D;
-        this.value = ((): string => {
-        return concat(this._value).trim()
-        })();
-    }
-}
-export interface comments {
-    kind: ASTKinds.comments;
+export interface in_reply_to {
+    kind: ASTKinds.in_reply_to;
     A: string;
     B: string;
-    C: unstructured;
+    C: msg_id[];
 }
 export interface keywords {
     kind: ASTKinds.keywords;
@@ -1165,94 +886,98 @@ export interface keywords_$0 {
     E: string;
     F: phrase;
 }
-export interface resent_date {
-    kind: ASTKinds.resent_date;
-    A: string;
-    B: string;
-    C: date_time;
+export type local_part = local_part_1 | local_part_2 | local_part_3;
+export type local_part_1 = dot_atom;
+export type local_part_2 = quoted_string;
+export type local_part_3 = obs_local_part;
+export type mailbox = mailbox_1 | mailbox_2;
+export type mailbox_1 = name_addr;
+export type mailbox_2 = addr_spec;
+export type mailbox_list = mailbox_list_1 | mailbox_list_2;
+export interface mailbox_list_1 {
+    kind: ASTKinds.mailbox_list_1;
+    A: mailbox_list_$0;
 }
-export interface resent_from {
-    kind: ASTKinds.resent_from;
-    A: string;
-    B: string;
-    C: mailbox_list;
+export interface mailbox_list_2 {
+    kind: ASTKinds.mailbox_list_2;
+    F: obs_mbox_list;
 }
-export interface resent_sender {
-    kind: ASTKinds.resent_sender;
-    A: string;
-    B: string;
-    C: mailbox;
+export interface mailbox_list_$0 {
+    kind: ASTKinds.mailbox_list_$0;
+    B: mailbox;
+    C: mailbox_list_$0_$0[];
 }
-export interface resent_to {
-    kind: ASTKinds.resent_to;
-    A: string;
-    B: string;
-    C: address_list;
+export interface mailbox_list_$0_$0 {
+    kind: ASTKinds.mailbox_list_$0_$0;
+    D: string;
+    E: mailbox;
 }
-export interface resent_cc {
-    kind: ASTKinds.resent_cc;
-    A: string;
-    B: string;
-    C: address_list;
+export interface message {
+    kind: ASTKinds.message;
+    fields: message_$0;
+    D: Nullable<message_$1>;
 }
-export interface resent_bcc {
-    kind: ASTKinds.resent_bcc;
-    A: string;
-    B: string;
-    C: Nullable<resent_bcc_$0>;
+export type message_$0 = message_$0_1 | message_$0_2;
+export type message_$0_1 = fields;
+export type message_$0_2 = obs_fields;
+export interface message_$1 {
+    kind: ASTKinds.message_$1;
+    F: body;
 }
-export type resent_bcc_$0 = resent_bcc_$0_1 | resent_bcc_$0_2;
-export interface resent_bcc_$0_1 {
-    kind: ASTKinds.resent_bcc_$0_1;
-    D: address_list;
-}
-export type resent_bcc_$0_2 = CFWS;
-export interface resent_msg_id {
-    kind: ASTKinds.resent_msg_id;
+export interface message_id {
+    kind: ASTKinds.message_id;
     A: string;
     B: string;
     C: msg_id;
 }
-export interface trace {
-    kind: ASTKinds.trace;
-    A: Nullable<return_path>;
-    B: received[];
+export type minute = minute_1 | minute_2;
+export interface minute_1 {
+    kind: ASTKinds.minute_1;
+    A: TWO_DIGIT;
 }
-export interface return_path {
-    kind: ASTKinds.return_path;
-    A: string;
+export interface minute_2 {
+    kind: ASTKinds.minute_2;
+    B: obs_minute;
+}
+export type month = month_1 | month_2 | month_3 | month_4 | month_5 | month_6 | month_7 | month_8 | month_9 | month_10 | month_11 | month_12;
+export type month_1 = string;
+export type month_2 = string;
+export type month_3 = string;
+export type month_4 = string;
+export type month_5 = string;
+export type month_6 = string;
+export type month_7 = string;
+export type month_8 = string;
+export type month_9 = string;
+export type month_10 = string;
+export type month_11 = string;
+export type month_12 = string;
+export interface msg_id {
+    kind: ASTKinds.msg_id;
     B: string;
-    C: path;
-}
-export type path = path_1 | path_2;
-export type path_1 = angle_addr;
-export type path_2 = path_$0;
-export interface path_$0 {
-    kind: ASTKinds.path_$0;
-}
-export interface received {
-    kind: ASTKinds.received;
-    A: string;
-    B: string;
-    C: received_token[];
+    C: id_left;
     D: string;
-    E: date_time;
+    E: id_right;
+    G: Nullable<CFWS>;
 }
-export type received_token = received_token_1 | received_token_2 | received_token_3 | received_token_4;
-export type received_token_1 = word;
-export type received_token_2 = angle_addr;
-export type received_token_3 = addr_spec;
-export type received_token_4 = domain;
-export interface optional_field {
-    kind: ASTKinds.optional_field;
-    A: field_name;
-    B: string;
-    C: unstructured;
+export interface name_addr {
+    kind: ASTKinds.name_addr;
+    A: Nullable<display_name>;
+    B: angle_addr;
 }
-export type field_name = ftext[];
-export type ftext = ftext_1 | ftext_2;
-export type ftext_1 = string;
-export type ftext_2 = string;
+export interface no_fold_literal {
+    kind: ASTKinds.no_fold_literal;
+    A: string;
+    B: dtext[];
+    C: string;
+}
+export interface obs_FWS {
+    kind: ASTKinds.obs_FWS;
+    A: WSP[];
+}
+export interface obs_FWS_$0 {
+    kind: ASTKinds.obs_FWS_$0;
+}
 export type obs_NO_WS_CTL = obs_NO_WS_CTL_1 | obs_NO_WS_CTL_2 | obs_NO_WS_CTL_3 | obs_NO_WS_CTL_4 | obs_NO_WS_CTL_5;
 export type obs_NO_WS_CTL_1 = string;
 export type obs_NO_WS_CTL_2 = string;
@@ -1268,22 +993,59 @@ export interface obs_NO_WS_CTL_5 {
     kind: ASTKinds.obs_NO_WS_CTL_5;
     E: string;
 }
-export type obs_ctext = obs_NO_WS_CTL;
-export type obs_qtext = obs_NO_WS_CTL;
-export type obs_utext = obs_utext_1 | obs_utext_2 | obs_utext_3;
-export type obs_utext_1 = string;
-export type obs_utext_2 = obs_NO_WS_CTL;
-export type obs_utext_3 = VCHAR;
-export interface obs_qp {
-    kind: ASTKinds.obs_qp;
-    A: string;
-    B: obs_qp_$0;
+export interface obs_addr_list {
+    kind: ASTKinds.obs_addr_list;
+    A: obs_addr_list_$0[];
+    D: address;
+    E: obs_addr_list_$1[];
 }
-export type obs_qp_$0 = obs_qp_$0_1 | obs_qp_$0_2 | obs_qp_$0_3 | obs_qp_$0_4;
-export type obs_qp_$0_1 = string;
-export type obs_qp_$0_2 = obs_NO_WS_CTL;
-export type obs_qp_$0_3 = LF;
-export type obs_qp_$0_4 = CR;
+export interface obs_addr_list_$0 {
+    kind: ASTKinds.obs_addr_list_$0;
+    B: Nullable<CFWS>;
+    C: string;
+}
+export interface obs_addr_list_$1 {
+    kind: ASTKinds.obs_addr_list_$1;
+    F: string;
+    G: Nullable<obs_addr_list_$1_$0>;
+}
+export type obs_addr_list_$1_$0 = obs_addr_list_$1_$0_1 | obs_addr_list_$1_$0_2;
+export type obs_addr_list_$1_$0_1 = address;
+export interface obs_addr_list_$1_$0_2 {
+    kind: ASTKinds.obs_addr_list_$1_$0_2;
+    I: CFWS;
+}
+export interface obs_angle_addr {
+    kind: ASTKinds.obs_angle_addr;
+    B: string;
+    C: obs_route;
+    D: addr_spec;
+    E: string;
+}
+export interface obs_bcc {
+    kind: ASTKinds.obs_bcc;
+    A: string;
+    C: string;
+    D: obs_bcc_$0;
+}
+export type obs_bcc_$0 = obs_bcc_$0_1 | obs_bcc_$0_2;
+export interface obs_bcc_$0_1 {
+    kind: ASTKinds.obs_bcc_$0_1;
+    E: address_list;
+}
+export interface obs_bcc_$0_2 {
+    kind: ASTKinds.obs_bcc_$0_2;
+    F: obs_bcc_$0_$0;
+}
+export interface obs_bcc_$0_$0 {
+    kind: ASTKinds.obs_bcc_$0_$0;
+    G: obs_bcc_$0_$0_$0[];
+}
+export interface obs_bcc_$0_$0_$0 {
+    kind: ASTKinds.obs_bcc_$0_$0_$0;
+    H: Nullable<CFWS>;
+    I: string;
+}
 export interface obs_body {
     kind: ASTKinds.obs_body;
     A: obs_body_$0[];
@@ -1311,109 +1073,38 @@ export interface obs_body_$0_$0_$0_$0_2 {
     kind: ASTKinds.obs_body_$0_$0_$0_$0_2;
     H: text;
 }
-export interface obs_unstruct {
-    kind: ASTKinds.obs_unstruct;
-    A: obs_unstruct_$0[];
+export interface obs_cc {
+    kind: ASTKinds.obs_cc;
+    A: string;
+    C: string;
+    D: address_list;
 }
-export type obs_unstruct_$0 = obs_unstruct_$0_1 | obs_unstruct_$0_2;
-export interface obs_unstruct_$0_1 {
-    kind: ASTKinds.obs_unstruct_$0_1;
-    B: obs_unstruct_$0_$0;
+export interface obs_comments {
+    kind: ASTKinds.obs_comments;
+    A: string;
+    C: string;
+    D: unstructured;
 }
-export type obs_unstruct_$0_2 = FWS;
-export interface obs_unstruct_$0_$0 {
-    kind: ASTKinds.obs_unstruct_$0_$0;
-    E: obs_unstruct_$0_$0_$0[];
-}
-export interface obs_unstruct_$0_$0_$0 {
-    kind: ASTKinds.obs_unstruct_$0_$0_$0;
-    F: obs_utext;
-}
-export interface obs_phrase {
-    kind: ASTKinds.obs_phrase;
-    A: word;
-    B: obs_phrase_$0;
-}
-export type obs_phrase_$0 = obs_phrase_$0_1 | obs_phrase_$0_2 | obs_phrase_$0_3;
-export type obs_phrase_$0_1 = word;
-export type obs_phrase_$0_2 = string;
-export type obs_phrase_$0_3 = CFWS;
-export interface obs_phrase_list {
-    kind: ASTKinds.obs_phrase_list;
-    A: obs_phrase_list_$0;
-    D: obs_phrase_list_$1[];
-}
-export type obs_phrase_list_$0 = obs_phrase_list_$0_1 | obs_phrase_list_$0_2;
-export type obs_phrase_list_$0_1 = phrase;
-export type obs_phrase_list_$0_2 = CFWS;
-export interface obs_phrase_list_$1 {
-    kind: ASTKinds.obs_phrase_list_$1;
-    E: string;
-    F: Nullable<obs_phrase_list_$1_$0>;
-}
-export type obs_phrase_list_$1_$0 = obs_phrase_list_$1_$0_1 | obs_phrase_list_$1_$0_2;
-export type obs_phrase_list_$1_$0_1 = phrase;
-export type obs_phrase_list_$1_$0_2 = CFWS;
-export interface obs_FWS {
-    kind: ASTKinds.obs_FWS;
-    A: WSP[];
-}
-export interface obs_FWS_$0 {
-    kind: ASTKinds.obs_FWS_$0;
-}
-export interface obs_day_of_week {
-    kind: ASTKinds.obs_day_of_week;
-    B: day_name;
-}
+export type obs_ctext = obs_NO_WS_CTL;
 export interface obs_day {
     kind: ASTKinds.obs_day;
     A: Nullable<CFWS>;
     B: DIGIT;
     C: Nullable<DIGIT>;
 }
-export interface obs_year {
-    kind: ASTKinds.obs_year;
-    A: Nullable<CFWS>;
-    B: TWO_DIGIT;
-    C: DIGIT[];
+export interface obs_day_of_week {
+    kind: ASTKinds.obs_day_of_week;
+    B: day_name;
 }
-export interface obs_hour {
-    kind: ASTKinds.obs_hour;
-    B: TWO_DIGIT;
+export interface obs_domain {
+    kind: ASTKinds.obs_domain;
+    A: atom;
+    B: obs_domain_$0[];
 }
-export interface obs_minute {
-    kind: ASTKinds.obs_minute;
-    B: TWO_DIGIT;
-}
-export interface obs_second {
-    kind: ASTKinds.obs_second;
-    B: TWO_DIGIT;
-}
-export type obs_zone = obs_zone_1 | obs_zone_2 | obs_zone_3 | obs_zone_4 | obs_zone_5 | obs_zone_6 | obs_zone_7 | obs_zone_8 | obs_zone_9 | obs_zone_10 | obs_zone_11 | obs_zone_12 | obs_zone_13 | obs_zone_14;
-export type obs_zone_1 = string;
-export type obs_zone_2 = string;
-export type obs_zone_3 = string;
-export type obs_zone_4 = string;
-export type obs_zone_5 = string;
-export type obs_zone_6 = string;
-export type obs_zone_7 = string;
-export type obs_zone_8 = string;
-export type obs_zone_9 = string;
-export type obs_zone_10 = string;
-export type obs_zone_11 = string;
-export type obs_zone_12 = string;
-export type obs_zone_13 = string;
-export type obs_zone_14 = string;
-export interface obs_angle_addr {
-    kind: ASTKinds.obs_angle_addr;
-    B: string;
-    C: obs_route;
-    D: addr_spec;
-    E: string;
-}
-export interface obs_route {
-    kind: ASTKinds.obs_route;
-    B: string;
+export interface obs_domain_$0 {
+    kind: ASTKinds.obs_domain_$0;
+    C: string;
+    D: atom;
 }
 export interface obs_domain_list {
     kind: ASTKinds.obs_domain_list;
@@ -1440,79 +1131,6 @@ export interface obs_domain_list_$1_$0 {
     kind: ASTKinds.obs_domain_list_$1_$0;
     J: string;
     K: domain;
-}
-export interface obs_mbox_list {
-    kind: ASTKinds.obs_mbox_list;
-    A: obs_mbox_list_$0[];
-    D: mailbox;
-    E: obs_mbox_list_$1[];
-}
-export interface obs_mbox_list_$0 {
-    kind: ASTKinds.obs_mbox_list_$0;
-    B: Nullable<CFWS>;
-    C: string;
-}
-export interface obs_mbox_list_$1 {
-    kind: ASTKinds.obs_mbox_list_$1;
-    F: string;
-    G: Nullable<obs_mbox_list_$1_$0>;
-}
-export type obs_mbox_list_$1_$0 = obs_mbox_list_$1_$0_1 | obs_mbox_list_$1_$0_2;
-export type obs_mbox_list_$1_$0_1 = mailbox;
-export interface obs_mbox_list_$1_$0_2 {
-    kind: ASTKinds.obs_mbox_list_$1_$0_2;
-    I: CFWS;
-}
-export interface obs_addr_list {
-    kind: ASTKinds.obs_addr_list;
-    A: obs_addr_list_$0[];
-    D: address;
-    E: obs_addr_list_$1[];
-}
-export interface obs_addr_list_$0 {
-    kind: ASTKinds.obs_addr_list_$0;
-    B: Nullable<CFWS>;
-    C: string;
-}
-export interface obs_addr_list_$1 {
-    kind: ASTKinds.obs_addr_list_$1;
-    F: string;
-    G: Nullable<obs_addr_list_$1_$0>;
-}
-export type obs_addr_list_$1_$0 = obs_addr_list_$1_$0_1 | obs_addr_list_$1_$0_2;
-export type obs_addr_list_$1_$0_1 = address;
-export interface obs_addr_list_$1_$0_2 {
-    kind: ASTKinds.obs_addr_list_$1_$0_2;
-    I: CFWS;
-}
-export interface obs_group_list {
-    kind: ASTKinds.obs_group_list;
-    A: obs_group_list_$0[];
-}
-export interface obs_group_list_$0 {
-    kind: ASTKinds.obs_group_list_$0;
-    B: Nullable<CFWS>;
-    C: string;
-}
-export interface obs_local_part {
-    kind: ASTKinds.obs_local_part;
-    A: word;
-    B: obs_local_part_$0[];
-}
-export interface obs_local_part_$0 {
-    kind: ASTKinds.obs_local_part_$0;
-    C: string;
-    D: word;
-}
-export interface obs_domain {
-    kind: ASTKinds.obs_domain;
-    A: atom;
-    B: obs_domain_$0[];
-}
-export interface obs_domain_$0 {
-    kind: ASTKinds.obs_domain_$0;
-    C: string;
-    D: atom;
 }
 export type obs_dtext = obs_dtext_1 | obs_dtext_2;
 export type obs_dtext_1 = obs_NO_WS_CTL;
@@ -1561,72 +1179,27 @@ export type obs_fields_$0_21 = obs_resent_cc;
 export type obs_fields_$0_22 = obs_resent_bcc;
 export type obs_fields_$0_23 = obs_resent_mid;
 export type obs_fields_$0_24 = obs_optional;
-export interface obs_orig_date {
-    kind: ASTKinds.obs_orig_date;
-    A: string;
-    C: string;
-    D: date_time;
-}
 export interface obs_from {
     kind: ASTKinds.obs_from;
     A: string;
     C: string;
     D: mailbox_list;
 }
-export interface obs_sender {
-    kind: ASTKinds.obs_sender;
-    A: string;
+export interface obs_group_list {
+    kind: ASTKinds.obs_group_list;
+    A: obs_group_list_$0[];
+}
+export interface obs_group_list_$0 {
+    kind: ASTKinds.obs_group_list_$0;
+    B: Nullable<CFWS>;
     C: string;
-    D: mailbox;
 }
-export interface obs_reply_to {
-    kind: ASTKinds.obs_reply_to;
-    A: string;
-    C: string;
-    D: address_list;
+export interface obs_hour {
+    kind: ASTKinds.obs_hour;
+    B: TWO_DIGIT;
 }
-export interface obs_to {
-    kind: ASTKinds.obs_to;
-    A: string;
-    C: string;
-    D: address_list;
-}
-export interface obs_cc {
-    kind: ASTKinds.obs_cc;
-    A: string;
-    C: string;
-    D: address_list;
-}
-export interface obs_bcc {
-    kind: ASTKinds.obs_bcc;
-    A: string;
-    C: string;
-    D: obs_bcc_$0;
-}
-export type obs_bcc_$0 = obs_bcc_$0_1 | obs_bcc_$0_2;
-export interface obs_bcc_$0_1 {
-    kind: ASTKinds.obs_bcc_$0_1;
-    E: address_list;
-}
-export interface obs_bcc_$0_2 {
-    kind: ASTKinds.obs_bcc_$0_2;
-    F: obs_bcc_$0_$0;
-}
-export interface obs_bcc_$0_$0 {
-    kind: ASTKinds.obs_bcc_$0_$0;
-    G: obs_bcc_$0_$0_$0[];
-}
-export interface obs_bcc_$0_$0_$0 {
-    kind: ASTKinds.obs_bcc_$0_$0_$0;
-    H: Nullable<CFWS>;
-    I: string;
-}
-export interface obs_message_id {
-    kind: ASTKinds.obs_message_id;
-    A: string;
-    C: string;
-    D: msg_id;
-}
+export type obs_id_left = local_part;
+export type obs_id_right = domain;
 export interface obs_in_reply_to {
     kind: ASTKinds.obs_in_reply_to;
     A: string;
@@ -1636,6 +1209,109 @@ export interface obs_in_reply_to {
 export type obs_in_reply_to_$0 = obs_in_reply_to_$0_1 | obs_in_reply_to_$0_2;
 export type obs_in_reply_to_$0_1 = phrase;
 export type obs_in_reply_to_$0_2 = msg_id;
+export interface obs_keywords {
+    kind: ASTKinds.obs_keywords;
+    A: string;
+    C: string;
+    D: obs_phrase_list;
+}
+export interface obs_local_part {
+    kind: ASTKinds.obs_local_part;
+    A: word;
+    B: obs_local_part_$0[];
+}
+export interface obs_local_part_$0 {
+    kind: ASTKinds.obs_local_part_$0;
+    C: string;
+    D: word;
+}
+export interface obs_mbox_list {
+    kind: ASTKinds.obs_mbox_list;
+    A: obs_mbox_list_$0[];
+    D: mailbox;
+    E: obs_mbox_list_$1[];
+}
+export interface obs_mbox_list_$0 {
+    kind: ASTKinds.obs_mbox_list_$0;
+    B: Nullable<CFWS>;
+    C: string;
+}
+export interface obs_mbox_list_$1 {
+    kind: ASTKinds.obs_mbox_list_$1;
+    F: string;
+    G: Nullable<obs_mbox_list_$1_$0>;
+}
+export type obs_mbox_list_$1_$0 = obs_mbox_list_$1_$0_1 | obs_mbox_list_$1_$0_2;
+export type obs_mbox_list_$1_$0_1 = mailbox;
+export interface obs_mbox_list_$1_$0_2 {
+    kind: ASTKinds.obs_mbox_list_$1_$0_2;
+    I: CFWS;
+}
+export interface obs_message_id {
+    kind: ASTKinds.obs_message_id;
+    A: string;
+    C: string;
+    D: msg_id;
+}
+export interface obs_minute {
+    kind: ASTKinds.obs_minute;
+    B: TWO_DIGIT;
+}
+export interface obs_optional {
+    kind: ASTKinds.obs_optional;
+    A: field_name;
+    C: string;
+    D: unstructured;
+}
+export interface obs_orig_date {
+    kind: ASTKinds.obs_orig_date;
+    A: string;
+    C: string;
+    D: date_time;
+}
+export interface obs_phrase {
+    kind: ASTKinds.obs_phrase;
+    A: word;
+    B: obs_phrase_$0;
+}
+export type obs_phrase_$0 = obs_phrase_$0_1 | obs_phrase_$0_2 | obs_phrase_$0_3;
+export type obs_phrase_$0_1 = word;
+export type obs_phrase_$0_2 = string;
+export type obs_phrase_$0_3 = CFWS;
+export interface obs_phrase_list {
+    kind: ASTKinds.obs_phrase_list;
+    A: obs_phrase_list_$0;
+    D: obs_phrase_list_$1[];
+}
+export type obs_phrase_list_$0 = obs_phrase_list_$0_1 | obs_phrase_list_$0_2;
+export type obs_phrase_list_$0_1 = phrase;
+export type obs_phrase_list_$0_2 = CFWS;
+export interface obs_phrase_list_$1 {
+    kind: ASTKinds.obs_phrase_list_$1;
+    E: string;
+    F: Nullable<obs_phrase_list_$1_$0>;
+}
+export type obs_phrase_list_$1_$0 = obs_phrase_list_$1_$0_1 | obs_phrase_list_$1_$0_2;
+export type obs_phrase_list_$1_$0_1 = phrase;
+export type obs_phrase_list_$1_$0_2 = CFWS;
+export interface obs_qp {
+    kind: ASTKinds.obs_qp;
+    A: string;
+    B: obs_qp_$0;
+}
+export type obs_qp_$0 = obs_qp_$0_1 | obs_qp_$0_2 | obs_qp_$0_3 | obs_qp_$0_4;
+export type obs_qp_$0_1 = string;
+export type obs_qp_$0_2 = obs_NO_WS_CTL;
+export type obs_qp_$0_3 = LF;
+export type obs_qp_$0_4 = CR;
+export type obs_qtext = obs_NO_WS_CTL;
+export interface obs_received {
+    kind: ASTKinds.obs_received;
+    A: string;
+    C: string;
+    D: received_token[];
+    E: CRLF;
+}
 export interface obs_references {
     kind: ASTKinds.obs_references;
     A: string;
@@ -1645,53 +1321,8 @@ export interface obs_references {
 export type obs_references_$0 = obs_references_$0_1 | obs_references_$0_2;
 export type obs_references_$0_1 = phrase;
 export type obs_references_$0_2 = msg_id;
-export type obs_id_left = local_part;
-export type obs_id_right = domain;
-export interface obs_subject {
-    kind: ASTKinds.obs_subject;
-    A: string;
-    C: string;
-    D: unstructured;
-}
-export interface obs_comments {
-    kind: ASTKinds.obs_comments;
-    A: string;
-    C: string;
-    D: unstructured;
-}
-export interface obs_keywords {
-    kind: ASTKinds.obs_keywords;
-    A: string;
-    C: string;
-    D: obs_phrase_list;
-}
-export interface obs_resent_from {
-    kind: ASTKinds.obs_resent_from;
-    A: string;
-    C: string;
-    D: mailbox_list;
-}
-export interface obs_resent_send {
-    kind: ASTKinds.obs_resent_send;
-    A: string;
-    C: string;
-    D: mailbox;
-}
-export interface obs_resent_date {
-    kind: ASTKinds.obs_resent_date;
-    A: string;
-    C: string;
-    D: date_time;
-}
-export interface obs_resent_to {
-    kind: ASTKinds.obs_resent_to;
-    A: string;
-    C: string;
-    D: address_list;
-    E: CRLF;
-}
-export interface obs_resent_cc {
-    kind: ASTKinds.obs_resent_cc;
+export interface obs_reply_to {
+    kind: ASTKinds.obs_reply_to;
     A: string;
     C: string;
     D: address_list;
@@ -1720,6 +1351,24 @@ export interface obs_resent_bcc_$0_$0_$0 {
     H: Nullable<CFWS>;
     I: string;
 }
+export interface obs_resent_cc {
+    kind: ASTKinds.obs_resent_cc;
+    A: string;
+    C: string;
+    D: address_list;
+}
+export interface obs_resent_date {
+    kind: ASTKinds.obs_resent_date;
+    A: string;
+    C: string;
+    D: date_time;
+}
+export interface obs_resent_from {
+    kind: ASTKinds.obs_resent_from;
+    A: string;
+    C: string;
+    D: mailbox_list;
+}
 export interface obs_resent_mid {
     kind: ASTKinds.obs_resent_mid;
     A: string;
@@ -1732,24 +1381,356 @@ export interface obs_resent_rply {
     C: string;
     D: address_list;
 }
+export interface obs_resent_send {
+    kind: ASTKinds.obs_resent_send;
+    A: string;
+    C: string;
+    D: mailbox;
+}
+export interface obs_resent_to {
+    kind: ASTKinds.obs_resent_to;
+    A: string;
+    C: string;
+    D: address_list;
+    E: CRLF;
+}
 export interface obs_return {
     kind: ASTKinds.obs_return;
     A: string;
     C: string;
     D: path;
 }
-export interface obs_received {
-    kind: ASTKinds.obs_received;
+export interface obs_route {
+    kind: ASTKinds.obs_route;
+    B: string;
+}
+export interface obs_second {
+    kind: ASTKinds.obs_second;
+    B: TWO_DIGIT;
+}
+export interface obs_sender {
+    kind: ASTKinds.obs_sender;
     A: string;
     C: string;
-    D: received_token[];
-    E: CRLF;
+    D: mailbox;
 }
-export interface obs_optional {
-    kind: ASTKinds.obs_optional;
-    A: field_name;
+export interface obs_subject {
+    kind: ASTKinds.obs_subject;
+    _name: string;
     C: string;
-    D: unstructured;
+    _value: unstructured;
+}
+export interface obs_to {
+    kind: ASTKinds.obs_to;
+    A: string;
+    C: string;
+    D: address_list;
+}
+export interface obs_unstruct {
+    kind: ASTKinds.obs_unstruct;
+    A: obs_unstruct_$0[];
+}
+export type obs_unstruct_$0 = obs_unstruct_$0_1 | obs_unstruct_$0_2;
+export interface obs_unstruct_$0_1 {
+    kind: ASTKinds.obs_unstruct_$0_1;
+    B: obs_unstruct_$0_$0;
+}
+export type obs_unstruct_$0_2 = FWS;
+export interface obs_unstruct_$0_$0 {
+    kind: ASTKinds.obs_unstruct_$0_$0;
+    E: obs_unstruct_$0_$0_$0[];
+}
+export interface obs_unstruct_$0_$0_$0 {
+    kind: ASTKinds.obs_unstruct_$0_$0_$0;
+    F: obs_utext;
+}
+export type obs_utext = obs_utext_1 | obs_utext_2 | obs_utext_3;
+export type obs_utext_1 = string;
+export type obs_utext_2 = obs_NO_WS_CTL;
+export type obs_utext_3 = VCHAR;
+export interface obs_year {
+    kind: ASTKinds.obs_year;
+    A: Nullable<CFWS>;
+    B: TWO_DIGIT;
+    C: DIGIT[];
+}
+export type obs_zone = obs_zone_1 | obs_zone_2 | obs_zone_3 | obs_zone_4 | obs_zone_5 | obs_zone_6 | obs_zone_7 | obs_zone_8 | obs_zone_9 | obs_zone_10 | obs_zone_11 | obs_zone_12 | obs_zone_13 | obs_zone_14;
+export type obs_zone_1 = string;
+export type obs_zone_2 = string;
+export type obs_zone_3 = string;
+export type obs_zone_4 = string;
+export type obs_zone_5 = string;
+export type obs_zone_6 = string;
+export type obs_zone_7 = string;
+export type obs_zone_8 = string;
+export type obs_zone_9 = string;
+export type obs_zone_10 = string;
+export type obs_zone_11 = string;
+export type obs_zone_12 = string;
+export type obs_zone_13 = string;
+export type obs_zone_14 = string;
+export interface optional_field {
+    kind: ASTKinds.optional_field;
+    A: field_name;
+    B: string;
+    C: unstructured;
+}
+export interface orig_date {
+    kind: ASTKinds.orig_date;
+    A: string;
+    B: string;
+    C: date_time;
+}
+export type path = path_1 | path_2;
+export type path_1 = angle_addr;
+export type path_2 = path_$0;
+export interface path_$0 {
+    kind: ASTKinds.path_$0;
+}
+export type phrase = phrase_1 | phrase_2;
+export type phrase_1 = word[];
+export type phrase_2 = obs_phrase;
+export type qcontent = qcontent_1 | qcontent_2;
+export type qcontent_1 = qtext;
+export type qcontent_2 = quoted_pair;
+export type qtext = qtext_1 | qtext_2 | qtext_3 | qtext_4;
+export type qtext_1 = string;
+export type qtext_2 = string;
+export type qtext_3 = string;
+export type qtext_4 = obs_qtext;
+export type quoted_pair = quoted_pair_1 | quoted_pair_2;
+export interface quoted_pair_1 {
+    kind: ASTKinds.quoted_pair_1;
+    A: quoted_pair_$0;
+}
+export interface quoted_pair_2 {
+    kind: ASTKinds.quoted_pair_2;
+    F: obs_qp;
+}
+export interface quoted_pair_$0 {
+    kind: ASTKinds.quoted_pair_$0;
+    B: string;
+    C: quoted_pair_$0_$0;
+}
+export type quoted_pair_$0_$0 = quoted_pair_$0_$0_1 | quoted_pair_$0_$0_2;
+export interface quoted_pair_$0_$0_1 {
+    kind: ASTKinds.quoted_pair_$0_$0_1;
+    D: VCHAR;
+}
+export type quoted_pair_$0_$0_2 = WSP;
+export interface quoted_string {
+    kind: ASTKinds.quoted_string;
+    B: DQUOTE;
+    C: quoted_string_$0[];
+    G: DQUOTE;
+}
+export interface quoted_string_$0 {
+    kind: ASTKinds.quoted_string_$0;
+    E: qcontent;
+}
+export interface received {
+    kind: ASTKinds.received;
+    A: string;
+    B: string;
+    C: received_token[];
+    D: string;
+    E: date_time;
+}
+export type received_token = received_token_1 | received_token_2 | received_token_3 | received_token_4;
+export type received_token_1 = word;
+export type received_token_2 = angle_addr;
+export type received_token_3 = addr_spec;
+export type received_token_4 = domain;
+export interface references {
+    kind: ASTKinds.references;
+    A: string;
+    B: string;
+    C: msg_id[];
+}
+export interface reply_to {
+    kind: ASTKinds.reply_to;
+    A: string;
+    B: string;
+    C: address_list;
+}
+export interface resent_bcc {
+    kind: ASTKinds.resent_bcc;
+    A: string;
+    B: string;
+    C: Nullable<resent_bcc_$0>;
+}
+export type resent_bcc_$0 = resent_bcc_$0_1 | resent_bcc_$0_2;
+export interface resent_bcc_$0_1 {
+    kind: ASTKinds.resent_bcc_$0_1;
+    D: address_list;
+}
+export type resent_bcc_$0_2 = CFWS;
+export interface resent_cc {
+    kind: ASTKinds.resent_cc;
+    A: string;
+    B: string;
+    C: address_list;
+}
+export interface resent_date {
+    kind: ASTKinds.resent_date;
+    A: string;
+    B: string;
+    C: date_time;
+}
+export interface resent_from {
+    kind: ASTKinds.resent_from;
+    A: string;
+    B: string;
+    C: mailbox_list;
+}
+export interface resent_msg_id {
+    kind: ASTKinds.resent_msg_id;
+    A: string;
+    B: string;
+    C: msg_id;
+}
+export interface resent_sender {
+    kind: ASTKinds.resent_sender;
+    A: string;
+    B: string;
+    C: mailbox;
+}
+export interface resent_to {
+    kind: ASTKinds.resent_to;
+    A: string;
+    B: string;
+    C: address_list;
+}
+export interface return_path {
+    kind: ASTKinds.return_path;
+    A: string;
+    B: string;
+    C: path;
+}
+export type second = second_1 | second_2;
+export interface second_1 {
+    kind: ASTKinds.second_1;
+    A: TWO_DIGIT;
+}
+export interface second_2 {
+    kind: ASTKinds.second_2;
+    B: obs_second;
+}
+export interface sender {
+    kind: ASTKinds.sender;
+    A: string;
+    B: string;
+    C: mailbox;
+}
+export type specials = specials_1 | specials_2 | specials_3 | specials_4 | specials_5 | specials_6 | specials_7 | specials_8 | specials_9 | specials_10;
+export type specials_1 = string;
+export type specials_2 = string;
+export type specials_3 = string;
+export type specials_4 = string;
+export type specials_5 = string;
+export type specials_6 = string;
+export type specials_7 = string;
+export type specials_8 = string;
+export type specials_9 = string;
+export type specials_10 = DQUOTE;
+export interface subject {
+    kind: ASTKinds.subject;
+    _name: string;
+    B: string;
+    _value: unstructured;
+}
+export type text = text_1 | text_2 | text_3 | text_4;
+export type text_1 = string;
+export type text_2 = string;
+export type text_3 = string;
+export type text_4 = string;
+export interface time {
+    kind: ASTKinds.time;
+    A: time_of_day;
+    B: zone;
+}
+export interface time_of_day {
+    kind: ASTKinds.time_of_day;
+    A: hour;
+    B: string;
+    C: minute;
+    D: Nullable<time_of_day_$0>;
+}
+export interface time_of_day_$0 {
+    kind: ASTKinds.time_of_day_$0;
+    E: string;
+    F: second;
+}
+export interface to {
+    kind: ASTKinds.to;
+    name: string;
+    B: string;
+    _address_list: address_list;
+}
+export interface trace {
+    kind: ASTKinds.trace;
+    A: Nullable<return_path>;
+    B: received[];
+}
+export type unstructured = unstructured_1 | unstructured_2;
+export interface unstructured_1 {
+    kind: ASTKinds.unstructured_1;
+    A: unstructured_$0;
+}
+export interface unstructured_2 {
+    kind: ASTKinds.unstructured_2;
+    F: obs_unstruct;
+}
+export interface unstructured_$0 {
+    kind: ASTKinds.unstructured_$0;
+    B: unstructured_$0_$0[];
+}
+export interface unstructured_$0_$0 {
+    kind: ASTKinds.unstructured_$0_$0;
+    C: Nullable<FWS>;
+    D: VCHAR;
+}
+export type word = word_1 | word_2;
+export type word_1 = atom;
+export type word_2 = quoted_string;
+export type year = year_1 | year_2;
+export interface year_1 {
+    kind: ASTKinds.year_1;
+    A: year_$0;
+}
+export interface year_2 {
+    kind: ASTKinds.year_2;
+    F: obs_year;
+}
+export interface year_$0 {
+    kind: ASTKinds.year_$0;
+    B: FWS;
+    C: FOUR_DIGIT;
+    D: DIGIT[];
+    E: FWS;
+}
+export type zone = zone_1 | zone_2;
+export interface zone_1 {
+    kind: ASTKinds.zone_1;
+    A: zone_$0;
+}
+export interface zone_2 {
+    kind: ASTKinds.zone_2;
+    G: obs_zone;
+}
+export interface zone_$0 {
+    kind: ASTKinds.zone_$0;
+    C: zone_$0_$0;
+    F: FOUR_DIGIT;
+}
+export type zone_$0_$0 = zone_$0_$0_1 | zone_$0_$0_2;
+export interface zone_$0_$0_1 {
+    kind: ASTKinds.zone_$0_$0_1;
+    D: string;
+}
+export interface zone_$0_$0_2 {
+    kind: ASTKinds.zone_$0_$0_2;
+    E: string;
 }
 export class Parser {
     private readonly input: string;
@@ -1768,440 +1749,505 @@ export class Parser {
     }
     public clearMemos(): void {
         this.$scope$start$memo.clear();
-        this.$scope$CR$memo.clear();
-        this.$scope$CRLF$memo.clear();
-        this.$scope$DIGIT$memo.clear();
-        this.$scope$TWO_DIGIT$memo.clear();
-        this.$scope$FOUR_DIGIT$memo.clear();
-        this.$scope$DQUOTE$memo.clear();
-        this.$scope$HTAB$memo.clear();
-        this.$scope$LF$memo.clear();
-        this.$scope$SP$memo.clear();
-        this.$scope$VCHAR$memo.clear();
-        this.$scope$WSP$memo.clear();
-        this.$scope$quoted_pair$memo.clear();
-        this.$scope$quoted_pair_$0$memo.clear();
-        this.$scope$quoted_pair_$0_$0$memo.clear();
-        this.$scope$FWS$memo.clear();
-        this.$scope$FWS_$0$memo.clear();
-        this.$scope$FWS_$0_$0$memo.clear();
-        this.$scope$ctext$memo.clear();
-        this.$scope$ccontent$memo.clear();
-        this.$scope$comment$memo.clear();
-        this.$scope$comment_$0$memo.clear();
         this.$scope$CFWS$memo.clear();
         this.$scope$CFWS_$0$memo.clear();
         this.$scope$CFWS_$0_$0$memo.clear();
-        this.$scope$atext$memo.clear();
-        this.$scope$atom$memo.clear();
-        this.$scope$dot_atom_text$memo.clear();
-        this.$scope$dot_atom_text_$0$memo.clear();
-        this.$scope$dot_atom$memo.clear();
-        this.$scope$specials$memo.clear();
-        this.$scope$qtext$memo.clear();
-        this.$scope$qcontent$memo.clear();
-        this.$scope$quoted_string$memo.clear();
-        this.$scope$quoted_string_$0$memo.clear();
-        this.$scope$word$memo.clear();
-        this.$scope$phrase$memo.clear();
-        this.$scope$unstructured$memo.clear();
-        this.$scope$unstructured_$0$memo.clear();
-        this.$scope$unstructured_$0_$0$memo.clear();
-        this.$scope$date_time$memo.clear();
-        this.$scope$date_time_$0$memo.clear();
-        this.$scope$day_of_week$memo.clear();
-        this.$scope$day_of_week_$0$memo.clear();
-        this.$scope$day_name$memo.clear();
-        this.$scope$date$memo.clear();
-        this.$scope$day$memo.clear();
-        this.$scope$day_$0$memo.clear();
-        this.$scope$month$memo.clear();
-        this.$scope$year$memo.clear();
-        this.$scope$year_$0$memo.clear();
-        this.$scope$time$memo.clear();
-        this.$scope$time_of_day$memo.clear();
-        this.$scope$time_of_day_$0$memo.clear();
-        this.$scope$hour$memo.clear();
-        this.$scope$minute$memo.clear();
-        this.$scope$second$memo.clear();
-        this.$scope$zone$memo.clear();
-        this.$scope$zone_$0$memo.clear();
-        this.$scope$zone_$0_$0$memo.clear();
+        this.$scope$CR$memo.clear();
+        this.$scope$CRLF$memo.clear();
+        this.$scope$DIGIT$memo.clear();
+        this.$scope$DQUOTE$memo.clear();
+        this.$scope$FOUR_DIGIT$memo.clear();
+        this.$scope$FWS$memo.clear();
+        this.$scope$FWS_$0$memo.clear();
+        this.$scope$FWS_$0_$0$memo.clear();
+        this.$scope$HTAB$memo.clear();
+        this.$scope$LF$memo.clear();
+        this.$scope$SP$memo.clear();
+        this.$scope$TWO_DIGIT$memo.clear();
+        this.$scope$VCHAR$memo.clear();
+        this.$scope$WSP$memo.clear();
+        this.$scope$_998text$memo.clear();
+        this.$scope$addr_spec$memo.clear();
         this.$scope$address$memo.clear();
-        this.$scope$mailbox$memo.clear();
-        this.$scope$name_addr$memo.clear();
-        this.$scope$angle_addr$memo.clear();
-        this.$scope$group$memo.clear();
-        this.$scope$display_name$memo.clear();
-        this.$scope$mailbox_list$memo.clear();
-        this.$scope$mailbox_list_$0$memo.clear();
-        this.$scope$mailbox_list_$0_$0$memo.clear();
         this.$scope$address_list$memo.clear();
         this.$scope$address_list_$0$memo.clear();
         this.$scope$address_list_$0_$0$memo.clear();
-        this.$scope$group_list$memo.clear();
-        this.$scope$addr_spec$memo.clear();
-        this.$scope$local_part$memo.clear();
-        this.$scope$domain$memo.clear();
-        this.$scope$domain_literal$memo.clear();
-        this.$scope$domain_literal_$0$memo.clear();
-        this.$scope$dtext$memo.clear();
-        this.$scope$message$memo.clear();
-        this.$scope$message_$0$memo.clear();
-        this.$scope$message_$1$memo.clear();
+        this.$scope$angle_addr$memo.clear();
+        this.$scope$atext$memo.clear();
+        this.$scope$atom$memo.clear();
+        this.$scope$bcc$memo.clear();
+        this.$scope$bcc_$0$memo.clear();
         this.$scope$body$memo.clear();
         this.$scope$body_$0$memo.clear();
         this.$scope$body_$0_$0$memo.clear();
-        this.$scope$text$memo.clear();
-        this.$scope$_998text$memo.clear();
+        this.$scope$cc$memo.clear();
+        this.$scope$ccontent$memo.clear();
+        this.$scope$comment$memo.clear();
+        this.$scope$comment_$0$memo.clear();
+        this.$scope$comments$memo.clear();
+        this.$scope$ctext$memo.clear();
+        this.$scope$date$memo.clear();
+        this.$scope$date_time$memo.clear();
+        this.$scope$date_time_$0$memo.clear();
+        this.$scope$day$memo.clear();
+        this.$scope$day_$0$memo.clear();
+        this.$scope$day_name$memo.clear();
+        this.$scope$day_of_week$memo.clear();
+        this.$scope$day_of_week_$0$memo.clear();
+        this.$scope$display_name$memo.clear();
+        this.$scope$domain$memo.clear();
+        this.$scope$domain_literal$memo.clear();
+        this.$scope$domain_literal_$0$memo.clear();
+        this.$scope$dot_atom$memo.clear();
+        this.$scope$dot_atom_text$memo.clear();
+        this.$scope$dot_atom_text_$0$memo.clear();
+        this.$scope$dtext$memo.clear();
+        this.$scope$field_name$memo.clear();
         this.$scope$fields$memo.clear();
         this.$scope$fields_$0$memo.clear();
         this.$scope$fields_$0_$0$memo.clear();
         this.$scope$fields_$1$memo.clear();
-        this.$scope$orig_date$memo.clear();
         this.$scope$from$memo.clear();
-        this.$scope$sender$memo.clear();
-        this.$scope$reply_to$memo.clear();
-        this.$scope$to$memo.clear();
-        this.$scope$cc$memo.clear();
-        this.$scope$bcc$memo.clear();
-        this.$scope$bcc_$0$memo.clear();
-        this.$scope$message_id$memo.clear();
-        this.$scope$in_reply_to$memo.clear();
-        this.$scope$references$memo.clear();
-        this.$scope$msg_id$memo.clear();
+        this.$scope$ftext$memo.clear();
+        this.$scope$group$memo.clear();
+        this.$scope$group_list$memo.clear();
+        this.$scope$hour$memo.clear();
         this.$scope$id_left$memo.clear();
         this.$scope$id_right$memo.clear();
-        this.$scope$no_fold_literal$memo.clear();
-        this.$scope$subject$memo.clear();
-        this.$scope$comments$memo.clear();
+        this.$scope$in_reply_to$memo.clear();
         this.$scope$keywords$memo.clear();
         this.$scope$keywords_$0$memo.clear();
-        this.$scope$resent_date$memo.clear();
-        this.$scope$resent_from$memo.clear();
-        this.$scope$resent_sender$memo.clear();
-        this.$scope$resent_to$memo.clear();
-        this.$scope$resent_cc$memo.clear();
-        this.$scope$resent_bcc$memo.clear();
-        this.$scope$resent_bcc_$0$memo.clear();
-        this.$scope$resent_msg_id$memo.clear();
-        this.$scope$trace$memo.clear();
-        this.$scope$return_path$memo.clear();
-        this.$scope$path$memo.clear();
-        this.$scope$path_$0$memo.clear();
-        this.$scope$received$memo.clear();
-        this.$scope$received_token$memo.clear();
-        this.$scope$optional_field$memo.clear();
-        this.$scope$field_name$memo.clear();
-        this.$scope$ftext$memo.clear();
+        this.$scope$local_part$memo.clear();
+        this.$scope$mailbox$memo.clear();
+        this.$scope$mailbox_list$memo.clear();
+        this.$scope$mailbox_list_$0$memo.clear();
+        this.$scope$mailbox_list_$0_$0$memo.clear();
+        this.$scope$message$memo.clear();
+        this.$scope$message_$0$memo.clear();
+        this.$scope$message_$1$memo.clear();
+        this.$scope$message_id$memo.clear();
+        this.$scope$minute$memo.clear();
+        this.$scope$month$memo.clear();
+        this.$scope$msg_id$memo.clear();
+        this.$scope$name_addr$memo.clear();
+        this.$scope$no_fold_literal$memo.clear();
+        this.$scope$obs_FWS$memo.clear();
+        this.$scope$obs_FWS_$0$memo.clear();
         this.$scope$obs_NO_WS_CTL$memo.clear();
-        this.$scope$obs_ctext$memo.clear();
-        this.$scope$obs_qtext$memo.clear();
-        this.$scope$obs_utext$memo.clear();
-        this.$scope$obs_qp$memo.clear();
-        this.$scope$obs_qp_$0$memo.clear();
+        this.$scope$obs_addr_list$memo.clear();
+        this.$scope$obs_addr_list_$0$memo.clear();
+        this.$scope$obs_addr_list_$1$memo.clear();
+        this.$scope$obs_addr_list_$1_$0$memo.clear();
+        this.$scope$obs_angle_addr$memo.clear();
+        this.$scope$obs_bcc$memo.clear();
+        this.$scope$obs_bcc_$0$memo.clear();
+        this.$scope$obs_bcc_$0_$0$memo.clear();
+        this.$scope$obs_bcc_$0_$0_$0$memo.clear();
         this.$scope$obs_body$memo.clear();
         this.$scope$obs_body_$0$memo.clear();
         this.$scope$obs_body_$0_$0$memo.clear();
         this.$scope$obs_body_$0_$0_$0$memo.clear();
         this.$scope$obs_body_$0_$0_$0_$0$memo.clear();
-        this.$scope$obs_unstruct$memo.clear();
-        this.$scope$obs_unstruct_$0$memo.clear();
-        this.$scope$obs_unstruct_$0_$0$memo.clear();
-        this.$scope$obs_unstruct_$0_$0_$0$memo.clear();
+        this.$scope$obs_cc$memo.clear();
+        this.$scope$obs_comments$memo.clear();
+        this.$scope$obs_ctext$memo.clear();
+        this.$scope$obs_day$memo.clear();
+        this.$scope$obs_day_of_week$memo.clear();
+        this.$scope$obs_domain$memo.clear();
+        this.$scope$obs_domain_$0$memo.clear();
+        this.$scope$obs_domain_list$memo.clear();
+        this.$scope$obs_domain_list_$0$memo.clear();
+        this.$scope$obs_domain_list_$1$memo.clear();
+        this.$scope$obs_domain_list_$1_$0$memo.clear();
+        this.$scope$obs_dtext$memo.clear();
+        this.$scope$obs_fields$memo.clear();
+        this.$scope$obs_fields_$0$memo.clear();
+        this.$scope$obs_from$memo.clear();
+        this.$scope$obs_group_list$memo.clear();
+        this.$scope$obs_group_list_$0$memo.clear();
+        this.$scope$obs_hour$memo.clear();
+        this.$scope$obs_id_left$memo.clear();
+        this.$scope$obs_id_right$memo.clear();
+        this.$scope$obs_in_reply_to$memo.clear();
+        this.$scope$obs_in_reply_to_$0$memo.clear();
+        this.$scope$obs_keywords$memo.clear();
+        this.$scope$obs_local_part$memo.clear();
+        this.$scope$obs_local_part_$0$memo.clear();
+        this.$scope$obs_mbox_list$memo.clear();
+        this.$scope$obs_mbox_list_$0$memo.clear();
+        this.$scope$obs_mbox_list_$1$memo.clear();
+        this.$scope$obs_mbox_list_$1_$0$memo.clear();
+        this.$scope$obs_message_id$memo.clear();
+        this.$scope$obs_minute$memo.clear();
+        this.$scope$obs_optional$memo.clear();
+        this.$scope$obs_orig_date$memo.clear();
         this.$scope$obs_phrase$memo.clear();
         this.$scope$obs_phrase_$0$memo.clear();
         this.$scope$obs_phrase_list$memo.clear();
         this.$scope$obs_phrase_list_$0$memo.clear();
         this.$scope$obs_phrase_list_$1$memo.clear();
         this.$scope$obs_phrase_list_$1_$0$memo.clear();
-        this.$scope$obs_FWS$memo.clear();
-        this.$scope$obs_FWS_$0$memo.clear();
-        this.$scope$obs_day_of_week$memo.clear();
-        this.$scope$obs_day$memo.clear();
-        this.$scope$obs_year$memo.clear();
-        this.$scope$obs_hour$memo.clear();
-        this.$scope$obs_minute$memo.clear();
-        this.$scope$obs_second$memo.clear();
-        this.$scope$obs_zone$memo.clear();
-        this.$scope$obs_angle_addr$memo.clear();
-        this.$scope$obs_route$memo.clear();
-        this.$scope$obs_domain_list$memo.clear();
-        this.$scope$obs_domain_list_$0$memo.clear();
-        this.$scope$obs_domain_list_$1$memo.clear();
-        this.$scope$obs_domain_list_$1_$0$memo.clear();
-        this.$scope$obs_mbox_list$memo.clear();
-        this.$scope$obs_mbox_list_$0$memo.clear();
-        this.$scope$obs_mbox_list_$1$memo.clear();
-        this.$scope$obs_mbox_list_$1_$0$memo.clear();
-        this.$scope$obs_addr_list$memo.clear();
-        this.$scope$obs_addr_list_$0$memo.clear();
-        this.$scope$obs_addr_list_$1$memo.clear();
-        this.$scope$obs_addr_list_$1_$0$memo.clear();
-        this.$scope$obs_group_list$memo.clear();
-        this.$scope$obs_group_list_$0$memo.clear();
-        this.$scope$obs_local_part$memo.clear();
-        this.$scope$obs_local_part_$0$memo.clear();
-        this.$scope$obs_domain$memo.clear();
-        this.$scope$obs_domain_$0$memo.clear();
-        this.$scope$obs_dtext$memo.clear();
-        this.$scope$obs_fields$memo.clear();
-        this.$scope$obs_fields_$0$memo.clear();
-        this.$scope$obs_orig_date$memo.clear();
-        this.$scope$obs_from$memo.clear();
-        this.$scope$obs_sender$memo.clear();
-        this.$scope$obs_reply_to$memo.clear();
-        this.$scope$obs_to$memo.clear();
-        this.$scope$obs_cc$memo.clear();
-        this.$scope$obs_bcc$memo.clear();
-        this.$scope$obs_bcc_$0$memo.clear();
-        this.$scope$obs_bcc_$0_$0$memo.clear();
-        this.$scope$obs_bcc_$0_$0_$0$memo.clear();
-        this.$scope$obs_message_id$memo.clear();
-        this.$scope$obs_in_reply_to$memo.clear();
-        this.$scope$obs_in_reply_to_$0$memo.clear();
+        this.$scope$obs_qp$memo.clear();
+        this.$scope$obs_qp_$0$memo.clear();
+        this.$scope$obs_qtext$memo.clear();
+        this.$scope$obs_received$memo.clear();
         this.$scope$obs_references$memo.clear();
         this.$scope$obs_references_$0$memo.clear();
-        this.$scope$obs_id_left$memo.clear();
-        this.$scope$obs_id_right$memo.clear();
-        this.$scope$obs_subject$memo.clear();
-        this.$scope$obs_comments$memo.clear();
-        this.$scope$obs_keywords$memo.clear();
-        this.$scope$obs_resent_from$memo.clear();
-        this.$scope$obs_resent_send$memo.clear();
-        this.$scope$obs_resent_date$memo.clear();
-        this.$scope$obs_resent_to$memo.clear();
-        this.$scope$obs_resent_cc$memo.clear();
+        this.$scope$obs_reply_to$memo.clear();
         this.$scope$obs_resent_bcc$memo.clear();
         this.$scope$obs_resent_bcc_$0$memo.clear();
         this.$scope$obs_resent_bcc_$0_$0$memo.clear();
         this.$scope$obs_resent_bcc_$0_$0_$0$memo.clear();
+        this.$scope$obs_resent_cc$memo.clear();
+        this.$scope$obs_resent_date$memo.clear();
+        this.$scope$obs_resent_from$memo.clear();
         this.$scope$obs_resent_mid$memo.clear();
         this.$scope$obs_resent_rply$memo.clear();
+        this.$scope$obs_resent_send$memo.clear();
+        this.$scope$obs_resent_to$memo.clear();
         this.$scope$obs_return$memo.clear();
-        this.$scope$obs_received$memo.clear();
-        this.$scope$obs_optional$memo.clear();
+        this.$scope$obs_route$memo.clear();
+        this.$scope$obs_second$memo.clear();
+        this.$scope$obs_sender$memo.clear();
+        this.$scope$obs_subject$memo.clear();
+        this.$scope$obs_to$memo.clear();
+        this.$scope$obs_unstruct$memo.clear();
+        this.$scope$obs_unstruct_$0$memo.clear();
+        this.$scope$obs_unstruct_$0_$0$memo.clear();
+        this.$scope$obs_unstruct_$0_$0_$0$memo.clear();
+        this.$scope$obs_utext$memo.clear();
+        this.$scope$obs_year$memo.clear();
+        this.$scope$obs_zone$memo.clear();
+        this.$scope$optional_field$memo.clear();
+        this.$scope$orig_date$memo.clear();
+        this.$scope$path$memo.clear();
+        this.$scope$path_$0$memo.clear();
+        this.$scope$phrase$memo.clear();
+        this.$scope$qcontent$memo.clear();
+        this.$scope$qtext$memo.clear();
+        this.$scope$quoted_pair$memo.clear();
+        this.$scope$quoted_pair_$0$memo.clear();
+        this.$scope$quoted_pair_$0_$0$memo.clear();
+        this.$scope$quoted_string$memo.clear();
+        this.$scope$quoted_string_$0$memo.clear();
+        this.$scope$received$memo.clear();
+        this.$scope$received_token$memo.clear();
+        this.$scope$references$memo.clear();
+        this.$scope$reply_to$memo.clear();
+        this.$scope$resent_bcc$memo.clear();
+        this.$scope$resent_bcc_$0$memo.clear();
+        this.$scope$resent_cc$memo.clear();
+        this.$scope$resent_date$memo.clear();
+        this.$scope$resent_from$memo.clear();
+        this.$scope$resent_msg_id$memo.clear();
+        this.$scope$resent_sender$memo.clear();
+        this.$scope$resent_to$memo.clear();
+        this.$scope$return_path$memo.clear();
+        this.$scope$second$memo.clear();
+        this.$scope$sender$memo.clear();
+        this.$scope$specials$memo.clear();
+        this.$scope$subject$memo.clear();
+        this.$scope$text$memo.clear();
+        this.$scope$time$memo.clear();
+        this.$scope$time_of_day$memo.clear();
+        this.$scope$time_of_day_$0$memo.clear();
+        this.$scope$to$memo.clear();
+        this.$scope$trace$memo.clear();
+        this.$scope$unstructured$memo.clear();
+        this.$scope$unstructured_$0$memo.clear();
+        this.$scope$unstructured_$0_$0$memo.clear();
+        this.$scope$word$memo.clear();
+        this.$scope$year$memo.clear();
+        this.$scope$year_$0$memo.clear();
+        this.$scope$zone$memo.clear();
+        this.$scope$zone_$0$memo.clear();
+        this.$scope$zone_$0_$0$memo.clear();
     }
     protected $scope$start$memo: Map<number, [Nullable<start>, PosInfo]> = new Map();
-    protected $scope$CR$memo: Map<number, [Nullable<CR>, PosInfo]> = new Map();
-    protected $scope$CRLF$memo: Map<number, [Nullable<CRLF>, PosInfo]> = new Map();
-    protected $scope$DIGIT$memo: Map<number, [Nullable<DIGIT>, PosInfo]> = new Map();
-    protected $scope$TWO_DIGIT$memo: Map<number, [Nullable<TWO_DIGIT>, PosInfo]> = new Map();
-    protected $scope$FOUR_DIGIT$memo: Map<number, [Nullable<FOUR_DIGIT>, PosInfo]> = new Map();
-    protected $scope$DQUOTE$memo: Map<number, [Nullable<DQUOTE>, PosInfo]> = new Map();
-    protected $scope$HTAB$memo: Map<number, [Nullable<HTAB>, PosInfo]> = new Map();
-    protected $scope$LF$memo: Map<number, [Nullable<LF>, PosInfo]> = new Map();
-    protected $scope$SP$memo: Map<number, [Nullable<SP>, PosInfo]> = new Map();
-    protected $scope$VCHAR$memo: Map<number, [Nullable<VCHAR>, PosInfo]> = new Map();
-    protected $scope$WSP$memo: Map<number, [Nullable<WSP>, PosInfo]> = new Map();
-    protected $scope$quoted_pair$memo: Map<number, [Nullable<quoted_pair>, PosInfo]> = new Map();
-    protected $scope$quoted_pair_$0$memo: Map<number, [Nullable<quoted_pair_$0>, PosInfo]> = new Map();
-    protected $scope$quoted_pair_$0_$0$memo: Map<number, [Nullable<quoted_pair_$0_$0>, PosInfo]> = new Map();
-    protected $scope$FWS$memo: Map<number, [Nullable<FWS>, PosInfo]> = new Map();
-    protected $scope$FWS_$0$memo: Map<number, [Nullable<FWS_$0>, PosInfo]> = new Map();
-    protected $scope$FWS_$0_$0$memo: Map<number, [Nullable<FWS_$0_$0>, PosInfo]> = new Map();
-    protected $scope$ctext$memo: Map<number, [Nullable<ctext>, PosInfo]> = new Map();
-    protected $scope$ccontent$memo: Map<number, [Nullable<ccontent>, PosInfo]> = new Map();
-    protected $scope$comment$memo: Map<number, [Nullable<comment>, PosInfo]> = new Map();
-    protected $scope$comment_$0$memo: Map<number, [Nullable<comment_$0>, PosInfo]> = new Map();
     protected $scope$CFWS$memo: Map<number, [Nullable<CFWS>, PosInfo]> = new Map();
     protected $scope$CFWS_$0$memo: Map<number, [Nullable<CFWS_$0>, PosInfo]> = new Map();
     protected $scope$CFWS_$0_$0$memo: Map<number, [Nullable<CFWS_$0_$0>, PosInfo]> = new Map();
-    protected $scope$atext$memo: Map<number, [Nullable<atext>, PosInfo]> = new Map();
-    protected $scope$atom$memo: Map<number, [Nullable<atom>, PosInfo]> = new Map();
-    protected $scope$dot_atom_text$memo: Map<number, [Nullable<dot_atom_text>, PosInfo]> = new Map();
-    protected $scope$dot_atom_text_$0$memo: Map<number, [Nullable<dot_atom_text_$0>, PosInfo]> = new Map();
-    protected $scope$dot_atom$memo: Map<number, [Nullable<dot_atom>, PosInfo]> = new Map();
-    protected $scope$specials$memo: Map<number, [Nullable<specials>, PosInfo]> = new Map();
-    protected $scope$qtext$memo: Map<number, [Nullable<qtext>, PosInfo]> = new Map();
-    protected $scope$qcontent$memo: Map<number, [Nullable<qcontent>, PosInfo]> = new Map();
-    protected $scope$quoted_string$memo: Map<number, [Nullable<quoted_string>, PosInfo]> = new Map();
-    protected $scope$quoted_string_$0$memo: Map<number, [Nullable<quoted_string_$0>, PosInfo]> = new Map();
-    protected $scope$word$memo: Map<number, [Nullable<word>, PosInfo]> = new Map();
-    protected $scope$phrase$memo: Map<number, [Nullable<phrase>, PosInfo]> = new Map();
-    protected $scope$unstructured$memo: Map<number, [Nullable<unstructured>, PosInfo]> = new Map();
-    protected $scope$unstructured_$0$memo: Map<number, [Nullable<unstructured_$0>, PosInfo]> = new Map();
-    protected $scope$unstructured_$0_$0$memo: Map<number, [Nullable<unstructured_$0_$0>, PosInfo]> = new Map();
-    protected $scope$date_time$memo: Map<number, [Nullable<date_time>, PosInfo]> = new Map();
-    protected $scope$date_time_$0$memo: Map<number, [Nullable<date_time_$0>, PosInfo]> = new Map();
-    protected $scope$day_of_week$memo: Map<number, [Nullable<day_of_week>, PosInfo]> = new Map();
-    protected $scope$day_of_week_$0$memo: Map<number, [Nullable<day_of_week_$0>, PosInfo]> = new Map();
-    protected $scope$day_name$memo: Map<number, [Nullable<day_name>, PosInfo]> = new Map();
-    protected $scope$date$memo: Map<number, [Nullable<date>, PosInfo]> = new Map();
-    protected $scope$day$memo: Map<number, [Nullable<day>, PosInfo]> = new Map();
-    protected $scope$day_$0$memo: Map<number, [Nullable<day_$0>, PosInfo]> = new Map();
-    protected $scope$month$memo: Map<number, [Nullable<month>, PosInfo]> = new Map();
-    protected $scope$year$memo: Map<number, [Nullable<year>, PosInfo]> = new Map();
-    protected $scope$year_$0$memo: Map<number, [Nullable<year_$0>, PosInfo]> = new Map();
-    protected $scope$time$memo: Map<number, [Nullable<time>, PosInfo]> = new Map();
-    protected $scope$time_of_day$memo: Map<number, [Nullable<time_of_day>, PosInfo]> = new Map();
-    protected $scope$time_of_day_$0$memo: Map<number, [Nullable<time_of_day_$0>, PosInfo]> = new Map();
-    protected $scope$hour$memo: Map<number, [Nullable<hour>, PosInfo]> = new Map();
-    protected $scope$minute$memo: Map<number, [Nullable<minute>, PosInfo]> = new Map();
-    protected $scope$second$memo: Map<number, [Nullable<second>, PosInfo]> = new Map();
-    protected $scope$zone$memo: Map<number, [Nullable<zone>, PosInfo]> = new Map();
-    protected $scope$zone_$0$memo: Map<number, [Nullable<zone_$0>, PosInfo]> = new Map();
-    protected $scope$zone_$0_$0$memo: Map<number, [Nullable<zone_$0_$0>, PosInfo]> = new Map();
+    protected $scope$CR$memo: Map<number, [Nullable<CR>, PosInfo]> = new Map();
+    protected $scope$CRLF$memo: Map<number, [Nullable<CRLF>, PosInfo]> = new Map();
+    protected $scope$DIGIT$memo: Map<number, [Nullable<DIGIT>, PosInfo]> = new Map();
+    protected $scope$DQUOTE$memo: Map<number, [Nullable<DQUOTE>, PosInfo]> = new Map();
+    protected $scope$FOUR_DIGIT$memo: Map<number, [Nullable<FOUR_DIGIT>, PosInfo]> = new Map();
+    protected $scope$FWS$memo: Map<number, [Nullable<FWS>, PosInfo]> = new Map();
+    protected $scope$FWS_$0$memo: Map<number, [Nullable<FWS_$0>, PosInfo]> = new Map();
+    protected $scope$FWS_$0_$0$memo: Map<number, [Nullable<FWS_$0_$0>, PosInfo]> = new Map();
+    protected $scope$HTAB$memo: Map<number, [Nullable<HTAB>, PosInfo]> = new Map();
+    protected $scope$LF$memo: Map<number, [Nullable<LF>, PosInfo]> = new Map();
+    protected $scope$SP$memo: Map<number, [Nullable<SP>, PosInfo]> = new Map();
+    protected $scope$TWO_DIGIT$memo: Map<number, [Nullable<TWO_DIGIT>, PosInfo]> = new Map();
+    protected $scope$VCHAR$memo: Map<number, [Nullable<VCHAR>, PosInfo]> = new Map();
+    protected $scope$WSP$memo: Map<number, [Nullable<WSP>, PosInfo]> = new Map();
+    protected $scope$_998text$memo: Map<number, [Nullable<_998text>, PosInfo]> = new Map();
+    protected $scope$addr_spec$memo: Map<number, [Nullable<addr_spec>, PosInfo]> = new Map();
     protected $scope$address$memo: Map<number, [Nullable<address>, PosInfo]> = new Map();
-    protected $scope$mailbox$memo: Map<number, [Nullable<mailbox>, PosInfo]> = new Map();
-    protected $scope$name_addr$memo: Map<number, [Nullable<name_addr>, PosInfo]> = new Map();
-    protected $scope$angle_addr$memo: Map<number, [Nullable<angle_addr>, PosInfo]> = new Map();
-    protected $scope$group$memo: Map<number, [Nullable<group>, PosInfo]> = new Map();
-    protected $scope$display_name$memo: Map<number, [Nullable<display_name>, PosInfo]> = new Map();
-    protected $scope$mailbox_list$memo: Map<number, [Nullable<mailbox_list>, PosInfo]> = new Map();
-    protected $scope$mailbox_list_$0$memo: Map<number, [Nullable<mailbox_list_$0>, PosInfo]> = new Map();
-    protected $scope$mailbox_list_$0_$0$memo: Map<number, [Nullable<mailbox_list_$0_$0>, PosInfo]> = new Map();
     protected $scope$address_list$memo: Map<number, [Nullable<address_list>, PosInfo]> = new Map();
     protected $scope$address_list_$0$memo: Map<number, [Nullable<address_list_$0>, PosInfo]> = new Map();
     protected $scope$address_list_$0_$0$memo: Map<number, [Nullable<address_list_$0_$0>, PosInfo]> = new Map();
-    protected $scope$group_list$memo: Map<number, [Nullable<group_list>, PosInfo]> = new Map();
-    protected $scope$addr_spec$memo: Map<number, [Nullable<addr_spec>, PosInfo]> = new Map();
-    protected $scope$local_part$memo: Map<number, [Nullable<local_part>, PosInfo]> = new Map();
-    protected $scope$domain$memo: Map<number, [Nullable<domain>, PosInfo]> = new Map();
-    protected $scope$domain_literal$memo: Map<number, [Nullable<domain_literal>, PosInfo]> = new Map();
-    protected $scope$domain_literal_$0$memo: Map<number, [Nullable<domain_literal_$0>, PosInfo]> = new Map();
-    protected $scope$dtext$memo: Map<number, [Nullable<dtext>, PosInfo]> = new Map();
-    protected $scope$message$memo: Map<number, [Nullable<message>, PosInfo]> = new Map();
-    protected $scope$message_$0$memo: Map<number, [Nullable<message_$0>, PosInfo]> = new Map();
-    protected $scope$message_$1$memo: Map<number, [Nullable<message_$1>, PosInfo]> = new Map();
+    protected $scope$angle_addr$memo: Map<number, [Nullable<angle_addr>, PosInfo]> = new Map();
+    protected $scope$atext$memo: Map<number, [Nullable<atext>, PosInfo]> = new Map();
+    protected $scope$atom$memo: Map<number, [Nullable<atom>, PosInfo]> = new Map();
+    protected $scope$bcc$memo: Map<number, [Nullable<bcc>, PosInfo]> = new Map();
+    protected $scope$bcc_$0$memo: Map<number, [Nullable<bcc_$0>, PosInfo]> = new Map();
     protected $scope$body$memo: Map<number, [Nullable<body>, PosInfo]> = new Map();
     protected $scope$body_$0$memo: Map<number, [Nullable<body_$0>, PosInfo]> = new Map();
     protected $scope$body_$0_$0$memo: Map<number, [Nullable<body_$0_$0>, PosInfo]> = new Map();
-    protected $scope$text$memo: Map<number, [Nullable<text>, PosInfo]> = new Map();
-    protected $scope$_998text$memo: Map<number, [Nullable<_998text>, PosInfo]> = new Map();
+    protected $scope$cc$memo: Map<number, [Nullable<cc>, PosInfo]> = new Map();
+    protected $scope$ccontent$memo: Map<number, [Nullable<ccontent>, PosInfo]> = new Map();
+    protected $scope$comment$memo: Map<number, [Nullable<comment>, PosInfo]> = new Map();
+    protected $scope$comment_$0$memo: Map<number, [Nullable<comment_$0>, PosInfo]> = new Map();
+    protected $scope$comments$memo: Map<number, [Nullable<comments>, PosInfo]> = new Map();
+    protected $scope$ctext$memo: Map<number, [Nullable<ctext>, PosInfo]> = new Map();
+    protected $scope$date$memo: Map<number, [Nullable<date>, PosInfo]> = new Map();
+    protected $scope$date_time$memo: Map<number, [Nullable<date_time>, PosInfo]> = new Map();
+    protected $scope$date_time_$0$memo: Map<number, [Nullable<date_time_$0>, PosInfo]> = new Map();
+    protected $scope$day$memo: Map<number, [Nullable<day>, PosInfo]> = new Map();
+    protected $scope$day_$0$memo: Map<number, [Nullable<day_$0>, PosInfo]> = new Map();
+    protected $scope$day_name$memo: Map<number, [Nullable<day_name>, PosInfo]> = new Map();
+    protected $scope$day_of_week$memo: Map<number, [Nullable<day_of_week>, PosInfo]> = new Map();
+    protected $scope$day_of_week_$0$memo: Map<number, [Nullable<day_of_week_$0>, PosInfo]> = new Map();
+    protected $scope$display_name$memo: Map<number, [Nullable<display_name>, PosInfo]> = new Map();
+    protected $scope$domain$memo: Map<number, [Nullable<domain>, PosInfo]> = new Map();
+    protected $scope$domain_literal$memo: Map<number, [Nullable<domain_literal>, PosInfo]> = new Map();
+    protected $scope$domain_literal_$0$memo: Map<number, [Nullable<domain_literal_$0>, PosInfo]> = new Map();
+    protected $scope$dot_atom$memo: Map<number, [Nullable<dot_atom>, PosInfo]> = new Map();
+    protected $scope$dot_atom_text$memo: Map<number, [Nullable<dot_atom_text>, PosInfo]> = new Map();
+    protected $scope$dot_atom_text_$0$memo: Map<number, [Nullable<dot_atom_text_$0>, PosInfo]> = new Map();
+    protected $scope$dtext$memo: Map<number, [Nullable<dtext>, PosInfo]> = new Map();
+    protected $scope$field_name$memo: Map<number, [Nullable<field_name>, PosInfo]> = new Map();
     protected $scope$fields$memo: Map<number, [Nullable<fields>, PosInfo]> = new Map();
     protected $scope$fields_$0$memo: Map<number, [Nullable<fields_$0>, PosInfo]> = new Map();
     protected $scope$fields_$0_$0$memo: Map<number, [Nullable<fields_$0_$0>, PosInfo]> = new Map();
     protected $scope$fields_$1$memo: Map<number, [Nullable<fields_$1>, PosInfo]> = new Map();
-    protected $scope$orig_date$memo: Map<number, [Nullable<orig_date>, PosInfo]> = new Map();
     protected $scope$from$memo: Map<number, [Nullable<from>, PosInfo]> = new Map();
-    protected $scope$sender$memo: Map<number, [Nullable<sender>, PosInfo]> = new Map();
-    protected $scope$reply_to$memo: Map<number, [Nullable<reply_to>, PosInfo]> = new Map();
-    protected $scope$to$memo: Map<number, [Nullable<to>, PosInfo]> = new Map();
-    protected $scope$cc$memo: Map<number, [Nullable<cc>, PosInfo]> = new Map();
-    protected $scope$bcc$memo: Map<number, [Nullable<bcc>, PosInfo]> = new Map();
-    protected $scope$bcc_$0$memo: Map<number, [Nullable<bcc_$0>, PosInfo]> = new Map();
-    protected $scope$message_id$memo: Map<number, [Nullable<message_id>, PosInfo]> = new Map();
-    protected $scope$in_reply_to$memo: Map<number, [Nullable<in_reply_to>, PosInfo]> = new Map();
-    protected $scope$references$memo: Map<number, [Nullable<references>, PosInfo]> = new Map();
-    protected $scope$msg_id$memo: Map<number, [Nullable<msg_id>, PosInfo]> = new Map();
+    protected $scope$ftext$memo: Map<number, [Nullable<ftext>, PosInfo]> = new Map();
+    protected $scope$group$memo: Map<number, [Nullable<group>, PosInfo]> = new Map();
+    protected $scope$group_list$memo: Map<number, [Nullable<group_list>, PosInfo]> = new Map();
+    protected $scope$hour$memo: Map<number, [Nullable<hour>, PosInfo]> = new Map();
     protected $scope$id_left$memo: Map<number, [Nullable<id_left>, PosInfo]> = new Map();
     protected $scope$id_right$memo: Map<number, [Nullable<id_right>, PosInfo]> = new Map();
-    protected $scope$no_fold_literal$memo: Map<number, [Nullable<no_fold_literal>, PosInfo]> = new Map();
-    protected $scope$subject$memo: Map<number, [Nullable<subject>, PosInfo]> = new Map();
-    protected $scope$comments$memo: Map<number, [Nullable<comments>, PosInfo]> = new Map();
+    protected $scope$in_reply_to$memo: Map<number, [Nullable<in_reply_to>, PosInfo]> = new Map();
     protected $scope$keywords$memo: Map<number, [Nullable<keywords>, PosInfo]> = new Map();
     protected $scope$keywords_$0$memo: Map<number, [Nullable<keywords_$0>, PosInfo]> = new Map();
-    protected $scope$resent_date$memo: Map<number, [Nullable<resent_date>, PosInfo]> = new Map();
-    protected $scope$resent_from$memo: Map<number, [Nullable<resent_from>, PosInfo]> = new Map();
-    protected $scope$resent_sender$memo: Map<number, [Nullable<resent_sender>, PosInfo]> = new Map();
-    protected $scope$resent_to$memo: Map<number, [Nullable<resent_to>, PosInfo]> = new Map();
-    protected $scope$resent_cc$memo: Map<number, [Nullable<resent_cc>, PosInfo]> = new Map();
-    protected $scope$resent_bcc$memo: Map<number, [Nullable<resent_bcc>, PosInfo]> = new Map();
-    protected $scope$resent_bcc_$0$memo: Map<number, [Nullable<resent_bcc_$0>, PosInfo]> = new Map();
-    protected $scope$resent_msg_id$memo: Map<number, [Nullable<resent_msg_id>, PosInfo]> = new Map();
-    protected $scope$trace$memo: Map<number, [Nullable<trace>, PosInfo]> = new Map();
-    protected $scope$return_path$memo: Map<number, [Nullable<return_path>, PosInfo]> = new Map();
-    protected $scope$path$memo: Map<number, [Nullable<path>, PosInfo]> = new Map();
-    protected $scope$path_$0$memo: Map<number, [Nullable<path_$0>, PosInfo]> = new Map();
-    protected $scope$received$memo: Map<number, [Nullable<received>, PosInfo]> = new Map();
-    protected $scope$received_token$memo: Map<number, [Nullable<received_token>, PosInfo]> = new Map();
-    protected $scope$optional_field$memo: Map<number, [Nullable<optional_field>, PosInfo]> = new Map();
-    protected $scope$field_name$memo: Map<number, [Nullable<field_name>, PosInfo]> = new Map();
-    protected $scope$ftext$memo: Map<number, [Nullable<ftext>, PosInfo]> = new Map();
+    protected $scope$local_part$memo: Map<number, [Nullable<local_part>, PosInfo]> = new Map();
+    protected $scope$mailbox$memo: Map<number, [Nullable<mailbox>, PosInfo]> = new Map();
+    protected $scope$mailbox_list$memo: Map<number, [Nullable<mailbox_list>, PosInfo]> = new Map();
+    protected $scope$mailbox_list_$0$memo: Map<number, [Nullable<mailbox_list_$0>, PosInfo]> = new Map();
+    protected $scope$mailbox_list_$0_$0$memo: Map<number, [Nullable<mailbox_list_$0_$0>, PosInfo]> = new Map();
+    protected $scope$message$memo: Map<number, [Nullable<message>, PosInfo]> = new Map();
+    protected $scope$message_$0$memo: Map<number, [Nullable<message_$0>, PosInfo]> = new Map();
+    protected $scope$message_$1$memo: Map<number, [Nullable<message_$1>, PosInfo]> = new Map();
+    protected $scope$message_id$memo: Map<number, [Nullable<message_id>, PosInfo]> = new Map();
+    protected $scope$minute$memo: Map<number, [Nullable<minute>, PosInfo]> = new Map();
+    protected $scope$month$memo: Map<number, [Nullable<month>, PosInfo]> = new Map();
+    protected $scope$msg_id$memo: Map<number, [Nullable<msg_id>, PosInfo]> = new Map();
+    protected $scope$name_addr$memo: Map<number, [Nullable<name_addr>, PosInfo]> = new Map();
+    protected $scope$no_fold_literal$memo: Map<number, [Nullable<no_fold_literal>, PosInfo]> = new Map();
+    protected $scope$obs_FWS$memo: Map<number, [Nullable<obs_FWS>, PosInfo]> = new Map();
+    protected $scope$obs_FWS_$0$memo: Map<number, [Nullable<obs_FWS_$0>, PosInfo]> = new Map();
     protected $scope$obs_NO_WS_CTL$memo: Map<number, [Nullable<obs_NO_WS_CTL>, PosInfo]> = new Map();
-    protected $scope$obs_ctext$memo: Map<number, [Nullable<obs_ctext>, PosInfo]> = new Map();
-    protected $scope$obs_qtext$memo: Map<number, [Nullable<obs_qtext>, PosInfo]> = new Map();
-    protected $scope$obs_utext$memo: Map<number, [Nullable<obs_utext>, PosInfo]> = new Map();
-    protected $scope$obs_qp$memo: Map<number, [Nullable<obs_qp>, PosInfo]> = new Map();
-    protected $scope$obs_qp_$0$memo: Map<number, [Nullable<obs_qp_$0>, PosInfo]> = new Map();
+    protected $scope$obs_addr_list$memo: Map<number, [Nullable<obs_addr_list>, PosInfo]> = new Map();
+    protected $scope$obs_addr_list_$0$memo: Map<number, [Nullable<obs_addr_list_$0>, PosInfo]> = new Map();
+    protected $scope$obs_addr_list_$1$memo: Map<number, [Nullable<obs_addr_list_$1>, PosInfo]> = new Map();
+    protected $scope$obs_addr_list_$1_$0$memo: Map<number, [Nullable<obs_addr_list_$1_$0>, PosInfo]> = new Map();
+    protected $scope$obs_angle_addr$memo: Map<number, [Nullable<obs_angle_addr>, PosInfo]> = new Map();
+    protected $scope$obs_bcc$memo: Map<number, [Nullable<obs_bcc>, PosInfo]> = new Map();
+    protected $scope$obs_bcc_$0$memo: Map<number, [Nullable<obs_bcc_$0>, PosInfo]> = new Map();
+    protected $scope$obs_bcc_$0_$0$memo: Map<number, [Nullable<obs_bcc_$0_$0>, PosInfo]> = new Map();
+    protected $scope$obs_bcc_$0_$0_$0$memo: Map<number, [Nullable<obs_bcc_$0_$0_$0>, PosInfo]> = new Map();
     protected $scope$obs_body$memo: Map<number, [Nullable<obs_body>, PosInfo]> = new Map();
     protected $scope$obs_body_$0$memo: Map<number, [Nullable<obs_body_$0>, PosInfo]> = new Map();
     protected $scope$obs_body_$0_$0$memo: Map<number, [Nullable<obs_body_$0_$0>, PosInfo]> = new Map();
     protected $scope$obs_body_$0_$0_$0$memo: Map<number, [Nullable<obs_body_$0_$0_$0>, PosInfo]> = new Map();
     protected $scope$obs_body_$0_$0_$0_$0$memo: Map<number, [Nullable<obs_body_$0_$0_$0_$0>, PosInfo]> = new Map();
-    protected $scope$obs_unstruct$memo: Map<number, [Nullable<obs_unstruct>, PosInfo]> = new Map();
-    protected $scope$obs_unstruct_$0$memo: Map<number, [Nullable<obs_unstruct_$0>, PosInfo]> = new Map();
-    protected $scope$obs_unstruct_$0_$0$memo: Map<number, [Nullable<obs_unstruct_$0_$0>, PosInfo]> = new Map();
-    protected $scope$obs_unstruct_$0_$0_$0$memo: Map<number, [Nullable<obs_unstruct_$0_$0_$0>, PosInfo]> = new Map();
+    protected $scope$obs_cc$memo: Map<number, [Nullable<obs_cc>, PosInfo]> = new Map();
+    protected $scope$obs_comments$memo: Map<number, [Nullable<obs_comments>, PosInfo]> = new Map();
+    protected $scope$obs_ctext$memo: Map<number, [Nullable<obs_ctext>, PosInfo]> = new Map();
+    protected $scope$obs_day$memo: Map<number, [Nullable<obs_day>, PosInfo]> = new Map();
+    protected $scope$obs_day_of_week$memo: Map<number, [Nullable<obs_day_of_week>, PosInfo]> = new Map();
+    protected $scope$obs_domain$memo: Map<number, [Nullable<obs_domain>, PosInfo]> = new Map();
+    protected $scope$obs_domain_$0$memo: Map<number, [Nullable<obs_domain_$0>, PosInfo]> = new Map();
+    protected $scope$obs_domain_list$memo: Map<number, [Nullable<obs_domain_list>, PosInfo]> = new Map();
+    protected $scope$obs_domain_list_$0$memo: Map<number, [Nullable<obs_domain_list_$0>, PosInfo]> = new Map();
+    protected $scope$obs_domain_list_$1$memo: Map<number, [Nullable<obs_domain_list_$1>, PosInfo]> = new Map();
+    protected $scope$obs_domain_list_$1_$0$memo: Map<number, [Nullable<obs_domain_list_$1_$0>, PosInfo]> = new Map();
+    protected $scope$obs_dtext$memo: Map<number, [Nullable<obs_dtext>, PosInfo]> = new Map();
+    protected $scope$obs_fields$memo: Map<number, [Nullable<obs_fields>, PosInfo]> = new Map();
+    protected $scope$obs_fields_$0$memo: Map<number, [Nullable<obs_fields_$0>, PosInfo]> = new Map();
+    protected $scope$obs_from$memo: Map<number, [Nullable<obs_from>, PosInfo]> = new Map();
+    protected $scope$obs_group_list$memo: Map<number, [Nullable<obs_group_list>, PosInfo]> = new Map();
+    protected $scope$obs_group_list_$0$memo: Map<number, [Nullable<obs_group_list_$0>, PosInfo]> = new Map();
+    protected $scope$obs_hour$memo: Map<number, [Nullable<obs_hour>, PosInfo]> = new Map();
+    protected $scope$obs_id_left$memo: Map<number, [Nullable<obs_id_left>, PosInfo]> = new Map();
+    protected $scope$obs_id_right$memo: Map<number, [Nullable<obs_id_right>, PosInfo]> = new Map();
+    protected $scope$obs_in_reply_to$memo: Map<number, [Nullable<obs_in_reply_to>, PosInfo]> = new Map();
+    protected $scope$obs_in_reply_to_$0$memo: Map<number, [Nullable<obs_in_reply_to_$0>, PosInfo]> = new Map();
+    protected $scope$obs_keywords$memo: Map<number, [Nullable<obs_keywords>, PosInfo]> = new Map();
+    protected $scope$obs_local_part$memo: Map<number, [Nullable<obs_local_part>, PosInfo]> = new Map();
+    protected $scope$obs_local_part_$0$memo: Map<number, [Nullable<obs_local_part_$0>, PosInfo]> = new Map();
+    protected $scope$obs_mbox_list$memo: Map<number, [Nullable<obs_mbox_list>, PosInfo]> = new Map();
+    protected $scope$obs_mbox_list_$0$memo: Map<number, [Nullable<obs_mbox_list_$0>, PosInfo]> = new Map();
+    protected $scope$obs_mbox_list_$1$memo: Map<number, [Nullable<obs_mbox_list_$1>, PosInfo]> = new Map();
+    protected $scope$obs_mbox_list_$1_$0$memo: Map<number, [Nullable<obs_mbox_list_$1_$0>, PosInfo]> = new Map();
+    protected $scope$obs_message_id$memo: Map<number, [Nullable<obs_message_id>, PosInfo]> = new Map();
+    protected $scope$obs_minute$memo: Map<number, [Nullable<obs_minute>, PosInfo]> = new Map();
+    protected $scope$obs_optional$memo: Map<number, [Nullable<obs_optional>, PosInfo]> = new Map();
+    protected $scope$obs_orig_date$memo: Map<number, [Nullable<obs_orig_date>, PosInfo]> = new Map();
     protected $scope$obs_phrase$memo: Map<number, [Nullable<obs_phrase>, PosInfo]> = new Map();
     protected $scope$obs_phrase_$0$memo: Map<number, [Nullable<obs_phrase_$0>, PosInfo]> = new Map();
     protected $scope$obs_phrase_list$memo: Map<number, [Nullable<obs_phrase_list>, PosInfo]> = new Map();
     protected $scope$obs_phrase_list_$0$memo: Map<number, [Nullable<obs_phrase_list_$0>, PosInfo]> = new Map();
     protected $scope$obs_phrase_list_$1$memo: Map<number, [Nullable<obs_phrase_list_$1>, PosInfo]> = new Map();
     protected $scope$obs_phrase_list_$1_$0$memo: Map<number, [Nullable<obs_phrase_list_$1_$0>, PosInfo]> = new Map();
-    protected $scope$obs_FWS$memo: Map<number, [Nullable<obs_FWS>, PosInfo]> = new Map();
-    protected $scope$obs_FWS_$0$memo: Map<number, [Nullable<obs_FWS_$0>, PosInfo]> = new Map();
-    protected $scope$obs_day_of_week$memo: Map<number, [Nullable<obs_day_of_week>, PosInfo]> = new Map();
-    protected $scope$obs_day$memo: Map<number, [Nullable<obs_day>, PosInfo]> = new Map();
-    protected $scope$obs_year$memo: Map<number, [Nullable<obs_year>, PosInfo]> = new Map();
-    protected $scope$obs_hour$memo: Map<number, [Nullable<obs_hour>, PosInfo]> = new Map();
-    protected $scope$obs_minute$memo: Map<number, [Nullable<obs_minute>, PosInfo]> = new Map();
-    protected $scope$obs_second$memo: Map<number, [Nullable<obs_second>, PosInfo]> = new Map();
-    protected $scope$obs_zone$memo: Map<number, [Nullable<obs_zone>, PosInfo]> = new Map();
-    protected $scope$obs_angle_addr$memo: Map<number, [Nullable<obs_angle_addr>, PosInfo]> = new Map();
-    protected $scope$obs_route$memo: Map<number, [Nullable<obs_route>, PosInfo]> = new Map();
-    protected $scope$obs_domain_list$memo: Map<number, [Nullable<obs_domain_list>, PosInfo]> = new Map();
-    protected $scope$obs_domain_list_$0$memo: Map<number, [Nullable<obs_domain_list_$0>, PosInfo]> = new Map();
-    protected $scope$obs_domain_list_$1$memo: Map<number, [Nullable<obs_domain_list_$1>, PosInfo]> = new Map();
-    protected $scope$obs_domain_list_$1_$0$memo: Map<number, [Nullable<obs_domain_list_$1_$0>, PosInfo]> = new Map();
-    protected $scope$obs_mbox_list$memo: Map<number, [Nullable<obs_mbox_list>, PosInfo]> = new Map();
-    protected $scope$obs_mbox_list_$0$memo: Map<number, [Nullable<obs_mbox_list_$0>, PosInfo]> = new Map();
-    protected $scope$obs_mbox_list_$1$memo: Map<number, [Nullable<obs_mbox_list_$1>, PosInfo]> = new Map();
-    protected $scope$obs_mbox_list_$1_$0$memo: Map<number, [Nullable<obs_mbox_list_$1_$0>, PosInfo]> = new Map();
-    protected $scope$obs_addr_list$memo: Map<number, [Nullable<obs_addr_list>, PosInfo]> = new Map();
-    protected $scope$obs_addr_list_$0$memo: Map<number, [Nullable<obs_addr_list_$0>, PosInfo]> = new Map();
-    protected $scope$obs_addr_list_$1$memo: Map<number, [Nullable<obs_addr_list_$1>, PosInfo]> = new Map();
-    protected $scope$obs_addr_list_$1_$0$memo: Map<number, [Nullable<obs_addr_list_$1_$0>, PosInfo]> = new Map();
-    protected $scope$obs_group_list$memo: Map<number, [Nullable<obs_group_list>, PosInfo]> = new Map();
-    protected $scope$obs_group_list_$0$memo: Map<number, [Nullable<obs_group_list_$0>, PosInfo]> = new Map();
-    protected $scope$obs_local_part$memo: Map<number, [Nullable<obs_local_part>, PosInfo]> = new Map();
-    protected $scope$obs_local_part_$0$memo: Map<number, [Nullable<obs_local_part_$0>, PosInfo]> = new Map();
-    protected $scope$obs_domain$memo: Map<number, [Nullable<obs_domain>, PosInfo]> = new Map();
-    protected $scope$obs_domain_$0$memo: Map<number, [Nullable<obs_domain_$0>, PosInfo]> = new Map();
-    protected $scope$obs_dtext$memo: Map<number, [Nullable<obs_dtext>, PosInfo]> = new Map();
-    protected $scope$obs_fields$memo: Map<number, [Nullable<obs_fields>, PosInfo]> = new Map();
-    protected $scope$obs_fields_$0$memo: Map<number, [Nullable<obs_fields_$0>, PosInfo]> = new Map();
-    protected $scope$obs_orig_date$memo: Map<number, [Nullable<obs_orig_date>, PosInfo]> = new Map();
-    protected $scope$obs_from$memo: Map<number, [Nullable<obs_from>, PosInfo]> = new Map();
-    protected $scope$obs_sender$memo: Map<number, [Nullable<obs_sender>, PosInfo]> = new Map();
-    protected $scope$obs_reply_to$memo: Map<number, [Nullable<obs_reply_to>, PosInfo]> = new Map();
-    protected $scope$obs_to$memo: Map<number, [Nullable<obs_to>, PosInfo]> = new Map();
-    protected $scope$obs_cc$memo: Map<number, [Nullable<obs_cc>, PosInfo]> = new Map();
-    protected $scope$obs_bcc$memo: Map<number, [Nullable<obs_bcc>, PosInfo]> = new Map();
-    protected $scope$obs_bcc_$0$memo: Map<number, [Nullable<obs_bcc_$0>, PosInfo]> = new Map();
-    protected $scope$obs_bcc_$0_$0$memo: Map<number, [Nullable<obs_bcc_$0_$0>, PosInfo]> = new Map();
-    protected $scope$obs_bcc_$0_$0_$0$memo: Map<number, [Nullable<obs_bcc_$0_$0_$0>, PosInfo]> = new Map();
-    protected $scope$obs_message_id$memo: Map<number, [Nullable<obs_message_id>, PosInfo]> = new Map();
-    protected $scope$obs_in_reply_to$memo: Map<number, [Nullable<obs_in_reply_to>, PosInfo]> = new Map();
-    protected $scope$obs_in_reply_to_$0$memo: Map<number, [Nullable<obs_in_reply_to_$0>, PosInfo]> = new Map();
+    protected $scope$obs_qp$memo: Map<number, [Nullable<obs_qp>, PosInfo]> = new Map();
+    protected $scope$obs_qp_$0$memo: Map<number, [Nullable<obs_qp_$0>, PosInfo]> = new Map();
+    protected $scope$obs_qtext$memo: Map<number, [Nullable<obs_qtext>, PosInfo]> = new Map();
+    protected $scope$obs_received$memo: Map<number, [Nullable<obs_received>, PosInfo]> = new Map();
     protected $scope$obs_references$memo: Map<number, [Nullable<obs_references>, PosInfo]> = new Map();
     protected $scope$obs_references_$0$memo: Map<number, [Nullable<obs_references_$0>, PosInfo]> = new Map();
-    protected $scope$obs_id_left$memo: Map<number, [Nullable<obs_id_left>, PosInfo]> = new Map();
-    protected $scope$obs_id_right$memo: Map<number, [Nullable<obs_id_right>, PosInfo]> = new Map();
-    protected $scope$obs_subject$memo: Map<number, [Nullable<obs_subject>, PosInfo]> = new Map();
-    protected $scope$obs_comments$memo: Map<number, [Nullable<obs_comments>, PosInfo]> = new Map();
-    protected $scope$obs_keywords$memo: Map<number, [Nullable<obs_keywords>, PosInfo]> = new Map();
-    protected $scope$obs_resent_from$memo: Map<number, [Nullable<obs_resent_from>, PosInfo]> = new Map();
-    protected $scope$obs_resent_send$memo: Map<number, [Nullable<obs_resent_send>, PosInfo]> = new Map();
-    protected $scope$obs_resent_date$memo: Map<number, [Nullable<obs_resent_date>, PosInfo]> = new Map();
-    protected $scope$obs_resent_to$memo: Map<number, [Nullable<obs_resent_to>, PosInfo]> = new Map();
-    protected $scope$obs_resent_cc$memo: Map<number, [Nullable<obs_resent_cc>, PosInfo]> = new Map();
+    protected $scope$obs_reply_to$memo: Map<number, [Nullable<obs_reply_to>, PosInfo]> = new Map();
     protected $scope$obs_resent_bcc$memo: Map<number, [Nullable<obs_resent_bcc>, PosInfo]> = new Map();
     protected $scope$obs_resent_bcc_$0$memo: Map<number, [Nullable<obs_resent_bcc_$0>, PosInfo]> = new Map();
     protected $scope$obs_resent_bcc_$0_$0$memo: Map<number, [Nullable<obs_resent_bcc_$0_$0>, PosInfo]> = new Map();
     protected $scope$obs_resent_bcc_$0_$0_$0$memo: Map<number, [Nullable<obs_resent_bcc_$0_$0_$0>, PosInfo]> = new Map();
+    protected $scope$obs_resent_cc$memo: Map<number, [Nullable<obs_resent_cc>, PosInfo]> = new Map();
+    protected $scope$obs_resent_date$memo: Map<number, [Nullable<obs_resent_date>, PosInfo]> = new Map();
+    protected $scope$obs_resent_from$memo: Map<number, [Nullable<obs_resent_from>, PosInfo]> = new Map();
     protected $scope$obs_resent_mid$memo: Map<number, [Nullable<obs_resent_mid>, PosInfo]> = new Map();
     protected $scope$obs_resent_rply$memo: Map<number, [Nullable<obs_resent_rply>, PosInfo]> = new Map();
+    protected $scope$obs_resent_send$memo: Map<number, [Nullable<obs_resent_send>, PosInfo]> = new Map();
+    protected $scope$obs_resent_to$memo: Map<number, [Nullable<obs_resent_to>, PosInfo]> = new Map();
     protected $scope$obs_return$memo: Map<number, [Nullable<obs_return>, PosInfo]> = new Map();
-    protected $scope$obs_received$memo: Map<number, [Nullable<obs_received>, PosInfo]> = new Map();
-    protected $scope$obs_optional$memo: Map<number, [Nullable<obs_optional>, PosInfo]> = new Map();
+    protected $scope$obs_route$memo: Map<number, [Nullable<obs_route>, PosInfo]> = new Map();
+    protected $scope$obs_second$memo: Map<number, [Nullable<obs_second>, PosInfo]> = new Map();
+    protected $scope$obs_sender$memo: Map<number, [Nullable<obs_sender>, PosInfo]> = new Map();
+    protected $scope$obs_subject$memo: Map<number, [Nullable<obs_subject>, PosInfo]> = new Map();
+    protected $scope$obs_to$memo: Map<number, [Nullable<obs_to>, PosInfo]> = new Map();
+    protected $scope$obs_unstruct$memo: Map<number, [Nullable<obs_unstruct>, PosInfo]> = new Map();
+    protected $scope$obs_unstruct_$0$memo: Map<number, [Nullable<obs_unstruct_$0>, PosInfo]> = new Map();
+    protected $scope$obs_unstruct_$0_$0$memo: Map<number, [Nullable<obs_unstruct_$0_$0>, PosInfo]> = new Map();
+    protected $scope$obs_unstruct_$0_$0_$0$memo: Map<number, [Nullable<obs_unstruct_$0_$0_$0>, PosInfo]> = new Map();
+    protected $scope$obs_utext$memo: Map<number, [Nullable<obs_utext>, PosInfo]> = new Map();
+    protected $scope$obs_year$memo: Map<number, [Nullable<obs_year>, PosInfo]> = new Map();
+    protected $scope$obs_zone$memo: Map<number, [Nullable<obs_zone>, PosInfo]> = new Map();
+    protected $scope$optional_field$memo: Map<number, [Nullable<optional_field>, PosInfo]> = new Map();
+    protected $scope$orig_date$memo: Map<number, [Nullable<orig_date>, PosInfo]> = new Map();
+    protected $scope$path$memo: Map<number, [Nullable<path>, PosInfo]> = new Map();
+    protected $scope$path_$0$memo: Map<number, [Nullable<path_$0>, PosInfo]> = new Map();
+    protected $scope$phrase$memo: Map<number, [Nullable<phrase>, PosInfo]> = new Map();
+    protected $scope$qcontent$memo: Map<number, [Nullable<qcontent>, PosInfo]> = new Map();
+    protected $scope$qtext$memo: Map<number, [Nullable<qtext>, PosInfo]> = new Map();
+    protected $scope$quoted_pair$memo: Map<number, [Nullable<quoted_pair>, PosInfo]> = new Map();
+    protected $scope$quoted_pair_$0$memo: Map<number, [Nullable<quoted_pair_$0>, PosInfo]> = new Map();
+    protected $scope$quoted_pair_$0_$0$memo: Map<number, [Nullable<quoted_pair_$0_$0>, PosInfo]> = new Map();
+    protected $scope$quoted_string$memo: Map<number, [Nullable<quoted_string>, PosInfo]> = new Map();
+    protected $scope$quoted_string_$0$memo: Map<number, [Nullable<quoted_string_$0>, PosInfo]> = new Map();
+    protected $scope$received$memo: Map<number, [Nullable<received>, PosInfo]> = new Map();
+    protected $scope$received_token$memo: Map<number, [Nullable<received_token>, PosInfo]> = new Map();
+    protected $scope$references$memo: Map<number, [Nullable<references>, PosInfo]> = new Map();
+    protected $scope$reply_to$memo: Map<number, [Nullable<reply_to>, PosInfo]> = new Map();
+    protected $scope$resent_bcc$memo: Map<number, [Nullable<resent_bcc>, PosInfo]> = new Map();
+    protected $scope$resent_bcc_$0$memo: Map<number, [Nullable<resent_bcc_$0>, PosInfo]> = new Map();
+    protected $scope$resent_cc$memo: Map<number, [Nullable<resent_cc>, PosInfo]> = new Map();
+    protected $scope$resent_date$memo: Map<number, [Nullable<resent_date>, PosInfo]> = new Map();
+    protected $scope$resent_from$memo: Map<number, [Nullable<resent_from>, PosInfo]> = new Map();
+    protected $scope$resent_msg_id$memo: Map<number, [Nullable<resent_msg_id>, PosInfo]> = new Map();
+    protected $scope$resent_sender$memo: Map<number, [Nullable<resent_sender>, PosInfo]> = new Map();
+    protected $scope$resent_to$memo: Map<number, [Nullable<resent_to>, PosInfo]> = new Map();
+    protected $scope$return_path$memo: Map<number, [Nullable<return_path>, PosInfo]> = new Map();
+    protected $scope$second$memo: Map<number, [Nullable<second>, PosInfo]> = new Map();
+    protected $scope$sender$memo: Map<number, [Nullable<sender>, PosInfo]> = new Map();
+    protected $scope$specials$memo: Map<number, [Nullable<specials>, PosInfo]> = new Map();
+    protected $scope$subject$memo: Map<number, [Nullable<subject>, PosInfo]> = new Map();
+    protected $scope$text$memo: Map<number, [Nullable<text>, PosInfo]> = new Map();
+    protected $scope$time$memo: Map<number, [Nullable<time>, PosInfo]> = new Map();
+    protected $scope$time_of_day$memo: Map<number, [Nullable<time_of_day>, PosInfo]> = new Map();
+    protected $scope$time_of_day_$0$memo: Map<number, [Nullable<time_of_day_$0>, PosInfo]> = new Map();
+    protected $scope$to$memo: Map<number, [Nullable<to>, PosInfo]> = new Map();
+    protected $scope$trace$memo: Map<number, [Nullable<trace>, PosInfo]> = new Map();
+    protected $scope$unstructured$memo: Map<number, [Nullable<unstructured>, PosInfo]> = new Map();
+    protected $scope$unstructured_$0$memo: Map<number, [Nullable<unstructured_$0>, PosInfo]> = new Map();
+    protected $scope$unstructured_$0_$0$memo: Map<number, [Nullable<unstructured_$0_$0>, PosInfo]> = new Map();
+    protected $scope$word$memo: Map<number, [Nullable<word>, PosInfo]> = new Map();
+    protected $scope$year$memo: Map<number, [Nullable<year>, PosInfo]> = new Map();
+    protected $scope$year_$0$memo: Map<number, [Nullable<year_$0>, PosInfo]> = new Map();
+    protected $scope$zone$memo: Map<number, [Nullable<zone>, PosInfo]> = new Map();
+    protected $scope$zone_$0$memo: Map<number, [Nullable<zone_$0>, PosInfo]> = new Map();
+    protected $scope$zone_$0_$0$memo: Map<number, [Nullable<zone_$0_$0>, PosInfo]> = new Map();
     public matchstart($$dpth: number, $$cr?: ErrorTracker): Nullable<start> {
         return this.memoise(
             () => {
                 return this.matchmessage($$dpth + 1, $$cr);
             },
             this.$scope$start$memo,
+        );
+    }
+    public matchCFWS($$dpth: number, $$cr?: ErrorTracker): Nullable<CFWS> {
+        return this.memoise(
+            () => {
+                return this.choice<CFWS>([
+                    () => this.matchCFWS_1($$dpth + 1, $$cr),
+                    () => this.matchCFWS_2($$dpth + 1, $$cr),
+                ]);
+            },
+            this.$scope$CFWS$memo,
+        );
+    }
+    public matchCFWS_1($$dpth: number, $$cr?: ErrorTracker): Nullable<CFWS_1> {
+        return this.run<CFWS_1>($$dpth,
+            () => {
+                let $scope$A: Nullable<CFWS_$0>;
+                let $$res: Nullable<CFWS_1> = null;
+                if (true
+                    && ($scope$A = this.matchCFWS_$0($$dpth + 1, $$cr)) !== null
+                ) {
+                    $$res = {kind: ASTKinds.CFWS_1, A: $scope$A};
+                }
+                return $$res;
+            });
+    }
+    public matchCFWS_2($$dpth: number, $$cr?: ErrorTracker): Nullable<CFWS_2> {
+        return this.matchFWS($$dpth + 1, $$cr);
+    }
+    public matchCFWS_$0($$dpth: number, $$cr?: ErrorTracker): Nullable<CFWS_$0> {
+        return this.memoise(
+            () => {
+                return this.run<CFWS_$0>($$dpth,
+                    () => {
+                        let $scope$B: Nullable<CFWS_$0_$0[]>;
+                        let $$res: Nullable<CFWS_$0> = null;
+                        if (true
+                            && ($scope$B = this.loop<CFWS_$0_$0>(() => this.matchCFWS_$0_$0($$dpth + 1, $$cr), false)) !== null
+                            && ((this.matchFWS($$dpth + 1, $$cr)) || true)
+                        ) {
+                            $$res = {kind: ASTKinds.CFWS_$0, B: $scope$B};
+                        }
+                        return $$res;
+                    });
+            },
+            this.$scope$CFWS_$0$memo,
+        );
+    }
+    public matchCFWS_$0_$0($$dpth: number, $$cr?: ErrorTracker): Nullable<CFWS_$0_$0> {
+        return this.memoise(
+            () => {
+                return this.run<CFWS_$0_$0>($$dpth,
+                    () => {
+                        let $scope$D: Nullable<comment>;
+                        let $$res: Nullable<CFWS_$0_$0> = null;
+                        if (true
+                            && ((this.matchFWS($$dpth + 1, $$cr)) || true)
+                            && ($scope$D = this.matchcomment($$dpth + 1, $$cr)) !== null
+                        ) {
+                            $$res = {kind: ASTKinds.CFWS_$0_$0, D: $scope$D};
+                        }
+                        return $$res;
+                    });
+            },
+            this.$scope$CFWS_$0_$0$memo,
         );
     }
     public matchCR($$dpth: number, $$cr?: ErrorTracker): Nullable<CR> {
@@ -2228,12 +2274,12 @@ export class Parser {
             this.$scope$DIGIT$memo,
         );
     }
-    public matchTWO_DIGIT($$dpth: number, $$cr?: ErrorTracker): Nullable<TWO_DIGIT> {
+    public matchDQUOTE($$dpth: number, $$cr?: ErrorTracker): Nullable<DQUOTE> {
         return this.memoise(
             () => {
-                return this.regexAccept(String.raw`(?:\d\d)`, $$dpth + 1, $$cr);
+                return this.regexAccept(String.raw`(?:\x22)`, $$dpth + 1, $$cr);
             },
-            this.$scope$TWO_DIGIT$memo,
+            this.$scope$DQUOTE$memo,
         );
     }
     public matchFOUR_DIGIT($$dpth: number, $$cr?: ErrorTracker): Nullable<FOUR_DIGIT> {
@@ -2243,147 +2289,6 @@ export class Parser {
             },
             this.$scope$FOUR_DIGIT$memo,
         );
-    }
-    public matchDQUOTE($$dpth: number, $$cr?: ErrorTracker): Nullable<DQUOTE> {
-        return this.memoise(
-            () => {
-                return this.regexAccept(String.raw`(?:\x22)`, $$dpth + 1, $$cr);
-            },
-            this.$scope$DQUOTE$memo,
-        );
-    }
-    public matchHTAB($$dpth: number, $$cr?: ErrorTracker): Nullable<HTAB> {
-        return this.memoise(
-            () => {
-                return this.regexAccept(String.raw`(?:\x09)`, $$dpth + 1, $$cr);
-            },
-            this.$scope$HTAB$memo,
-        );
-    }
-    public matchLF($$dpth: number, $$cr?: ErrorTracker): Nullable<LF> {
-        return this.memoise(
-            () => {
-                return this.regexAccept(String.raw`(?:\x0A)`, $$dpth + 1, $$cr);
-            },
-            this.$scope$LF$memo,
-        );
-    }
-    public matchSP($$dpth: number, $$cr?: ErrorTracker): Nullable<SP> {
-        return this.memoise(
-            () => {
-                return this.regexAccept(String.raw`(?:\x20)`, $$dpth + 1, $$cr);
-            },
-            this.$scope$SP$memo,
-        );
-    }
-    public matchVCHAR($$dpth: number, $$cr?: ErrorTracker): Nullable<VCHAR> {
-        return this.memoise(
-            () => {
-                return this.regexAccept(String.raw`(?:[\x21-\x7E])`, $$dpth + 1, $$cr);
-            },
-            this.$scope$VCHAR$memo,
-        );
-    }
-    public matchWSP($$dpth: number, $$cr?: ErrorTracker): Nullable<WSP> {
-        return this.memoise(
-            () => {
-                return this.choice<WSP>([
-                    () => this.matchWSP_1($$dpth + 1, $$cr),
-                    () => this.matchWSP_2($$dpth + 1, $$cr),
-                ]);
-            },
-            this.$scope$WSP$memo,
-        );
-    }
-    public matchWSP_1($$dpth: number, $$cr?: ErrorTracker): Nullable<WSP_1> {
-        return this.matchSP($$dpth + 1, $$cr);
-    }
-    public matchWSP_2($$dpth: number, $$cr?: ErrorTracker): Nullable<WSP_2> {
-        return this.matchHTAB($$dpth + 1, $$cr);
-    }
-    public matchquoted_pair($$dpth: number, $$cr?: ErrorTracker): Nullable<quoted_pair> {
-        return this.memoise(
-            () => {
-                return this.choice<quoted_pair>([
-                    () => this.matchquoted_pair_1($$dpth + 1, $$cr),
-                    () => this.matchquoted_pair_2($$dpth + 1, $$cr),
-                ]);
-            },
-            this.$scope$quoted_pair$memo,
-        );
-    }
-    public matchquoted_pair_1($$dpth: number, $$cr?: ErrorTracker): Nullable<quoted_pair_1> {
-        return this.run<quoted_pair_1>($$dpth,
-            () => {
-                let $scope$A: Nullable<quoted_pair_$0>;
-                let $$res: Nullable<quoted_pair_1> = null;
-                if (true
-                    && ($scope$A = this.matchquoted_pair_$0($$dpth + 1, $$cr)) !== null
-                ) {
-                    $$res = {kind: ASTKinds.quoted_pair_1, A: $scope$A};
-                }
-                return $$res;
-            });
-    }
-    public matchquoted_pair_2($$dpth: number, $$cr?: ErrorTracker): Nullable<quoted_pair_2> {
-        return this.run<quoted_pair_2>($$dpth,
-            () => {
-                let $scope$F: Nullable<obs_qp>;
-                let $$res: Nullable<quoted_pair_2> = null;
-                if (true
-                    && ($scope$F = this.matchobs_qp($$dpth + 1, $$cr)) !== null
-                ) {
-                    $$res = {kind: ASTKinds.quoted_pair_2, F: $scope$F};
-                }
-                return $$res;
-            });
-    }
-    public matchquoted_pair_$0($$dpth: number, $$cr?: ErrorTracker): Nullable<quoted_pair_$0> {
-        return this.memoise(
-            () => {
-                return this.run<quoted_pair_$0>($$dpth,
-                    () => {
-                        let $scope$B: Nullable<string>;
-                        let $scope$C: Nullable<quoted_pair_$0_$0>;
-                        let $$res: Nullable<quoted_pair_$0> = null;
-                        if (true
-                            && ($scope$B = this.regexAccept(String.raw`(?:\\)`, $$dpth + 1, $$cr)) !== null
-                            && ($scope$C = this.matchquoted_pair_$0_$0($$dpth + 1, $$cr)) !== null
-                        ) {
-                            $$res = {kind: ASTKinds.quoted_pair_$0, B: $scope$B, C: $scope$C};
-                        }
-                        return $$res;
-                    });
-            },
-            this.$scope$quoted_pair_$0$memo,
-        );
-    }
-    public matchquoted_pair_$0_$0($$dpth: number, $$cr?: ErrorTracker): Nullable<quoted_pair_$0_$0> {
-        return this.memoise(
-            () => {
-                return this.choice<quoted_pair_$0_$0>([
-                    () => this.matchquoted_pair_$0_$0_1($$dpth + 1, $$cr),
-                    () => this.matchquoted_pair_$0_$0_2($$dpth + 1, $$cr),
-                ]);
-            },
-            this.$scope$quoted_pair_$0_$0$memo,
-        );
-    }
-    public matchquoted_pair_$0_$0_1($$dpth: number, $$cr?: ErrorTracker): Nullable<quoted_pair_$0_$0_1> {
-        return this.run<quoted_pair_$0_$0_1>($$dpth,
-            () => {
-                let $scope$D: Nullable<VCHAR>;
-                let $$res: Nullable<quoted_pair_$0_$0_1> = null;
-                if (true
-                    && ($scope$D = this.matchVCHAR($$dpth + 1, $$cr)) !== null
-                ) {
-                    $$res = {kind: ASTKinds.quoted_pair_$0_$0_1, D: $scope$D};
-                }
-                return $$res;
-            });
-    }
-    public matchquoted_pair_$0_$0_2($$dpth: number, $$cr?: ErrorTracker): Nullable<quoted_pair_$0_$0_2> {
-        return this.matchWSP($$dpth + 1, $$cr);
     }
     public matchFWS($$dpth: number, $$cr?: ErrorTracker): Nullable<FWS> {
         return this.memoise(
@@ -2462,70 +2367,398 @@ export class Parser {
             this.$scope$FWS_$0_$0$memo,
         );
     }
-    public matchctext($$dpth: number, $$cr?: ErrorTracker): Nullable<ctext> {
+    public matchHTAB($$dpth: number, $$cr?: ErrorTracker): Nullable<HTAB> {
         return this.memoise(
             () => {
-                return this.choice<ctext>([
-                    () => this.matchctext_1($$dpth + 1, $$cr),
-                    () => this.matchctext_2($$dpth + 1, $$cr),
-                    () => this.matchctext_3($$dpth + 1, $$cr),
-                    () => this.matchctext_4($$dpth + 1, $$cr),
-                ]);
+                return this.regexAccept(String.raw`(?:\x09)`, $$dpth + 1, $$cr);
             },
-            this.$scope$ctext$memo,
+            this.$scope$HTAB$memo,
         );
     }
-    public matchctext_1($$dpth: number, $$cr?: ErrorTracker): Nullable<ctext_1> {
-        return this.run<ctext_1>($$dpth,
+    public matchLF($$dpth: number, $$cr?: ErrorTracker): Nullable<LF> {
+        return this.memoise(
             () => {
-                let $scope$A: Nullable<string>;
-                let $$res: Nullable<ctext_1> = null;
+                return this.regexAccept(String.raw`(?:\x0A)`, $$dpth + 1, $$cr);
+            },
+            this.$scope$LF$memo,
+        );
+    }
+    public matchSP($$dpth: number, $$cr?: ErrorTracker): Nullable<SP> {
+        return this.memoise(
+            () => {
+                return this.regexAccept(String.raw`(?:\x20)`, $$dpth + 1, $$cr);
+            },
+            this.$scope$SP$memo,
+        );
+    }
+    public matchTWO_DIGIT($$dpth: number, $$cr?: ErrorTracker): Nullable<TWO_DIGIT> {
+        return this.memoise(
+            () => {
+                return this.regexAccept(String.raw`(?:\d\d)`, $$dpth + 1, $$cr);
+            },
+            this.$scope$TWO_DIGIT$memo,
+        );
+    }
+    public matchVCHAR($$dpth: number, $$cr?: ErrorTracker): Nullable<VCHAR> {
+        return this.memoise(
+            () => {
+                return this.regexAccept(String.raw`(?:[\x21-\x7E])`, $$dpth + 1, $$cr);
+            },
+            this.$scope$VCHAR$memo,
+        );
+    }
+    public matchWSP($$dpth: number, $$cr?: ErrorTracker): Nullable<WSP> {
+        return this.memoise(
+            () => {
+                return this.choice<WSP>([
+                    () => this.matchWSP_1($$dpth + 1, $$cr),
+                    () => this.matchWSP_2($$dpth + 1, $$cr),
+                ]);
+            },
+            this.$scope$WSP$memo,
+        );
+    }
+    public matchWSP_1($$dpth: number, $$cr?: ErrorTracker): Nullable<WSP_1> {
+        return this.matchSP($$dpth + 1, $$cr);
+    }
+    public matchWSP_2($$dpth: number, $$cr?: ErrorTracker): Nullable<WSP_2> {
+        return this.matchHTAB($$dpth + 1, $$cr);
+    }
+    public match_998text($$dpth: number, $$cr?: ErrorTracker): Nullable<_998text> {
+        return this.memoise(
+            () => {
+                return this.regexAccept(String.raw`(?:[\x01-\x09\x0B\x0C\x0E-\x7F]{998,})`, $$dpth + 1, $$cr);
+            },
+            this.$scope$_998text$memo,
+        );
+    }
+    public matchaddr_spec($$dpth: number, $$cr?: ErrorTracker): Nullable<addr_spec> {
+        return this.memoise(
+            () => {
+                return this.run<addr_spec>($$dpth,
+                    () => {
+                        let $scope$A: Nullable<local_part>;
+                        let $scope$B: Nullable<string>;
+                        let $scope$C: Nullable<domain>;
+                        let $$res: Nullable<addr_spec> = null;
+                        if (true
+                            && ($scope$A = this.matchlocal_part($$dpth + 1, $$cr)) !== null
+                            && ($scope$B = this.regexAccept(String.raw`(?:@)`, $$dpth + 1, $$cr)) !== null
+                            && ($scope$C = this.matchdomain($$dpth + 1, $$cr)) !== null
+                        ) {
+                            $$res = {kind: ASTKinds.addr_spec, A: $scope$A, B: $scope$B, C: $scope$C};
+                        }
+                        return $$res;
+                    });
+            },
+            this.$scope$addr_spec$memo,
+        );
+    }
+    public matchaddress($$dpth: number, $$cr?: ErrorTracker): Nullable<address> {
+        return this.memoise(
+            () => {
+                return this.choice<address>([
+                    () => this.matchaddress_1($$dpth + 1, $$cr),
+                    () => this.matchaddress_2($$dpth + 1, $$cr),
+                ]);
+            },
+            this.$scope$address$memo,
+        );
+    }
+    public matchaddress_1($$dpth: number, $$cr?: ErrorTracker): Nullable<address_1> {
+        return this.matchmailbox($$dpth + 1, $$cr);
+    }
+    public matchaddress_2($$dpth: number, $$cr?: ErrorTracker): Nullable<address_2> {
+        return this.matchgroup($$dpth + 1, $$cr);
+    }
+    public matchaddress_list($$dpth: number, $$cr?: ErrorTracker): Nullable<address_list> {
+        return this.memoise(
+            () => {
+                return this.choice<address_list>([
+                    () => this.matchaddress_list_1($$dpth + 1, $$cr),
+                    () => this.matchaddress_list_2($$dpth + 1, $$cr),
+                ]);
+            },
+            this.$scope$address_list$memo,
+        );
+    }
+    public matchaddress_list_1($$dpth: number, $$cr?: ErrorTracker): Nullable<address_list_1> {
+        return this.run<address_list_1>($$dpth,
+            () => {
+                let $scope$A: Nullable<address_list_$0>;
+                let $$res: Nullable<address_list_1> = null;
                 if (true
-                    && ($scope$A = this.regexAccept(String.raw`(?:[\x21-\x27])`, $$dpth + 1, $$cr)) !== null
+                    && ($scope$A = this.matchaddress_list_$0($$dpth + 1, $$cr)) !== null
                 ) {
-                    $$res = {kind: ASTKinds.ctext_1, A: $scope$A};
+                    $$res = {kind: ASTKinds.address_list_1, A: $scope$A};
                 }
                 return $$res;
             });
     }
-    public matchctext_2($$dpth: number, $$cr?: ErrorTracker): Nullable<ctext_2> {
-        return this.run<ctext_2>($$dpth,
+    public matchaddress_list_2($$dpth: number, $$cr?: ErrorTracker): Nullable<address_list_2> {
+        return this.run<address_list_2>($$dpth,
+            () => {
+                let $scope$F: Nullable<obs_addr_list>;
+                let $$res: Nullable<address_list_2> = null;
+                if (true
+                    && ($scope$F = this.matchobs_addr_list($$dpth + 1, $$cr)) !== null
+                ) {
+                    $$res = {kind: ASTKinds.address_list_2, F: $scope$F};
+                }
+                return $$res;
+            });
+    }
+    public matchaddress_list_$0($$dpth: number, $$cr?: ErrorTracker): Nullable<address_list_$0> {
+        return this.memoise(
+            () => {
+                return this.run<address_list_$0>($$dpth,
+                    () => {
+                        let $scope$B: Nullable<address>;
+                        let $scope$C: Nullable<address_list_$0_$0[]>;
+                        let $$res: Nullable<address_list_$0> = null;
+                        if (true
+                            && ($scope$B = this.matchaddress($$dpth + 1, $$cr)) !== null
+                            && ($scope$C = this.loop<address_list_$0_$0>(() => this.matchaddress_list_$0_$0($$dpth + 1, $$cr), true)) !== null
+                        ) {
+                            $$res = {kind: ASTKinds.address_list_$0, B: $scope$B, C: $scope$C};
+                        }
+                        return $$res;
+                    });
+            },
+            this.$scope$address_list_$0$memo,
+        );
+    }
+    public matchaddress_list_$0_$0($$dpth: number, $$cr?: ErrorTracker): Nullable<address_list_$0_$0> {
+        return this.memoise(
+            () => {
+                return this.run<address_list_$0_$0>($$dpth,
+                    () => {
+                        let $scope$D: Nullable<string>;
+                        let $scope$E: Nullable<address>;
+                        let $$res: Nullable<address_list_$0_$0> = null;
+                        if (true
+                            && ($scope$D = this.regexAccept(String.raw`(?:,)`, $$dpth + 1, $$cr)) !== null
+                            && ($scope$E = this.matchaddress($$dpth + 1, $$cr)) !== null
+                        ) {
+                            $$res = {kind: ASTKinds.address_list_$0_$0, D: $scope$D, E: $scope$E};
+                        }
+                        return $$res;
+                    });
+            },
+            this.$scope$address_list_$0_$0$memo,
+        );
+    }
+    public matchangle_addr($$dpth: number, $$cr?: ErrorTracker): Nullable<angle_addr> {
+        return this.memoise(
+            () => {
+                return this.choice<angle_addr>([
+                    () => this.matchangle_addr_1($$dpth + 1, $$cr),
+                    () => this.matchangle_addr_2($$dpth + 1, $$cr),
+                ]);
+            },
+            this.$scope$angle_addr$memo,
+        );
+    }
+    public matchangle_addr_1($$dpth: number, $$cr?: ErrorTracker): Nullable<angle_addr_1> {
+        return this.run<angle_addr_1>($$dpth,
             () => {
                 let $scope$B: Nullable<string>;
-                let $$res: Nullable<ctext_2> = null;
+                let $scope$C: Nullable<addr_spec>;
+                let $scope$D: Nullable<string>;
+                let $$res: Nullable<angle_addr_1> = null;
                 if (true
-                    && ($scope$B = this.regexAccept(String.raw`(?:[\x2a-\x5b])`, $$dpth + 1, $$cr)) !== null
+                    && ((this.matchCFWS($$dpth + 1, $$cr)) || true)
+                    && ($scope$B = this.regexAccept(String.raw`(?:<)`, $$dpth + 1, $$cr)) !== null
+                    && ($scope$C = this.matchaddr_spec($$dpth + 1, $$cr)) !== null
+                    && ($scope$D = this.regexAccept(String.raw`(?:>)`, $$dpth + 1, $$cr)) !== null
+                    && ((this.matchCFWS($$dpth + 1, $$cr)) || true)
                 ) {
-                    $$res = {kind: ASTKinds.ctext_2, B: $scope$B};
+                    $$res = {kind: ASTKinds.angle_addr_1, B: $scope$B, C: $scope$C, D: $scope$D};
                 }
                 return $$res;
             });
     }
-    public matchctext_3($$dpth: number, $$cr?: ErrorTracker): Nullable<ctext_3> {
-        return this.run<ctext_3>($$dpth,
+    public matchangle_addr_2($$dpth: number, $$cr?: ErrorTracker): Nullable<angle_addr_2> {
+        return this.run<angle_addr_2>($$dpth,
             () => {
-                let $scope$C: Nullable<string>;
-                let $$res: Nullable<ctext_3> = null;
+                let $scope$F: Nullable<obs_angle_addr>;
+                let $$res: Nullable<angle_addr_2> = null;
                 if (true
-                    && ($scope$C = this.regexAccept(String.raw`(?:[\x5d-\x7e])`, $$dpth + 1, $$cr)) !== null
+                    && ($scope$F = this.matchobs_angle_addr($$dpth + 1, $$cr)) !== null
                 ) {
-                    $$res = {kind: ASTKinds.ctext_3, C: $scope$C};
+                    $$res = {kind: ASTKinds.angle_addr_2, F: $scope$F};
                 }
                 return $$res;
             });
     }
-    public matchctext_4($$dpth: number, $$cr?: ErrorTracker): Nullable<ctext_4> {
-        return this.run<ctext_4>($$dpth,
+    public matchatext($$dpth: number, $$cr?: ErrorTracker): Nullable<atext> {
+        return this.memoise(
             () => {
-                let $scope$D: Nullable<obs_ctext>;
-                let $$res: Nullable<ctext_4> = null;
+                return this.regexAccept(String.raw`(?:[A-Za-z0-9!#$%&\x27\*\+\-\/=?^_\`{|}~])`, $$dpth + 1, $$cr);
+            },
+            this.$scope$atext$memo,
+        );
+    }
+    public matchatom($$dpth: number, $$cr?: ErrorTracker): Nullable<atom> {
+        return this.memoise(
+            () => {
+                return this.run<atom>($$dpth,
+                    () => {
+                        let $scope$A: Nullable<Nullable<CFWS>>;
+                        let $scope$B: Nullable<atext[]>;
+                        let $scope$C: Nullable<Nullable<CFWS>>;
+                        let $$res: Nullable<atom> = null;
+                        if (true
+                            && (($scope$A = this.matchCFWS($$dpth + 1, $$cr)) || true)
+                            && ($scope$B = this.loop<atext>(() => this.matchatext($$dpth + 1, $$cr), false)) !== null
+                            && (($scope$C = this.matchCFWS($$dpth + 1, $$cr)) || true)
+                        ) {
+                            $$res = {kind: ASTKinds.atom, A: $scope$A, B: $scope$B, C: $scope$C};
+                        }
+                        return $$res;
+                    });
+            },
+            this.$scope$atom$memo,
+        );
+    }
+    public matchbcc($$dpth: number, $$cr?: ErrorTracker): Nullable<bcc> {
+        return this.memoise(
+            () => {
+                return this.run<bcc>($$dpth,
+                    () => {
+                        let $scope$A: Nullable<string>;
+                        let $scope$B: Nullable<string>;
+                        let $scope$C: Nullable<Nullable<bcc_$0>>;
+                        let $$res: Nullable<bcc> = null;
+                        if (true
+                            && ($scope$A = this.regexAccept(String.raw`(?:Bcc)`, $$dpth + 1, $$cr)) !== null
+                            && ($scope$B = this.regexAccept(String.raw`(?::)`, $$dpth + 1, $$cr)) !== null
+                            && (($scope$C = this.matchbcc_$0($$dpth + 1, $$cr)) || true)
+                            && this.matchCRLF($$dpth + 1, $$cr) !== null
+                        ) {
+                            $$res = {kind: ASTKinds.bcc, A: $scope$A, B: $scope$B, C: $scope$C};
+                        }
+                        return $$res;
+                    });
+            },
+            this.$scope$bcc$memo,
+        );
+    }
+    public matchbcc_$0($$dpth: number, $$cr?: ErrorTracker): Nullable<bcc_$0> {
+        return this.memoise(
+            () => {
+                return this.choice<bcc_$0>([
+                    () => this.matchbcc_$0_1($$dpth + 1, $$cr),
+                    () => this.matchbcc_$0_2($$dpth + 1, $$cr),
+                ]);
+            },
+            this.$scope$bcc_$0$memo,
+        );
+    }
+    public matchbcc_$0_1($$dpth: number, $$cr?: ErrorTracker): Nullable<bcc_$0_1> {
+        return this.matchaddress_list($$dpth + 1, $$cr);
+    }
+    public matchbcc_$0_2($$dpth: number, $$cr?: ErrorTracker): Nullable<bcc_$0_2> {
+        return this.matchCFWS($$dpth + 1, $$cr);
+    }
+    public matchbody($$dpth: number, $$cr?: ErrorTracker): Nullable<body> {
+        return this.memoise(
+            () => {
+                return this.choice<body>([
+                    () => this.matchbody_1($$dpth + 1, $$cr),
+                    () => this.matchbody_2($$dpth + 1, $$cr),
+                ]);
+            },
+            this.$scope$body$memo,
+        );
+    }
+    public matchbody_1($$dpth: number, $$cr?: ErrorTracker): Nullable<body_1> {
+        return this.run<body_1>($$dpth,
+            () => {
+                let $scope$A: Nullable<body_$0>;
+                let $$res: Nullable<body_1> = null;
                 if (true
-                    && ($scope$D = this.matchobs_ctext($$dpth + 1, $$cr)) !== null
+                    && ($scope$A = this.matchbody_$0($$dpth + 1, $$cr)) !== null
                 ) {
-                    $$res = {kind: ASTKinds.ctext_4, D: $scope$D};
+                    $$res = {kind: ASTKinds.body_1, A: $scope$A};
                 }
                 return $$res;
             });
+    }
+    public matchbody_2($$dpth: number, $$cr?: ErrorTracker): Nullable<body_2> {
+        return this.run<body_2>($$dpth,
+            () => {
+                let $scope$F: Nullable<obs_body>;
+                let $$res: Nullable<body_2> = null;
+                if (true
+                    && ($scope$F = this.matchobs_body($$dpth + 1, $$cr)) !== null
+                ) {
+                    $$res = {kind: ASTKinds.body_2, F: $scope$F};
+                }
+                return $$res;
+            });
+    }
+    public matchbody_$0($$dpth: number, $$cr?: ErrorTracker): Nullable<body_$0> {
+        return this.memoise(
+            () => {
+                return this.run<body_$0>($$dpth,
+                    () => {
+                        let $scope$B: Nullable<body_$0_$0[]>;
+                        let $scope$E: Nullable<_998text>;
+                        let $$res: Nullable<body_$0> = null;
+                        if (true
+                            && ($scope$B = this.loop<body_$0_$0>(() => this.matchbody_$0_$0($$dpth + 1, $$cr), true)) !== null
+                            && ($scope$E = this.match_998text($$dpth + 1, $$cr)) !== null
+                        ) {
+                            $$res = {kind: ASTKinds.body_$0, B: $scope$B, E: $scope$E};
+                        }
+                        return $$res;
+                    });
+            },
+            this.$scope$body_$0$memo,
+        );
+    }
+    public matchbody_$0_$0($$dpth: number, $$cr?: ErrorTracker): Nullable<body_$0_$0> {
+        return this.memoise(
+            () => {
+                return this.run<body_$0_$0>($$dpth,
+                    () => {
+                        let $scope$C: Nullable<_998text>;
+                        let $$res: Nullable<body_$0_$0> = null;
+                        if (true
+                            && ($scope$C = this.match_998text($$dpth + 1, $$cr)) !== null
+                            && this.matchCRLF($$dpth + 1, $$cr) !== null
+                        ) {
+                            $$res = {kind: ASTKinds.body_$0_$0, C: $scope$C};
+                        }
+                        return $$res;
+                    });
+            },
+            this.$scope$body_$0_$0$memo,
+        );
+    }
+    public matchcc($$dpth: number, $$cr?: ErrorTracker): Nullable<cc> {
+        return this.memoise(
+            () => {
+                return this.run<cc>($$dpth,
+                    () => {
+                        let $scope$A: Nullable<string>;
+                        let $scope$B: Nullable<string>;
+                        let $scope$C: Nullable<address_list>;
+                        let $$res: Nullable<cc> = null;
+                        if (true
+                            && ($scope$A = this.regexAccept(String.raw`(?:Cc)`, $$dpth + 1, $$cr)) !== null
+                            && ($scope$B = this.regexAccept(String.raw`(?::)`, $$dpth + 1, $$cr)) !== null
+                            && ($scope$C = this.matchaddress_list($$dpth + 1, $$cr)) !== null
+                            && this.matchCRLF($$dpth + 1, $$cr) !== null
+                        ) {
+                            $$res = {kind: ASTKinds.cc, A: $scope$A, B: $scope$B, C: $scope$C};
+                        }
+                        return $$res;
+                    });
+            },
+            this.$scope$cc$memo,
+        );
     }
     public matchccontent($$dpth: number, $$cr?: ErrorTracker): Nullable<ccontent> {
         return this.memoise(
@@ -2620,404 +2853,114 @@ export class Parser {
             this.$scope$comment_$0$memo,
         );
     }
-    public matchCFWS($$dpth: number, $$cr?: ErrorTracker): Nullable<CFWS> {
+    public matchcomments($$dpth: number, $$cr?: ErrorTracker): Nullable<comments> {
         return this.memoise(
             () => {
-                return this.choice<CFWS>([
-                    () => this.matchCFWS_1($$dpth + 1, $$cr),
-                    () => this.matchCFWS_2($$dpth + 1, $$cr),
-                ]);
+                return this.run<comments>($$dpth,
+                    () => {
+                        let $scope$A: Nullable<string>;
+                        let $scope$B: Nullable<string>;
+                        let $scope$C: Nullable<unstructured>;
+                        let $$res: Nullable<comments> = null;
+                        if (true
+                            && ($scope$A = this.regexAccept(String.raw`(?:Comments)`, $$dpth + 1, $$cr)) !== null
+                            && ($scope$B = this.regexAccept(String.raw`(?::)`, $$dpth + 1, $$cr)) !== null
+                            && ($scope$C = this.matchunstructured($$dpth + 1, $$cr)) !== null
+                            && this.matchCRLF($$dpth + 1, $$cr) !== null
+                        ) {
+                            $$res = {kind: ASTKinds.comments, A: $scope$A, B: $scope$B, C: $scope$C};
+                        }
+                        return $$res;
+                    });
             },
-            this.$scope$CFWS$memo,
+            this.$scope$comments$memo,
         );
     }
-    public matchCFWS_1($$dpth: number, $$cr?: ErrorTracker): Nullable<CFWS_1> {
-        return this.run<CFWS_1>($$dpth,
+    public matchctext($$dpth: number, $$cr?: ErrorTracker): Nullable<ctext> {
+        return this.memoise(
             () => {
-                let $scope$A: Nullable<CFWS_$0>;
-                let $$res: Nullable<CFWS_1> = null;
+                return this.choice<ctext>([
+                    () => this.matchctext_1($$dpth + 1, $$cr),
+                    () => this.matchctext_2($$dpth + 1, $$cr),
+                    () => this.matchctext_3($$dpth + 1, $$cr),
+                    () => this.matchctext_4($$dpth + 1, $$cr),
+                ]);
+            },
+            this.$scope$ctext$memo,
+        );
+    }
+    public matchctext_1($$dpth: number, $$cr?: ErrorTracker): Nullable<ctext_1> {
+        return this.run<ctext_1>($$dpth,
+            () => {
+                let $scope$A: Nullable<string>;
+                let $$res: Nullable<ctext_1> = null;
                 if (true
-                    && ($scope$A = this.matchCFWS_$0($$dpth + 1, $$cr)) !== null
+                    && ($scope$A = this.regexAccept(String.raw`(?:[\x21-\x27])`, $$dpth + 1, $$cr)) !== null
                 ) {
-                    $$res = {kind: ASTKinds.CFWS_1, A: $scope$A};
+                    $$res = {kind: ASTKinds.ctext_1, A: $scope$A};
                 }
                 return $$res;
             });
     }
-    public matchCFWS_2($$dpth: number, $$cr?: ErrorTracker): Nullable<CFWS_2> {
-        return this.matchFWS($$dpth + 1, $$cr);
-    }
-    public matchCFWS_$0($$dpth: number, $$cr?: ErrorTracker): Nullable<CFWS_$0> {
-        return this.memoise(
+    public matchctext_2($$dpth: number, $$cr?: ErrorTracker): Nullable<ctext_2> {
+        return this.run<ctext_2>($$dpth,
             () => {
-                return this.run<CFWS_$0>($$dpth,
-                    () => {
-                        let $scope$B: Nullable<CFWS_$0_$0[]>;
-                        let $$res: Nullable<CFWS_$0> = null;
-                        if (true
-                            && ($scope$B = this.loop<CFWS_$0_$0>(() => this.matchCFWS_$0_$0($$dpth + 1, $$cr), false)) !== null
-                            && ((this.matchFWS($$dpth + 1, $$cr)) || true)
-                        ) {
-                            $$res = {kind: ASTKinds.CFWS_$0, B: $scope$B};
-                        }
-                        return $$res;
-                    });
-            },
-            this.$scope$CFWS_$0$memo,
-        );
-    }
-    public matchCFWS_$0_$0($$dpth: number, $$cr?: ErrorTracker): Nullable<CFWS_$0_$0> {
-        return this.memoise(
-            () => {
-                return this.run<CFWS_$0_$0>($$dpth,
-                    () => {
-                        let $scope$D: Nullable<comment>;
-                        let $$res: Nullable<CFWS_$0_$0> = null;
-                        if (true
-                            && ((this.matchFWS($$dpth + 1, $$cr)) || true)
-                            && ($scope$D = this.matchcomment($$dpth + 1, $$cr)) !== null
-                        ) {
-                            $$res = {kind: ASTKinds.CFWS_$0_$0, D: $scope$D};
-                        }
-                        return $$res;
-                    });
-            },
-            this.$scope$CFWS_$0_$0$memo,
-        );
-    }
-    public matchatext($$dpth: number, $$cr?: ErrorTracker): Nullable<atext> {
-        return this.memoise(
-            () => {
-                return this.regexAccept(String.raw`(?:[A-Za-z0-9!#$%&\x27\*\+\-\/=?^_\`{|}~])`, $$dpth + 1, $$cr);
-            },
-            this.$scope$atext$memo,
-        );
-    }
-    public matchatom($$dpth: number, $$cr?: ErrorTracker): Nullable<atom> {
-        return this.memoise(
-            () => {
-                return this.run<atom>($$dpth,
-                    () => {
-                        let $scope$B: Nullable<atext[]>;
-                        let $$res: Nullable<atom> = null;
-                        if (true
-                            && ((this.matchCFWS($$dpth + 1, $$cr)) || true)
-                            && ($scope$B = this.loop<atext>(() => this.matchatext($$dpth + 1, $$cr), false)) !== null
-                            && ((this.matchCFWS($$dpth + 1, $$cr)) || true)
-                        ) {
-                            $$res = {kind: ASTKinds.atom, B: $scope$B};
-                        }
-                        return $$res;
-                    });
-            },
-            this.$scope$atom$memo,
-        );
-    }
-    public matchdot_atom_text($$dpth: number, $$cr?: ErrorTracker): Nullable<dot_atom_text> {
-        return this.memoise(
-            () => {
-                return this.run<dot_atom_text>($$dpth,
-                    () => {
-                        let $scope$A: Nullable<atext[]>;
-                        let $scope$B: Nullable<dot_atom_text_$0[]>;
-                        let $$res: Nullable<dot_atom_text> = null;
-                        if (true
-                            && ($scope$A = this.loop<atext>(() => this.matchatext($$dpth + 1, $$cr), false)) !== null
-                            && ($scope$B = this.loop<dot_atom_text_$0>(() => this.matchdot_atom_text_$0($$dpth + 1, $$cr), true)) !== null
-                        ) {
-                            $$res = {kind: ASTKinds.dot_atom_text, A: $scope$A, B: $scope$B};
-                        }
-                        return $$res;
-                    });
-            },
-            this.$scope$dot_atom_text$memo,
-        );
-    }
-    public matchdot_atom_text_$0($$dpth: number, $$cr?: ErrorTracker): Nullable<dot_atom_text_$0> {
-        return this.memoise(
-            () => {
-                return this.run<dot_atom_text_$0>($$dpth,
-                    () => {
-                        let $scope$C: Nullable<string>;
-                        let $scope$D: Nullable<atext[]>;
-                        let $$res: Nullable<dot_atom_text_$0> = null;
-                        if (true
-                            && ($scope$C = this.regexAccept(String.raw`(?:\.)`, $$dpth + 1, $$cr)) !== null
-                            && ($scope$D = this.loop<atext>(() => this.matchatext($$dpth + 1, $$cr), false)) !== null
-                        ) {
-                            $$res = {kind: ASTKinds.dot_atom_text_$0, C: $scope$C, D: $scope$D};
-                        }
-                        return $$res;
-                    });
-            },
-            this.$scope$dot_atom_text_$0$memo,
-        );
-    }
-    public matchdot_atom($$dpth: number, $$cr?: ErrorTracker): Nullable<dot_atom> {
-        return this.memoise(
-            () => {
-                return this.run<dot_atom>($$dpth,
-                    () => {
-                        let $scope$A: Nullable<Nullable<CFWS>>;
-                        let $scope$B: Nullable<dot_atom_text>;
-                        let $scope$C: Nullable<Nullable<CFWS>>;
-                        let $$res: Nullable<dot_atom> = null;
-                        if (true
-                            && (($scope$A = this.matchCFWS($$dpth + 1, $$cr)) || true)
-                            && ($scope$B = this.matchdot_atom_text($$dpth + 1, $$cr)) !== null
-                            && (($scope$C = this.matchCFWS($$dpth + 1, $$cr)) || true)
-                        ) {
-                            $$res = {kind: ASTKinds.dot_atom, A: $scope$A, B: $scope$B, C: $scope$C};
-                        }
-                        return $$res;
-                    });
-            },
-            this.$scope$dot_atom$memo,
-        );
-    }
-    public matchspecials($$dpth: number, $$cr?: ErrorTracker): Nullable<specials> {
-        return this.memoise(
-            () => {
-                return this.choice<specials>([
-                    () => this.matchspecials_1($$dpth + 1, $$cr),
-                    () => this.matchspecials_2($$dpth + 1, $$cr),
-                    () => this.matchspecials_3($$dpth + 1, $$cr),
-                    () => this.matchspecials_4($$dpth + 1, $$cr),
-                    () => this.matchspecials_5($$dpth + 1, $$cr),
-                    () => this.matchspecials_6($$dpth + 1, $$cr),
-                    () => this.matchspecials_7($$dpth + 1, $$cr),
-                    () => this.matchspecials_8($$dpth + 1, $$cr),
-                    () => this.matchspecials_9($$dpth + 1, $$cr),
-                    () => this.matchspecials_10($$dpth + 1, $$cr),
-                ]);
-            },
-            this.$scope$specials$memo,
-        );
-    }
-    public matchspecials_1($$dpth: number, $$cr?: ErrorTracker): Nullable<specials_1> {
-        return this.regexAccept(String.raw`(?:\()`, $$dpth + 1, $$cr);
-    }
-    public matchspecials_2($$dpth: number, $$cr?: ErrorTracker): Nullable<specials_2> {
-        return this.regexAccept(String.raw`(?:\))`, $$dpth + 1, $$cr);
-    }
-    public matchspecials_3($$dpth: number, $$cr?: ErrorTracker): Nullable<specials_3> {
-        return this.regexAccept(String.raw`(?:[<>])`, $$dpth + 1, $$cr);
-    }
-    public matchspecials_4($$dpth: number, $$cr?: ErrorTracker): Nullable<specials_4> {
-        return this.regexAccept(String.raw`(?:\[)`, $$dpth + 1, $$cr);
-    }
-    public matchspecials_5($$dpth: number, $$cr?: ErrorTracker): Nullable<specials_5> {
-        return this.regexAccept(String.raw`(?:\])`, $$dpth + 1, $$cr);
-    }
-    public matchspecials_6($$dpth: number, $$cr?: ErrorTracker): Nullable<specials_6> {
-        return this.regexAccept(String.raw`(?:[:;@])`, $$dpth + 1, $$cr);
-    }
-    public matchspecials_7($$dpth: number, $$cr?: ErrorTracker): Nullable<specials_7> {
-        return this.regexAccept(String.raw`(?:\\)`, $$dpth + 1, $$cr);
-    }
-    public matchspecials_8($$dpth: number, $$cr?: ErrorTracker): Nullable<specials_8> {
-        return this.regexAccept(String.raw`(?:,)`, $$dpth + 1, $$cr);
-    }
-    public matchspecials_9($$dpth: number, $$cr?: ErrorTracker): Nullable<specials_9> {
-        return this.regexAccept(String.raw`(?:\.)`, $$dpth + 1, $$cr);
-    }
-    public matchspecials_10($$dpth: number, $$cr?: ErrorTracker): Nullable<specials_10> {
-        return this.matchDQUOTE($$dpth + 1, $$cr);
-    }
-    public matchqtext($$dpth: number, $$cr?: ErrorTracker): Nullable<qtext> {
-        return this.memoise(
-            () => {
-                return this.choice<qtext>([
-                    () => this.matchqtext_1($$dpth + 1, $$cr),
-                    () => this.matchqtext_2($$dpth + 1, $$cr),
-                    () => this.matchqtext_3($$dpth + 1, $$cr),
-                    () => this.matchqtext_4($$dpth + 1, $$cr),
-                ]);
-            },
-            this.$scope$qtext$memo,
-        );
-    }
-    public matchqtext_1($$dpth: number, $$cr?: ErrorTracker): Nullable<qtext_1> {
-        return this.regexAccept(String.raw`(?:\x21)`, $$dpth + 1, $$cr);
-    }
-    public matchqtext_2($$dpth: number, $$cr?: ErrorTracker): Nullable<qtext_2> {
-        return this.regexAccept(String.raw`(?:[\x23-\x5b])`, $$dpth + 1, $$cr);
-    }
-    public matchqtext_3($$dpth: number, $$cr?: ErrorTracker): Nullable<qtext_3> {
-        return this.regexAccept(String.raw`(?:[\x5d-\x7e])`, $$dpth + 1, $$cr);
-    }
-    public matchqtext_4($$dpth: number, $$cr?: ErrorTracker): Nullable<qtext_4> {
-        return this.matchobs_qtext($$dpth + 1, $$cr);
-    }
-    public matchqcontent($$dpth: number, $$cr?: ErrorTracker): Nullable<qcontent> {
-        return this.memoise(
-            () => {
-                return this.choice<qcontent>([
-                    () => this.matchqcontent_1($$dpth + 1, $$cr),
-                    () => this.matchqcontent_2($$dpth + 1, $$cr),
-                ]);
-            },
-            this.$scope$qcontent$memo,
-        );
-    }
-    public matchqcontent_1($$dpth: number, $$cr?: ErrorTracker): Nullable<qcontent_1> {
-        return this.matchqtext($$dpth + 1, $$cr);
-    }
-    public matchqcontent_2($$dpth: number, $$cr?: ErrorTracker): Nullable<qcontent_2> {
-        return this.matchquoted_pair($$dpth + 1, $$cr);
-    }
-    public matchquoted_string($$dpth: number, $$cr?: ErrorTracker): Nullable<quoted_string> {
-        return this.memoise(
-            () => {
-                return this.run<quoted_string>($$dpth,
-                    () => {
-                        let $scope$B: Nullable<DQUOTE>;
-                        let $scope$C: Nullable<quoted_string_$0[]>;
-                        let $scope$G: Nullable<DQUOTE>;
-                        let $$res: Nullable<quoted_string> = null;
-                        if (true
-                            && ((this.matchCFWS($$dpth + 1, $$cr)) || true)
-                            && ($scope$B = this.matchDQUOTE($$dpth + 1, $$cr)) !== null
-                            && ($scope$C = this.loop<quoted_string_$0>(() => this.matchquoted_string_$0($$dpth + 1, $$cr), true)) !== null
-                            && ((this.matchFWS($$dpth + 1, $$cr)) || true)
-                            && ($scope$G = this.matchDQUOTE($$dpth + 1, $$cr)) !== null
-                            && ((this.matchCFWS($$dpth + 1, $$cr)) || true)
-                        ) {
-                            $$res = {kind: ASTKinds.quoted_string, B: $scope$B, C: $scope$C, G: $scope$G};
-                        }
-                        return $$res;
-                    });
-            },
-            this.$scope$quoted_string$memo,
-        );
-    }
-    public matchquoted_string_$0($$dpth: number, $$cr?: ErrorTracker): Nullable<quoted_string_$0> {
-        return this.memoise(
-            () => {
-                return this.run<quoted_string_$0>($$dpth,
-                    () => {
-                        let $scope$E: Nullable<qcontent>;
-                        let $$res: Nullable<quoted_string_$0> = null;
-                        if (true
-                            && ((this.matchFWS($$dpth + 1, $$cr)) || true)
-                            && ($scope$E = this.matchqcontent($$dpth + 1, $$cr)) !== null
-                        ) {
-                            $$res = {kind: ASTKinds.quoted_string_$0, E: $scope$E};
-                        }
-                        return $$res;
-                    });
-            },
-            this.$scope$quoted_string_$0$memo,
-        );
-    }
-    public matchword($$dpth: number, $$cr?: ErrorTracker): Nullable<word> {
-        return this.memoise(
-            () => {
-                return this.choice<word>([
-                    () => this.matchword_1($$dpth + 1, $$cr),
-                    () => this.matchword_2($$dpth + 1, $$cr),
-                ]);
-            },
-            this.$scope$word$memo,
-        );
-    }
-    public matchword_1($$dpth: number, $$cr?: ErrorTracker): Nullable<word_1> {
-        return this.matchatom($$dpth + 1, $$cr);
-    }
-    public matchword_2($$dpth: number, $$cr?: ErrorTracker): Nullable<word_2> {
-        return this.matchquoted_string($$dpth + 1, $$cr);
-    }
-    public matchphrase($$dpth: number, $$cr?: ErrorTracker): Nullable<phrase> {
-        return this.memoise(
-            () => {
-                return this.choice<phrase>([
-                    () => this.matchphrase_1($$dpth + 1, $$cr),
-                    () => this.matchphrase_2($$dpth + 1, $$cr),
-                ]);
-            },
-            this.$scope$phrase$memo,
-        );
-    }
-    public matchphrase_1($$dpth: number, $$cr?: ErrorTracker): Nullable<phrase_1> {
-        return this.loop<word>(() => this.matchword($$dpth + 1, $$cr), false);
-    }
-    public matchphrase_2($$dpth: number, $$cr?: ErrorTracker): Nullable<phrase_2> {
-        return this.matchobs_phrase($$dpth + 1, $$cr);
-    }
-    public matchunstructured($$dpth: number, $$cr?: ErrorTracker): Nullable<unstructured> {
-        return this.memoise(
-            () => {
-                return this.choice<unstructured>([
-                    () => this.matchunstructured_1($$dpth + 1, $$cr),
-                    () => this.matchunstructured_2($$dpth + 1, $$cr),
-                ]);
-            },
-            this.$scope$unstructured$memo,
-        );
-    }
-    public matchunstructured_1($$dpth: number, $$cr?: ErrorTracker): Nullable<unstructured_1> {
-        return this.run<unstructured_1>($$dpth,
-            () => {
-                let $scope$A: Nullable<unstructured_$0>;
-                let $$res: Nullable<unstructured_1> = null;
+                let $scope$B: Nullable<string>;
+                let $$res: Nullable<ctext_2> = null;
                 if (true
-                    && ($scope$A = this.matchunstructured_$0($$dpth + 1, $$cr)) !== null
+                    && ($scope$B = this.regexAccept(String.raw`(?:[\x2a-\x5b])`, $$dpth + 1, $$cr)) !== null
                 ) {
-                    $$res = {kind: ASTKinds.unstructured_1, A: $scope$A};
+                    $$res = {kind: ASTKinds.ctext_2, B: $scope$B};
                 }
                 return $$res;
             });
     }
-    public matchunstructured_2($$dpth: number, $$cr?: ErrorTracker): Nullable<unstructured_2> {
-        return this.run<unstructured_2>($$dpth,
+    public matchctext_3($$dpth: number, $$cr?: ErrorTracker): Nullable<ctext_3> {
+        return this.run<ctext_3>($$dpth,
             () => {
-                let $scope$F: Nullable<obs_unstruct>;
-                let $$res: Nullable<unstructured_2> = null;
+                let $scope$C: Nullable<string>;
+                let $$res: Nullable<ctext_3> = null;
                 if (true
-                    && ($scope$F = this.matchobs_unstruct($$dpth + 1, $$cr)) !== null
+                    && ($scope$C = this.regexAccept(String.raw`(?:[\x5d-\x7e])`, $$dpth + 1, $$cr)) !== null
                 ) {
-                    $$res = {kind: ASTKinds.unstructured_2, F: $scope$F};
+                    $$res = {kind: ASTKinds.ctext_3, C: $scope$C};
                 }
                 return $$res;
             });
     }
-    public matchunstructured_$0($$dpth: number, $$cr?: ErrorTracker): Nullable<unstructured_$0> {
-        return this.memoise(
+    public matchctext_4($$dpth: number, $$cr?: ErrorTracker): Nullable<ctext_4> {
+        return this.run<ctext_4>($$dpth,
             () => {
-                return this.run<unstructured_$0>($$dpth,
-                    () => {
-                        let $scope$B: Nullable<unstructured_$0_$0[]>;
-                        let $$res: Nullable<unstructured_$0> = null;
-                        if (true
-                            && ($scope$B = this.loop<unstructured_$0_$0>(() => this.matchunstructured_$0_$0($$dpth + 1, $$cr), true)) !== null
-                            && this.loop<WSP>(() => this.matchWSP($$dpth + 1, $$cr), true) !== null
-                        ) {
-                            $$res = {kind: ASTKinds.unstructured_$0, B: $scope$B};
-                        }
-                        return $$res;
-                    });
-            },
-            this.$scope$unstructured_$0$memo,
-        );
+                let $scope$D: Nullable<obs_ctext>;
+                let $$res: Nullable<ctext_4> = null;
+                if (true
+                    && ($scope$D = this.matchobs_ctext($$dpth + 1, $$cr)) !== null
+                ) {
+                    $$res = {kind: ASTKinds.ctext_4, D: $scope$D};
+                }
+                return $$res;
+            });
     }
-    public matchunstructured_$0_$0($$dpth: number, $$cr?: ErrorTracker): Nullable<unstructured_$0_$0> {
+    public matchdate($$dpth: number, $$cr?: ErrorTracker): Nullable<date> {
         return this.memoise(
             () => {
-                return this.run<unstructured_$0_$0>($$dpth,
+                return this.run<date>($$dpth,
                     () => {
-                        let $scope$C: Nullable<Nullable<FWS>>;
-                        let $scope$D: Nullable<VCHAR>;
-                        let $$res: Nullable<unstructured_$0_$0> = null;
+                        let $scope$A: Nullable<day>;
+                        let $scope$B: Nullable<month>;
+                        let $scope$C: Nullable<year>;
+                        let $$res: Nullable<date> = null;
                         if (true
-                            && (($scope$C = this.matchFWS($$dpth + 1, $$cr)) || true)
-                            && ($scope$D = this.matchVCHAR($$dpth + 1, $$cr)) !== null
+                            && ($scope$A = this.matchday($$dpth + 1, $$cr)) !== null
+                            && ($scope$B = this.matchmonth($$dpth + 1, $$cr)) !== null
+                            && ($scope$C = this.matchyear($$dpth + 1, $$cr)) !== null
                         ) {
-                            $$res = {kind: ASTKinds.unstructured_$0_$0, C: $scope$C, D: $scope$D};
+                            $$res = {kind: ASTKinds.date, A: $scope$A, B: $scope$B, C: $scope$C};
                         }
                         return $$res;
                     });
             },
-            this.$scope$unstructured_$0_$0$memo,
+            this.$scope$date$memo,
         );
     }
     public matchdate_time($$dpth: number, $$cr?: ErrorTracker): Nullable<date_time> {
@@ -3061,121 +3004,6 @@ export class Parser {
                     });
             },
             this.$scope$date_time_$0$memo,
-        );
-    }
-    public matchday_of_week($$dpth: number, $$cr?: ErrorTracker): Nullable<day_of_week> {
-        return this.memoise(
-            () => {
-                return this.choice<day_of_week>([
-                    () => this.matchday_of_week_1($$dpth + 1, $$cr),
-                    () => this.matchday_of_week_2($$dpth + 1, $$cr),
-                ]);
-            },
-            this.$scope$day_of_week$memo,
-        );
-    }
-    public matchday_of_week_1($$dpth: number, $$cr?: ErrorTracker): Nullable<day_of_week_1> {
-        return this.run<day_of_week_1>($$dpth,
-            () => {
-                let $scope$A: Nullable<day_of_week_$0>;
-                let $$res: Nullable<day_of_week_1> = null;
-                if (true
-                    && ($scope$A = this.matchday_of_week_$0($$dpth + 1, $$cr)) !== null
-                ) {
-                    $$res = {kind: ASTKinds.day_of_week_1, A: $scope$A};
-                }
-                return $$res;
-            });
-    }
-    public matchday_of_week_2($$dpth: number, $$cr?: ErrorTracker): Nullable<day_of_week_2> {
-        return this.run<day_of_week_2>($$dpth,
-            () => {
-                let $scope$D: Nullable<obs_day_of_week>;
-                let $$res: Nullable<day_of_week_2> = null;
-                if (true
-                    && ($scope$D = this.matchobs_day_of_week($$dpth + 1, $$cr)) !== null
-                ) {
-                    $$res = {kind: ASTKinds.day_of_week_2, D: $scope$D};
-                }
-                return $$res;
-            });
-    }
-    public matchday_of_week_$0($$dpth: number, $$cr?: ErrorTracker): Nullable<day_of_week_$0> {
-        return this.memoise(
-            () => {
-                return this.run<day_of_week_$0>($$dpth,
-                    () => {
-                        let $scope$C: Nullable<day_name>;
-                        let $$res: Nullable<day_of_week_$0> = null;
-                        if (true
-                            && ((this.matchFWS($$dpth + 1, $$cr)) || true)
-                            && ($scope$C = this.matchday_name($$dpth + 1, $$cr)) !== null
-                        ) {
-                            $$res = {kind: ASTKinds.day_of_week_$0, C: $scope$C};
-                        }
-                        return $$res;
-                    });
-            },
-            this.$scope$day_of_week_$0$memo,
-        );
-    }
-    public matchday_name($$dpth: number, $$cr?: ErrorTracker): Nullable<day_name> {
-        return this.memoise(
-            () => {
-                return this.choice<day_name>([
-                    () => this.matchday_name_1($$dpth + 1, $$cr),
-                    () => this.matchday_name_2($$dpth + 1, $$cr),
-                    () => this.matchday_name_3($$dpth + 1, $$cr),
-                    () => this.matchday_name_4($$dpth + 1, $$cr),
-                    () => this.matchday_name_5($$dpth + 1, $$cr),
-                    () => this.matchday_name_6($$dpth + 1, $$cr),
-                    () => this.matchday_name_7($$dpth + 1, $$cr),
-                ]);
-            },
-            this.$scope$day_name$memo,
-        );
-    }
-    public matchday_name_1($$dpth: number, $$cr?: ErrorTracker): Nullable<day_name_1> {
-        return this.regexAccept(String.raw`(?:Mon)`, $$dpth + 1, $$cr);
-    }
-    public matchday_name_2($$dpth: number, $$cr?: ErrorTracker): Nullable<day_name_2> {
-        return this.regexAccept(String.raw`(?:Tue)`, $$dpth + 1, $$cr);
-    }
-    public matchday_name_3($$dpth: number, $$cr?: ErrorTracker): Nullable<day_name_3> {
-        return this.regexAccept(String.raw`(?:Wed)`, $$dpth + 1, $$cr);
-    }
-    public matchday_name_4($$dpth: number, $$cr?: ErrorTracker): Nullable<day_name_4> {
-        return this.regexAccept(String.raw`(?:Thu)`, $$dpth + 1, $$cr);
-    }
-    public matchday_name_5($$dpth: number, $$cr?: ErrorTracker): Nullable<day_name_5> {
-        return this.regexAccept(String.raw`(?:Fri)`, $$dpth + 1, $$cr);
-    }
-    public matchday_name_6($$dpth: number, $$cr?: ErrorTracker): Nullable<day_name_6> {
-        return this.regexAccept(String.raw`(?:Sat)`, $$dpth + 1, $$cr);
-    }
-    public matchday_name_7($$dpth: number, $$cr?: ErrorTracker): Nullable<day_name_7> {
-        return this.regexAccept(String.raw`(?:Sun)`, $$dpth + 1, $$cr);
-    }
-    public matchdate($$dpth: number, $$cr?: ErrorTracker): Nullable<date> {
-        return this.memoise(
-            () => {
-                return this.run<date>($$dpth,
-                    () => {
-                        let $scope$A: Nullable<day>;
-                        let $scope$B: Nullable<month>;
-                        let $scope$C: Nullable<year>;
-                        let $$res: Nullable<date> = null;
-                        if (true
-                            && ($scope$A = this.matchday($$dpth + 1, $$cr)) !== null
-                            && ($scope$B = this.matchmonth($$dpth + 1, $$cr)) !== null
-                            && ($scope$C = this.matchyear($$dpth + 1, $$cr)) !== null
-                        ) {
-                            $$res = {kind: ASTKinds.date, A: $scope$A, B: $scope$B, C: $scope$C};
-                        }
-                        return $$res;
-                    });
-            },
-            this.$scope$date$memo,
         );
     }
     public matchday($$dpth: number, $$cr?: ErrorTracker): Nullable<day> {
@@ -3237,514 +3065,97 @@ export class Parser {
             this.$scope$day_$0$memo,
         );
     }
-    public matchmonth($$dpth: number, $$cr?: ErrorTracker): Nullable<month> {
+    public matchday_name($$dpth: number, $$cr?: ErrorTracker): Nullable<day_name> {
         return this.memoise(
             () => {
-                return this.choice<month>([
-                    () => this.matchmonth_1($$dpth + 1, $$cr),
-                    () => this.matchmonth_2($$dpth + 1, $$cr),
-                    () => this.matchmonth_3($$dpth + 1, $$cr),
-                    () => this.matchmonth_4($$dpth + 1, $$cr),
-                    () => this.matchmonth_5($$dpth + 1, $$cr),
-                    () => this.matchmonth_6($$dpth + 1, $$cr),
-                    () => this.matchmonth_7($$dpth + 1, $$cr),
-                    () => this.matchmonth_8($$dpth + 1, $$cr),
-                    () => this.matchmonth_9($$dpth + 1, $$cr),
-                    () => this.matchmonth_10($$dpth + 1, $$cr),
-                    () => this.matchmonth_11($$dpth + 1, $$cr),
-                    () => this.matchmonth_12($$dpth + 1, $$cr),
+                return this.choice<day_name>([
+                    () => this.matchday_name_1($$dpth + 1, $$cr),
+                    () => this.matchday_name_2($$dpth + 1, $$cr),
+                    () => this.matchday_name_3($$dpth + 1, $$cr),
+                    () => this.matchday_name_4($$dpth + 1, $$cr),
+                    () => this.matchday_name_5($$dpth + 1, $$cr),
+                    () => this.matchday_name_6($$dpth + 1, $$cr),
+                    () => this.matchday_name_7($$dpth + 1, $$cr),
                 ]);
             },
-            this.$scope$month$memo,
+            this.$scope$day_name$memo,
         );
     }
-    public matchmonth_1($$dpth: number, $$cr?: ErrorTracker): Nullable<month_1> {
-        return this.regexAccept(String.raw`(?:Jan)`, $$dpth + 1, $$cr);
+    public matchday_name_1($$dpth: number, $$cr?: ErrorTracker): Nullable<day_name_1> {
+        return this.regexAccept(String.raw`(?:Mon)`, $$dpth + 1, $$cr);
     }
-    public matchmonth_2($$dpth: number, $$cr?: ErrorTracker): Nullable<month_2> {
-        return this.regexAccept(String.raw`(?:Feb)`, $$dpth + 1, $$cr);
+    public matchday_name_2($$dpth: number, $$cr?: ErrorTracker): Nullable<day_name_2> {
+        return this.regexAccept(String.raw`(?:Tue)`, $$dpth + 1, $$cr);
     }
-    public matchmonth_3($$dpth: number, $$cr?: ErrorTracker): Nullable<month_3> {
-        return this.regexAccept(String.raw`(?:Mar)`, $$dpth + 1, $$cr);
+    public matchday_name_3($$dpth: number, $$cr?: ErrorTracker): Nullable<day_name_3> {
+        return this.regexAccept(String.raw`(?:Wed)`, $$dpth + 1, $$cr);
     }
-    public matchmonth_4($$dpth: number, $$cr?: ErrorTracker): Nullable<month_4> {
-        return this.regexAccept(String.raw`(?:Apr)`, $$dpth + 1, $$cr);
+    public matchday_name_4($$dpth: number, $$cr?: ErrorTracker): Nullable<day_name_4> {
+        return this.regexAccept(String.raw`(?:Thu)`, $$dpth + 1, $$cr);
     }
-    public matchmonth_5($$dpth: number, $$cr?: ErrorTracker): Nullable<month_5> {
-        return this.regexAccept(String.raw`(?:May)`, $$dpth + 1, $$cr);
+    public matchday_name_5($$dpth: number, $$cr?: ErrorTracker): Nullable<day_name_5> {
+        return this.regexAccept(String.raw`(?:Fri)`, $$dpth + 1, $$cr);
     }
-    public matchmonth_6($$dpth: number, $$cr?: ErrorTracker): Nullable<month_6> {
-        return this.regexAccept(String.raw`(?:Jun)`, $$dpth + 1, $$cr);
+    public matchday_name_6($$dpth: number, $$cr?: ErrorTracker): Nullable<day_name_6> {
+        return this.regexAccept(String.raw`(?:Sat)`, $$dpth + 1, $$cr);
     }
-    public matchmonth_7($$dpth: number, $$cr?: ErrorTracker): Nullable<month_7> {
-        return this.regexAccept(String.raw`(?:Jul)`, $$dpth + 1, $$cr);
+    public matchday_name_7($$dpth: number, $$cr?: ErrorTracker): Nullable<day_name_7> {
+        return this.regexAccept(String.raw`(?:Sun)`, $$dpth + 1, $$cr);
     }
-    public matchmonth_8($$dpth: number, $$cr?: ErrorTracker): Nullable<month_8> {
-        return this.regexAccept(String.raw`(?:Aug)`, $$dpth + 1, $$cr);
-    }
-    public matchmonth_9($$dpth: number, $$cr?: ErrorTracker): Nullable<month_9> {
-        return this.regexAccept(String.raw`(?:Sep)`, $$dpth + 1, $$cr);
-    }
-    public matchmonth_10($$dpth: number, $$cr?: ErrorTracker): Nullable<month_10> {
-        return this.regexAccept(String.raw`(?:Oct)`, $$dpth + 1, $$cr);
-    }
-    public matchmonth_11($$dpth: number, $$cr?: ErrorTracker): Nullable<month_11> {
-        return this.regexAccept(String.raw`(?:Nov)`, $$dpth + 1, $$cr);
-    }
-    public matchmonth_12($$dpth: number, $$cr?: ErrorTracker): Nullable<month_12> {
-        return this.regexAccept(String.raw`(?:Dec)`, $$dpth + 1, $$cr);
-    }
-    public matchyear($$dpth: number, $$cr?: ErrorTracker): Nullable<year> {
+    public matchday_of_week($$dpth: number, $$cr?: ErrorTracker): Nullable<day_of_week> {
         return this.memoise(
             () => {
-                return this.choice<year>([
-                    () => this.matchyear_1($$dpth + 1, $$cr),
-                    () => this.matchyear_2($$dpth + 1, $$cr),
+                return this.choice<day_of_week>([
+                    () => this.matchday_of_week_1($$dpth + 1, $$cr),
+                    () => this.matchday_of_week_2($$dpth + 1, $$cr),
                 ]);
             },
-            this.$scope$year$memo,
+            this.$scope$day_of_week$memo,
         );
     }
-    public matchyear_1($$dpth: number, $$cr?: ErrorTracker): Nullable<year_1> {
-        return this.run<year_1>($$dpth,
+    public matchday_of_week_1($$dpth: number, $$cr?: ErrorTracker): Nullable<day_of_week_1> {
+        return this.run<day_of_week_1>($$dpth,
             () => {
-                let $scope$A: Nullable<year_$0>;
-                let $$res: Nullable<year_1> = null;
+                let $scope$A: Nullable<day_of_week_$0>;
+                let $$res: Nullable<day_of_week_1> = null;
                 if (true
-                    && ($scope$A = this.matchyear_$0($$dpth + 1, $$cr)) !== null
+                    && ($scope$A = this.matchday_of_week_$0($$dpth + 1, $$cr)) !== null
                 ) {
-                    $$res = {kind: ASTKinds.year_1, A: $scope$A};
+                    $$res = {kind: ASTKinds.day_of_week_1, A: $scope$A};
                 }
                 return $$res;
             });
     }
-    public matchyear_2($$dpth: number, $$cr?: ErrorTracker): Nullable<year_2> {
-        return this.run<year_2>($$dpth,
+    public matchday_of_week_2($$dpth: number, $$cr?: ErrorTracker): Nullable<day_of_week_2> {
+        return this.run<day_of_week_2>($$dpth,
             () => {
-                let $scope$F: Nullable<obs_year>;
-                let $$res: Nullable<year_2> = null;
+                let $scope$D: Nullable<obs_day_of_week>;
+                let $$res: Nullable<day_of_week_2> = null;
                 if (true
-                    && ($scope$F = this.matchobs_year($$dpth + 1, $$cr)) !== null
+                    && ($scope$D = this.matchobs_day_of_week($$dpth + 1, $$cr)) !== null
                 ) {
-                    $$res = {kind: ASTKinds.year_2, F: $scope$F};
+                    $$res = {kind: ASTKinds.day_of_week_2, D: $scope$D};
                 }
                 return $$res;
             });
     }
-    public matchyear_$0($$dpth: number, $$cr?: ErrorTracker): Nullable<year_$0> {
+    public matchday_of_week_$0($$dpth: number, $$cr?: ErrorTracker): Nullable<day_of_week_$0> {
         return this.memoise(
             () => {
-                return this.run<year_$0>($$dpth,
+                return this.run<day_of_week_$0>($$dpth,
                     () => {
-                        let $scope$B: Nullable<FWS>;
-                        let $scope$C: Nullable<FOUR_DIGIT>;
-                        let $scope$D: Nullable<DIGIT[]>;
-                        let $scope$E: Nullable<FWS>;
-                        let $$res: Nullable<year_$0> = null;
+                        let $scope$C: Nullable<day_name>;
+                        let $$res: Nullable<day_of_week_$0> = null;
                         if (true
-                            && ($scope$B = this.matchFWS($$dpth + 1, $$cr)) !== null
-                            && ($scope$C = this.matchFOUR_DIGIT($$dpth + 1, $$cr)) !== null
-                            && ($scope$D = this.loop<DIGIT>(() => this.matchDIGIT($$dpth + 1, $$cr), true)) !== null
-                            && ($scope$E = this.matchFWS($$dpth + 1, $$cr)) !== null
+                            && ((this.matchFWS($$dpth + 1, $$cr)) || true)
+                            && ($scope$C = this.matchday_name($$dpth + 1, $$cr)) !== null
                         ) {
-                            $$res = {kind: ASTKinds.year_$0, B: $scope$B, C: $scope$C, D: $scope$D, E: $scope$E};
+                            $$res = {kind: ASTKinds.day_of_week_$0, C: $scope$C};
                         }
                         return $$res;
                     });
             },
-            this.$scope$year_$0$memo,
-        );
-    }
-    public matchtime($$dpth: number, $$cr?: ErrorTracker): Nullable<time> {
-        return this.memoise(
-            () => {
-                return this.run<time>($$dpth,
-                    () => {
-                        let $scope$A: Nullable<time_of_day>;
-                        let $scope$B: Nullable<zone>;
-                        let $$res: Nullable<time> = null;
-                        if (true
-                            && ($scope$A = this.matchtime_of_day($$dpth + 1, $$cr)) !== null
-                            && ($scope$B = this.matchzone($$dpth + 1, $$cr)) !== null
-                        ) {
-                            $$res = {kind: ASTKinds.time, A: $scope$A, B: $scope$B};
-                        }
-                        return $$res;
-                    });
-            },
-            this.$scope$time$memo,
-        );
-    }
-    public matchtime_of_day($$dpth: number, $$cr?: ErrorTracker): Nullable<time_of_day> {
-        return this.memoise(
-            () => {
-                return this.run<time_of_day>($$dpth,
-                    () => {
-                        let $scope$A: Nullable<hour>;
-                        let $scope$B: Nullable<string>;
-                        let $scope$C: Nullable<minute>;
-                        let $scope$D: Nullable<Nullable<time_of_day_$0>>;
-                        let $$res: Nullable<time_of_day> = null;
-                        if (true
-                            && ($scope$A = this.matchhour($$dpth + 1, $$cr)) !== null
-                            && ($scope$B = this.regexAccept(String.raw`(?::)`, $$dpth + 1, $$cr)) !== null
-                            && ($scope$C = this.matchminute($$dpth + 1, $$cr)) !== null
-                            && (($scope$D = this.matchtime_of_day_$0($$dpth + 1, $$cr)) || true)
-                        ) {
-                            $$res = {kind: ASTKinds.time_of_day, A: $scope$A, B: $scope$B, C: $scope$C, D: $scope$D};
-                        }
-                        return $$res;
-                    });
-            },
-            this.$scope$time_of_day$memo,
-        );
-    }
-    public matchtime_of_day_$0($$dpth: number, $$cr?: ErrorTracker): Nullable<time_of_day_$0> {
-        return this.memoise(
-            () => {
-                return this.run<time_of_day_$0>($$dpth,
-                    () => {
-                        let $scope$E: Nullable<string>;
-                        let $scope$F: Nullable<second>;
-                        let $$res: Nullable<time_of_day_$0> = null;
-                        if (true
-                            && ($scope$E = this.regexAccept(String.raw`(?::)`, $$dpth + 1, $$cr)) !== null
-                            && ($scope$F = this.matchsecond($$dpth + 1, $$cr)) !== null
-                        ) {
-                            $$res = {kind: ASTKinds.time_of_day_$0, E: $scope$E, F: $scope$F};
-                        }
-                        return $$res;
-                    });
-            },
-            this.$scope$time_of_day_$0$memo,
-        );
-    }
-    public matchhour($$dpth: number, $$cr?: ErrorTracker): Nullable<hour> {
-        return this.memoise(
-            () => {
-                return this.choice<hour>([
-                    () => this.matchhour_1($$dpth + 1, $$cr),
-                    () => this.matchhour_2($$dpth + 1, $$cr),
-                ]);
-            },
-            this.$scope$hour$memo,
-        );
-    }
-    public matchhour_1($$dpth: number, $$cr?: ErrorTracker): Nullable<hour_1> {
-        return this.run<hour_1>($$dpth,
-            () => {
-                let $scope$A: Nullable<TWO_DIGIT>;
-                let $$res: Nullable<hour_1> = null;
-                if (true
-                    && ($scope$A = this.matchTWO_DIGIT($$dpth + 1, $$cr)) !== null
-                ) {
-                    $$res = {kind: ASTKinds.hour_1, A: $scope$A};
-                }
-                return $$res;
-            });
-    }
-    public matchhour_2($$dpth: number, $$cr?: ErrorTracker): Nullable<hour_2> {
-        return this.run<hour_2>($$dpth,
-            () => {
-                let $scope$B: Nullable<obs_hour>;
-                let $$res: Nullable<hour_2> = null;
-                if (true
-                    && ($scope$B = this.matchobs_hour($$dpth + 1, $$cr)) !== null
-                ) {
-                    $$res = {kind: ASTKinds.hour_2, B: $scope$B};
-                }
-                return $$res;
-            });
-    }
-    public matchminute($$dpth: number, $$cr?: ErrorTracker): Nullable<minute> {
-        return this.memoise(
-            () => {
-                return this.choice<minute>([
-                    () => this.matchminute_1($$dpth + 1, $$cr),
-                    () => this.matchminute_2($$dpth + 1, $$cr),
-                ]);
-            },
-            this.$scope$minute$memo,
-        );
-    }
-    public matchminute_1($$dpth: number, $$cr?: ErrorTracker): Nullable<minute_1> {
-        return this.run<minute_1>($$dpth,
-            () => {
-                let $scope$A: Nullable<TWO_DIGIT>;
-                let $$res: Nullable<minute_1> = null;
-                if (true
-                    && ($scope$A = this.matchTWO_DIGIT($$dpth + 1, $$cr)) !== null
-                ) {
-                    $$res = {kind: ASTKinds.minute_1, A: $scope$A};
-                }
-                return $$res;
-            });
-    }
-    public matchminute_2($$dpth: number, $$cr?: ErrorTracker): Nullable<minute_2> {
-        return this.run<minute_2>($$dpth,
-            () => {
-                let $scope$B: Nullable<obs_minute>;
-                let $$res: Nullable<minute_2> = null;
-                if (true
-                    && ($scope$B = this.matchobs_minute($$dpth + 1, $$cr)) !== null
-                ) {
-                    $$res = {kind: ASTKinds.minute_2, B: $scope$B};
-                }
-                return $$res;
-            });
-    }
-    public matchsecond($$dpth: number, $$cr?: ErrorTracker): Nullable<second> {
-        return this.memoise(
-            () => {
-                return this.choice<second>([
-                    () => this.matchsecond_1($$dpth + 1, $$cr),
-                    () => this.matchsecond_2($$dpth + 1, $$cr),
-                ]);
-            },
-            this.$scope$second$memo,
-        );
-    }
-    public matchsecond_1($$dpth: number, $$cr?: ErrorTracker): Nullable<second_1> {
-        return this.run<second_1>($$dpth,
-            () => {
-                let $scope$A: Nullable<TWO_DIGIT>;
-                let $$res: Nullable<second_1> = null;
-                if (true
-                    && ($scope$A = this.matchTWO_DIGIT($$dpth + 1, $$cr)) !== null
-                ) {
-                    $$res = {kind: ASTKinds.second_1, A: $scope$A};
-                }
-                return $$res;
-            });
-    }
-    public matchsecond_2($$dpth: number, $$cr?: ErrorTracker): Nullable<second_2> {
-        return this.run<second_2>($$dpth,
-            () => {
-                let $scope$B: Nullable<obs_second>;
-                let $$res: Nullable<second_2> = null;
-                if (true
-                    && ($scope$B = this.matchobs_second($$dpth + 1, $$cr)) !== null
-                ) {
-                    $$res = {kind: ASTKinds.second_2, B: $scope$B};
-                }
-                return $$res;
-            });
-    }
-    public matchzone($$dpth: number, $$cr?: ErrorTracker): Nullable<zone> {
-        return this.memoise(
-            () => {
-                return this.choice<zone>([
-                    () => this.matchzone_1($$dpth + 1, $$cr),
-                    () => this.matchzone_2($$dpth + 1, $$cr),
-                ]);
-            },
-            this.$scope$zone$memo,
-        );
-    }
-    public matchzone_1($$dpth: number, $$cr?: ErrorTracker): Nullable<zone_1> {
-        return this.run<zone_1>($$dpth,
-            () => {
-                let $scope$A: Nullable<zone_$0>;
-                let $$res: Nullable<zone_1> = null;
-                if (true
-                    && ($scope$A = this.matchzone_$0($$dpth + 1, $$cr)) !== null
-                ) {
-                    $$res = {kind: ASTKinds.zone_1, A: $scope$A};
-                }
-                return $$res;
-            });
-    }
-    public matchzone_2($$dpth: number, $$cr?: ErrorTracker): Nullable<zone_2> {
-        return this.run<zone_2>($$dpth,
-            () => {
-                let $scope$G: Nullable<obs_zone>;
-                let $$res: Nullable<zone_2> = null;
-                if (true
-                    && ($scope$G = this.matchobs_zone($$dpth + 1, $$cr)) !== null
-                ) {
-                    $$res = {kind: ASTKinds.zone_2, G: $scope$G};
-                }
-                return $$res;
-            });
-    }
-    public matchzone_$0($$dpth: number, $$cr?: ErrorTracker): Nullable<zone_$0> {
-        return this.memoise(
-            () => {
-                return this.run<zone_$0>($$dpth,
-                    () => {
-                        let $scope$C: Nullable<zone_$0_$0>;
-                        let $scope$F: Nullable<FOUR_DIGIT>;
-                        let $$res: Nullable<zone_$0> = null;
-                        if (true
-                            && this.matchFWS($$dpth + 1, $$cr) !== null
-                            && ($scope$C = this.matchzone_$0_$0($$dpth + 1, $$cr)) !== null
-                            && ($scope$F = this.matchFOUR_DIGIT($$dpth + 1, $$cr)) !== null
-                        ) {
-                            $$res = {kind: ASTKinds.zone_$0, C: $scope$C, F: $scope$F};
-                        }
-                        return $$res;
-                    });
-            },
-            this.$scope$zone_$0$memo,
-        );
-    }
-    public matchzone_$0_$0($$dpth: number, $$cr?: ErrorTracker): Nullable<zone_$0_$0> {
-        return this.memoise(
-            () => {
-                return this.choice<zone_$0_$0>([
-                    () => this.matchzone_$0_$0_1($$dpth + 1, $$cr),
-                    () => this.matchzone_$0_$0_2($$dpth + 1, $$cr),
-                ]);
-            },
-            this.$scope$zone_$0_$0$memo,
-        );
-    }
-    public matchzone_$0_$0_1($$dpth: number, $$cr?: ErrorTracker): Nullable<zone_$0_$0_1> {
-        return this.run<zone_$0_$0_1>($$dpth,
-            () => {
-                let $scope$D: Nullable<string>;
-                let $$res: Nullable<zone_$0_$0_1> = null;
-                if (true
-                    && ($scope$D = this.regexAccept(String.raw`(?:\+)`, $$dpth + 1, $$cr)) !== null
-                ) {
-                    $$res = {kind: ASTKinds.zone_$0_$0_1, D: $scope$D};
-                }
-                return $$res;
-            });
-    }
-    public matchzone_$0_$0_2($$dpth: number, $$cr?: ErrorTracker): Nullable<zone_$0_$0_2> {
-        return this.run<zone_$0_$0_2>($$dpth,
-            () => {
-                let $scope$E: Nullable<string>;
-                let $$res: Nullable<zone_$0_$0_2> = null;
-                if (true
-                    && ($scope$E = this.regexAccept(String.raw`(?:\-)`, $$dpth + 1, $$cr)) !== null
-                ) {
-                    $$res = {kind: ASTKinds.zone_$0_$0_2, E: $scope$E};
-                }
-                return $$res;
-            });
-    }
-    public matchaddress($$dpth: number, $$cr?: ErrorTracker): Nullable<address> {
-        return this.memoise(
-            () => {
-                return this.choice<address>([
-                    () => this.matchaddress_1($$dpth + 1, $$cr),
-                    () => this.matchaddress_2($$dpth + 1, $$cr),
-                ]);
-            },
-            this.$scope$address$memo,
-        );
-    }
-    public matchaddress_1($$dpth: number, $$cr?: ErrorTracker): Nullable<address_1> {
-        return this.matchmailbox($$dpth + 1, $$cr);
-    }
-    public matchaddress_2($$dpth: number, $$cr?: ErrorTracker): Nullable<address_2> {
-        return this.matchgroup($$dpth + 1, $$cr);
-    }
-    public matchmailbox($$dpth: number, $$cr?: ErrorTracker): Nullable<mailbox> {
-        return this.memoise(
-            () => {
-                return this.choice<mailbox>([
-                    () => this.matchmailbox_1($$dpth + 1, $$cr),
-                    () => this.matchmailbox_2($$dpth + 1, $$cr),
-                ]);
-            },
-            this.$scope$mailbox$memo,
-        );
-    }
-    public matchmailbox_1($$dpth: number, $$cr?: ErrorTracker): Nullable<mailbox_1> {
-        return this.matchname_addr($$dpth + 1, $$cr);
-    }
-    public matchmailbox_2($$dpth: number, $$cr?: ErrorTracker): Nullable<mailbox_2> {
-        return this.matchaddr_spec($$dpth + 1, $$cr);
-    }
-    public matchname_addr($$dpth: number, $$cr?: ErrorTracker): Nullable<name_addr> {
-        return this.memoise(
-            () => {
-                return this.run<name_addr>($$dpth,
-                    () => {
-                        let $scope$A: Nullable<Nullable<display_name>>;
-                        let $scope$B: Nullable<angle_addr>;
-                        let $$res: Nullable<name_addr> = null;
-                        if (true
-                            && (($scope$A = this.matchdisplay_name($$dpth + 1, $$cr)) || true)
-                            && ($scope$B = this.matchangle_addr($$dpth + 1, $$cr)) !== null
-                        ) {
-                            $$res = {kind: ASTKinds.name_addr, A: $scope$A, B: $scope$B};
-                        }
-                        return $$res;
-                    });
-            },
-            this.$scope$name_addr$memo,
-        );
-    }
-    public matchangle_addr($$dpth: number, $$cr?: ErrorTracker): Nullable<angle_addr> {
-        return this.memoise(
-            () => {
-                return this.choice<angle_addr>([
-                    () => this.matchangle_addr_1($$dpth + 1, $$cr),
-                    () => this.matchangle_addr_2($$dpth + 1, $$cr),
-                ]);
-            },
-            this.$scope$angle_addr$memo,
-        );
-    }
-    public matchangle_addr_1($$dpth: number, $$cr?: ErrorTracker): Nullable<angle_addr_1> {
-        return this.run<angle_addr_1>($$dpth,
-            () => {
-                let $scope$B: Nullable<string>;
-                let $scope$C: Nullable<addr_spec>;
-                let $scope$D: Nullable<string>;
-                let $$res: Nullable<angle_addr_1> = null;
-                if (true
-                    && ((this.matchCFWS($$dpth + 1, $$cr)) || true)
-                    && ($scope$B = this.regexAccept(String.raw`(?:<)`, $$dpth + 1, $$cr)) !== null
-                    && ($scope$C = this.matchaddr_spec($$dpth + 1, $$cr)) !== null
-                    && ($scope$D = this.regexAccept(String.raw`(?:>)`, $$dpth + 1, $$cr)) !== null
-                    && ((this.matchCFWS($$dpth + 1, $$cr)) || true)
-                ) {
-                    $$res = {kind: ASTKinds.angle_addr_1, B: $scope$B, C: $scope$C, D: $scope$D};
-                }
-                return $$res;
-            });
-    }
-    public matchangle_addr_2($$dpth: number, $$cr?: ErrorTracker): Nullable<angle_addr_2> {
-        return this.run<angle_addr_2>($$dpth,
-            () => {
-                let $scope$F: Nullable<obs_angle_addr>;
-                let $$res: Nullable<angle_addr_2> = null;
-                if (true
-                    && ($scope$F = this.matchobs_angle_addr($$dpth + 1, $$cr)) !== null
-                ) {
-                    $$res = {kind: ASTKinds.angle_addr_2, F: $scope$F};
-                }
-                return $$res;
-            });
-    }
-    public matchgroup($$dpth: number, $$cr?: ErrorTracker): Nullable<group> {
-        return this.memoise(
-            () => {
-                return this.run<group>($$dpth,
-                    () => {
-                        let $scope$A: Nullable<display_name>;
-                        let $scope$B: Nullable<string>;
-                        let $scope$C: Nullable<Nullable<group_list>>;
-                        let $scope$D: Nullable<string>;
-                        let $$res: Nullable<group> = null;
-                        if (true
-                            && ($scope$A = this.matchdisplay_name($$dpth + 1, $$cr)) !== null
-                            && ($scope$B = this.regexAccept(String.raw`(?::)`, $$dpth + 1, $$cr)) !== null
-                            && (($scope$C = this.matchgroup_list($$dpth + 1, $$cr)) || true)
-                            && ($scope$D = this.regexAccept(String.raw`(?:;)`, $$dpth + 1, $$cr)) !== null
-                            && ((this.matchCFWS($$dpth + 1, $$cr)) || true)
-                        ) {
-                            $$res = {kind: ASTKinds.group, A: $scope$A, B: $scope$B, C: $scope$C, D: $scope$D};
-                        }
-                        return $$res;
-                    });
-            },
-            this.$scope$group$memo,
+            this.$scope$day_of_week_$0$memo,
         );
     }
     public matchdisplay_name($$dpth: number, $$cr?: ErrorTracker): Nullable<display_name> {
@@ -3754,224 +3165,6 @@ export class Parser {
             },
             this.$scope$display_name$memo,
         );
-    }
-    public matchmailbox_list($$dpth: number, $$cr?: ErrorTracker): Nullable<mailbox_list> {
-        return this.memoise(
-            () => {
-                return this.choice<mailbox_list>([
-                    () => this.matchmailbox_list_1($$dpth + 1, $$cr),
-                    () => this.matchmailbox_list_2($$dpth + 1, $$cr),
-                ]);
-            },
-            this.$scope$mailbox_list$memo,
-        );
-    }
-    public matchmailbox_list_1($$dpth: number, $$cr?: ErrorTracker): Nullable<mailbox_list_1> {
-        return this.run<mailbox_list_1>($$dpth,
-            () => {
-                let $scope$A: Nullable<mailbox_list_$0>;
-                let $$res: Nullable<mailbox_list_1> = null;
-                if (true
-                    && ($scope$A = this.matchmailbox_list_$0($$dpth + 1, $$cr)) !== null
-                ) {
-                    $$res = {kind: ASTKinds.mailbox_list_1, A: $scope$A};
-                }
-                return $$res;
-            });
-    }
-    public matchmailbox_list_2($$dpth: number, $$cr?: ErrorTracker): Nullable<mailbox_list_2> {
-        return this.run<mailbox_list_2>($$dpth,
-            () => {
-                let $scope$F: Nullable<obs_mbox_list>;
-                let $$res: Nullable<mailbox_list_2> = null;
-                if (true
-                    && ($scope$F = this.matchobs_mbox_list($$dpth + 1, $$cr)) !== null
-                ) {
-                    $$res = {kind: ASTKinds.mailbox_list_2, F: $scope$F};
-                }
-                return $$res;
-            });
-    }
-    public matchmailbox_list_$0($$dpth: number, $$cr?: ErrorTracker): Nullable<mailbox_list_$0> {
-        return this.memoise(
-            () => {
-                return this.run<mailbox_list_$0>($$dpth,
-                    () => {
-                        let $scope$B: Nullable<mailbox>;
-                        let $scope$C: Nullable<mailbox_list_$0_$0[]>;
-                        let $$res: Nullable<mailbox_list_$0> = null;
-                        if (true
-                            && ($scope$B = this.matchmailbox($$dpth + 1, $$cr)) !== null
-                            && ($scope$C = this.loop<mailbox_list_$0_$0>(() => this.matchmailbox_list_$0_$0($$dpth + 1, $$cr), true)) !== null
-                        ) {
-                            $$res = {kind: ASTKinds.mailbox_list_$0, B: $scope$B, C: $scope$C};
-                        }
-                        return $$res;
-                    });
-            },
-            this.$scope$mailbox_list_$0$memo,
-        );
-    }
-    public matchmailbox_list_$0_$0($$dpth: number, $$cr?: ErrorTracker): Nullable<mailbox_list_$0_$0> {
-        return this.memoise(
-            () => {
-                return this.run<mailbox_list_$0_$0>($$dpth,
-                    () => {
-                        let $scope$D: Nullable<string>;
-                        let $scope$E: Nullable<mailbox>;
-                        let $$res: Nullable<mailbox_list_$0_$0> = null;
-                        if (true
-                            && ($scope$D = this.regexAccept(String.raw`(?:,)`, $$dpth + 1, $$cr)) !== null
-                            && ($scope$E = this.matchmailbox($$dpth + 1, $$cr)) !== null
-                        ) {
-                            $$res = {kind: ASTKinds.mailbox_list_$0_$0, D: $scope$D, E: $scope$E};
-                        }
-                        return $$res;
-                    });
-            },
-            this.$scope$mailbox_list_$0_$0$memo,
-        );
-    }
-    public matchaddress_list($$dpth: number, $$cr?: ErrorTracker): Nullable<address_list> {
-        return this.memoise(
-            () => {
-                return this.choice<address_list>([
-                    () => this.matchaddress_list_1($$dpth + 1, $$cr),
-                    () => this.matchaddress_list_2($$dpth + 1, $$cr),
-                ]);
-            },
-            this.$scope$address_list$memo,
-        );
-    }
-    public matchaddress_list_1($$dpth: number, $$cr?: ErrorTracker): Nullable<address_list_1> {
-        return this.run<address_list_1>($$dpth,
-            () => {
-                let $scope$A: Nullable<address_list_$0>;
-                let $$res: Nullable<address_list_1> = null;
-                if (true
-                    && ($scope$A = this.matchaddress_list_$0($$dpth + 1, $$cr)) !== null
-                ) {
-                    $$res = {kind: ASTKinds.address_list_1, A: $scope$A};
-                }
-                return $$res;
-            });
-    }
-    public matchaddress_list_2($$dpth: number, $$cr?: ErrorTracker): Nullable<address_list_2> {
-        return this.run<address_list_2>($$dpth,
-            () => {
-                let $scope$F: Nullable<obs_addr_list>;
-                let $$res: Nullable<address_list_2> = null;
-                if (true
-                    && ($scope$F = this.matchobs_addr_list($$dpth + 1, $$cr)) !== null
-                ) {
-                    $$res = {kind: ASTKinds.address_list_2, F: $scope$F};
-                }
-                return $$res;
-            });
-    }
-    public matchaddress_list_$0($$dpth: number, $$cr?: ErrorTracker): Nullable<address_list_$0> {
-        return this.memoise(
-            () => {
-                return this.run<address_list_$0>($$dpth,
-                    () => {
-                        let $scope$B: Nullable<address>;
-                        let $scope$C: Nullable<address_list_$0_$0[]>;
-                        let $$res: Nullable<address_list_$0> = null;
-                        if (true
-                            && ($scope$B = this.matchaddress($$dpth + 1, $$cr)) !== null
-                            && ($scope$C = this.loop<address_list_$0_$0>(() => this.matchaddress_list_$0_$0($$dpth + 1, $$cr), true)) !== null
-                        ) {
-                            $$res = {kind: ASTKinds.address_list_$0, B: $scope$B, C: $scope$C};
-                        }
-                        return $$res;
-                    });
-            },
-            this.$scope$address_list_$0$memo,
-        );
-    }
-    public matchaddress_list_$0_$0($$dpth: number, $$cr?: ErrorTracker): Nullable<address_list_$0_$0> {
-        return this.memoise(
-            () => {
-                return this.run<address_list_$0_$0>($$dpth,
-                    () => {
-                        let $scope$D: Nullable<string>;
-                        let $scope$E: Nullable<address>;
-                        let $$res: Nullable<address_list_$0_$0> = null;
-                        if (true
-                            && ($scope$D = this.regexAccept(String.raw`(?:,)`, $$dpth + 1, $$cr)) !== null
-                            && ($scope$E = this.matchaddress($$dpth + 1, $$cr)) !== null
-                        ) {
-                            $$res = {kind: ASTKinds.address_list_$0_$0, D: $scope$D, E: $scope$E};
-                        }
-                        return $$res;
-                    });
-            },
-            this.$scope$address_list_$0_$0$memo,
-        );
-    }
-    public matchgroup_list($$dpth: number, $$cr?: ErrorTracker): Nullable<group_list> {
-        return this.memoise(
-            () => {
-                return this.choice<group_list>([
-                    () => this.matchgroup_list_1($$dpth + 1, $$cr),
-                    () => this.matchgroup_list_2($$dpth + 1, $$cr),
-                    () => this.matchgroup_list_3($$dpth + 1, $$cr),
-                ]);
-            },
-            this.$scope$group_list$memo,
-        );
-    }
-    public matchgroup_list_1($$dpth: number, $$cr?: ErrorTracker): Nullable<group_list_1> {
-        return this.matchmailbox_list($$dpth + 1, $$cr);
-    }
-    public matchgroup_list_2($$dpth: number, $$cr?: ErrorTracker): Nullable<group_list_2> {
-        return this.matchCFWS($$dpth + 1, $$cr);
-    }
-    public matchgroup_list_3($$dpth: number, $$cr?: ErrorTracker): Nullable<group_list_3> {
-        return this.matchobs_group_list($$dpth + 1, $$cr);
-    }
-    public matchaddr_spec($$dpth: number, $$cr?: ErrorTracker): Nullable<addr_spec> {
-        return this.memoise(
-            () => {
-                return this.run<addr_spec>($$dpth,
-                    () => {
-                        let $scope$A: Nullable<local_part>;
-                        let $scope$B: Nullable<string>;
-                        let $scope$C: Nullable<domain>;
-                        let $$res: Nullable<addr_spec> = null;
-                        if (true
-                            && ($scope$A = this.matchlocal_part($$dpth + 1, $$cr)) !== null
-                            && ($scope$B = this.regexAccept(String.raw`(?:@)`, $$dpth + 1, $$cr)) !== null
-                            && ($scope$C = this.matchdomain($$dpth + 1, $$cr)) !== null
-                        ) {
-                            $$res = {kind: ASTKinds.addr_spec, A: $scope$A, B: $scope$B, C: $scope$C};
-                        }
-                        return $$res;
-                    });
-            },
-            this.$scope$addr_spec$memo,
-        );
-    }
-    public matchlocal_part($$dpth: number, $$cr?: ErrorTracker): Nullable<local_part> {
-        return this.memoise(
-            () => {
-                return this.choice<local_part>([
-                    () => this.matchlocal_part_1($$dpth + 1, $$cr),
-                    () => this.matchlocal_part_2($$dpth + 1, $$cr),
-                    () => this.matchlocal_part_3($$dpth + 1, $$cr),
-                ]);
-            },
-            this.$scope$local_part$memo,
-        );
-    }
-    public matchlocal_part_1($$dpth: number, $$cr?: ErrorTracker): Nullable<local_part_1> {
-        return this.matchdot_atom($$dpth + 1, $$cr);
-    }
-    public matchlocal_part_2($$dpth: number, $$cr?: ErrorTracker): Nullable<local_part_2> {
-        return this.matchquoted_string($$dpth + 1, $$cr);
-    }
-    public matchlocal_part_3($$dpth: number, $$cr?: ErrorTracker): Nullable<local_part_3> {
-        return this.matchobs_local_part($$dpth + 1, $$cr);
     }
     public matchdomain($$dpth: number, $$cr?: ErrorTracker): Nullable<domain> {
         return this.memoise(
@@ -4038,6 +3231,68 @@ export class Parser {
             this.$scope$domain_literal_$0$memo,
         );
     }
+    public matchdot_atom($$dpth: number, $$cr?: ErrorTracker): Nullable<dot_atom> {
+        return this.memoise(
+            () => {
+                return this.run<dot_atom>($$dpth,
+                    () => {
+                        let $scope$A: Nullable<Nullable<CFWS>>;
+                        let $scope$B: Nullable<dot_atom_text>;
+                        let $scope$C: Nullable<Nullable<CFWS>>;
+                        let $$res: Nullable<dot_atom> = null;
+                        if (true
+                            && (($scope$A = this.matchCFWS($$dpth + 1, $$cr)) || true)
+                            && ($scope$B = this.matchdot_atom_text($$dpth + 1, $$cr)) !== null
+                            && (($scope$C = this.matchCFWS($$dpth + 1, $$cr)) || true)
+                        ) {
+                            $$res = {kind: ASTKinds.dot_atom, A: $scope$A, B: $scope$B, C: $scope$C};
+                        }
+                        return $$res;
+                    });
+            },
+            this.$scope$dot_atom$memo,
+        );
+    }
+    public matchdot_atom_text($$dpth: number, $$cr?: ErrorTracker): Nullable<dot_atom_text> {
+        return this.memoise(
+            () => {
+                return this.run<dot_atom_text>($$dpth,
+                    () => {
+                        let $scope$A: Nullable<atext[]>;
+                        let $scope$B: Nullable<dot_atom_text_$0[]>;
+                        let $$res: Nullable<dot_atom_text> = null;
+                        if (true
+                            && ($scope$A = this.loop<atext>(() => this.matchatext($$dpth + 1, $$cr), false)) !== null
+                            && ($scope$B = this.loop<dot_atom_text_$0>(() => this.matchdot_atom_text_$0($$dpth + 1, $$cr), true)) !== null
+                        ) {
+                            $$res = {kind: ASTKinds.dot_atom_text, A: $scope$A, B: $scope$B};
+                        }
+                        return $$res;
+                    });
+            },
+            this.$scope$dot_atom_text$memo,
+        );
+    }
+    public matchdot_atom_text_$0($$dpth: number, $$cr?: ErrorTracker): Nullable<dot_atom_text_$0> {
+        return this.memoise(
+            () => {
+                return this.run<dot_atom_text_$0>($$dpth,
+                    () => {
+                        let $scope$C: Nullable<string>;
+                        let $scope$D: Nullable<atext[]>;
+                        let $$res: Nullable<dot_atom_text_$0> = null;
+                        if (true
+                            && ($scope$C = this.regexAccept(String.raw`(?:\.)`, $$dpth + 1, $$cr)) !== null
+                            && ($scope$D = this.loop<atext>(() => this.matchatext($$dpth + 1, $$cr), false)) !== null
+                        ) {
+                            $$res = {kind: ASTKinds.dot_atom_text_$0, C: $scope$C, D: $scope$D};
+                        }
+                        return $$res;
+                    });
+            },
+            this.$scope$dot_atom_text_$0$memo,
+        );
+    }
     public matchdtext($$dpth: number, $$cr?: ErrorTracker): Nullable<dtext> {
         return this.memoise(
             () => {
@@ -4059,169 +3314,12 @@ export class Parser {
     public matchdtext_3($$dpth: number, $$cr?: ErrorTracker): Nullable<dtext_3> {
         return this.matchobs_dtext($$dpth + 1, $$cr);
     }
-    public matchmessage($$dpth: number, $$cr?: ErrorTracker): Nullable<message> {
+    public matchfield_name($$dpth: number, $$cr?: ErrorTracker): Nullable<field_name> {
         return this.memoise(
             () => {
-                return this.run<message>($$dpth,
-                    () => {
-                        let $scope$fields: Nullable<message_$0>;
-                        let $scope$D: Nullable<Nullable<message_$1>>;
-                        let $$res: Nullable<message> = null;
-                        if (true
-                            && ($scope$fields = this.matchmessage_$0($$dpth + 1, $$cr)) !== null
-                            && (($scope$D = this.matchmessage_$1($$dpth + 1, $$cr)) || true)
-                        ) {
-                            $$res = {kind: ASTKinds.message, fields: $scope$fields, D: $scope$D};
-                        }
-                        return $$res;
-                    });
+                return this.loop<ftext>(() => this.matchftext($$dpth + 1, $$cr), false);
             },
-            this.$scope$message$memo,
-        );
-    }
-    public matchmessage_$0($$dpth: number, $$cr?: ErrorTracker): Nullable<message_$0> {
-        return this.memoise(
-            () => {
-                return this.choice<message_$0>([
-                    () => this.matchmessage_$0_1($$dpth + 1, $$cr),
-                    () => this.matchmessage_$0_2($$dpth + 1, $$cr),
-                ]);
-            },
-            this.$scope$message_$0$memo,
-        );
-    }
-    public matchmessage_$0_1($$dpth: number, $$cr?: ErrorTracker): Nullable<message_$0_1> {
-        return this.matchfields($$dpth + 1, $$cr);
-    }
-    public matchmessage_$0_2($$dpth: number, $$cr?: ErrorTracker): Nullable<message_$0_2> {
-        return this.matchobs_fields($$dpth + 1, $$cr);
-    }
-    public matchmessage_$1($$dpth: number, $$cr?: ErrorTracker): Nullable<message_$1> {
-        return this.memoise(
-            () => {
-                return this.run<message_$1>($$dpth,
-                    () => {
-                        let $scope$F: Nullable<body>;
-                        let $$res: Nullable<message_$1> = null;
-                        if (true
-                            && this.matchCRLF($$dpth + 1, $$cr) !== null
-                            && ($scope$F = this.matchbody($$dpth + 1, $$cr)) !== null
-                        ) {
-                            $$res = {kind: ASTKinds.message_$1, F: $scope$F};
-                        }
-                        return $$res;
-                    });
-            },
-            this.$scope$message_$1$memo,
-        );
-    }
-    public matchbody($$dpth: number, $$cr?: ErrorTracker): Nullable<body> {
-        return this.memoise(
-            () => {
-                return this.choice<body>([
-                    () => this.matchbody_1($$dpth + 1, $$cr),
-                    () => this.matchbody_2($$dpth + 1, $$cr),
-                ]);
-            },
-            this.$scope$body$memo,
-        );
-    }
-    public matchbody_1($$dpth: number, $$cr?: ErrorTracker): Nullable<body_1> {
-        return this.run<body_1>($$dpth,
-            () => {
-                let $scope$A: Nullable<body_$0>;
-                let $$res: Nullable<body_1> = null;
-                if (true
-                    && ($scope$A = this.matchbody_$0($$dpth + 1, $$cr)) !== null
-                ) {
-                    $$res = {kind: ASTKinds.body_1, A: $scope$A};
-                }
-                return $$res;
-            });
-    }
-    public matchbody_2($$dpth: number, $$cr?: ErrorTracker): Nullable<body_2> {
-        return this.run<body_2>($$dpth,
-            () => {
-                let $scope$F: Nullable<obs_body>;
-                let $$res: Nullable<body_2> = null;
-                if (true
-                    && ($scope$F = this.matchobs_body($$dpth + 1, $$cr)) !== null
-                ) {
-                    $$res = {kind: ASTKinds.body_2, F: $scope$F};
-                }
-                return $$res;
-            });
-    }
-    public matchbody_$0($$dpth: number, $$cr?: ErrorTracker): Nullable<body_$0> {
-        return this.memoise(
-            () => {
-                return this.run<body_$0>($$dpth,
-                    () => {
-                        let $scope$B: Nullable<body_$0_$0[]>;
-                        let $scope$E: Nullable<_998text>;
-                        let $$res: Nullable<body_$0> = null;
-                        if (true
-                            && ($scope$B = this.loop<body_$0_$0>(() => this.matchbody_$0_$0($$dpth + 1, $$cr), true)) !== null
-                            && ($scope$E = this.match_998text($$dpth + 1, $$cr)) !== null
-                        ) {
-                            $$res = {kind: ASTKinds.body_$0, B: $scope$B, E: $scope$E};
-                        }
-                        return $$res;
-                    });
-            },
-            this.$scope$body_$0$memo,
-        );
-    }
-    public matchbody_$0_$0($$dpth: number, $$cr?: ErrorTracker): Nullable<body_$0_$0> {
-        return this.memoise(
-            () => {
-                return this.run<body_$0_$0>($$dpth,
-                    () => {
-                        let $scope$C: Nullable<_998text>;
-                        let $$res: Nullable<body_$0_$0> = null;
-                        if (true
-                            && ($scope$C = this.match_998text($$dpth + 1, $$cr)) !== null
-                            && this.matchCRLF($$dpth + 1, $$cr) !== null
-                        ) {
-                            $$res = {kind: ASTKinds.body_$0_$0, C: $scope$C};
-                        }
-                        return $$res;
-                    });
-            },
-            this.$scope$body_$0_$0$memo,
-        );
-    }
-    public matchtext($$dpth: number, $$cr?: ErrorTracker): Nullable<text> {
-        return this.memoise(
-            () => {
-                return this.choice<text>([
-                    () => this.matchtext_1($$dpth + 1, $$cr),
-                    () => this.matchtext_2($$dpth + 1, $$cr),
-                    () => this.matchtext_3($$dpth + 1, $$cr),
-                    () => this.matchtext_4($$dpth + 1, $$cr),
-                ]);
-            },
-            this.$scope$text$memo,
-        );
-    }
-    public matchtext_1($$dpth: number, $$cr?: ErrorTracker): Nullable<text_1> {
-        return this.regexAccept(String.raw`(?:[\x01-\x09])`, $$dpth + 1, $$cr);
-    }
-    public matchtext_2($$dpth: number, $$cr?: ErrorTracker): Nullable<text_2> {
-        return this.regexAccept(String.raw`(?:\x0B)`, $$dpth + 1, $$cr);
-    }
-    public matchtext_3($$dpth: number, $$cr?: ErrorTracker): Nullable<text_3> {
-        return this.regexAccept(String.raw`(?:\x0C)`, $$dpth + 1, $$cr);
-    }
-    public matchtext_4($$dpth: number, $$cr?: ErrorTracker): Nullable<text_4> {
-        return this.regexAccept(String.raw`(?:[\x0E-\x7f])`, $$dpth + 1, $$cr);
-    }
-    public match_998text($$dpth: number, $$cr?: ErrorTracker): Nullable<_998text> {
-        return this.memoise(
-            () => {
-                return this.regexAccept(String.raw`(?:[\x01-\x09\x0B\x0C\x0E-\x7F]{998,})`, $$dpth + 1, $$cr);
-            },
-            this.$scope$_998text$memo,
+            this.$scope$field_name$memo,
         );
     }
     public matchfields($$dpth: number, $$cr?: ErrorTracker): Nullable<fields> {
@@ -4236,7 +3334,7 @@ export class Parser {
                             && ($scope$A = this.loop<fields_$0>(() => this.matchfields_$0($$dpth + 1, $$cr), true)) !== null
                             && ($scope$L = this.loop<fields_$1>(() => this.matchfields_$1($$dpth + 1, $$cr), true)) !== null
                         ) {
-                            $$res = new fields($scope$A, $scope$L);
+                            $$res = {kind: ASTKinds.fields, A: $scope$A, L: $scope$L};
                         }
                         return $$res;
                     });
@@ -4385,29 +3483,6 @@ export class Parser {
     public matchfields_$1_14($$dpth: number, $$cr?: ErrorTracker): Nullable<fields_$1_14> {
         return this.matchoptional_field($$dpth + 1, $$cr);
     }
-    public matchorig_date($$dpth: number, $$cr?: ErrorTracker): Nullable<orig_date> {
-        return this.memoise(
-            () => {
-                return this.run<orig_date>($$dpth,
-                    () => {
-                        let $scope$A: Nullable<string>;
-                        let $scope$B: Nullable<string>;
-                        let $scope$C: Nullable<date_time>;
-                        let $$res: Nullable<orig_date> = null;
-                        if (true
-                            && ($scope$A = this.regexAccept(String.raw`(?:Date)`, $$dpth + 1, $$cr)) !== null
-                            && ($scope$B = this.regexAccept(String.raw`(?::)`, $$dpth + 1, $$cr)) !== null
-                            && ($scope$C = this.matchdate_time($$dpth + 1, $$cr)) !== null
-                            && this.matchCRLF($$dpth + 1, $$cr) !== null
-                        ) {
-                            $$res = {kind: ASTKinds.orig_date, A: $scope$A, B: $scope$B, C: $scope$C};
-                        }
-                        return $$res;
-                    });
-            },
-            this.$scope$orig_date$memo,
-        );
-    }
     public matchfrom($$dpth: number, $$cr?: ErrorTracker): Nullable<from> {
         return this.memoise(
             () => {
@@ -4431,234 +3506,105 @@ export class Parser {
             this.$scope$from$memo,
         );
     }
-    public matchsender($$dpth: number, $$cr?: ErrorTracker): Nullable<sender> {
+    public matchftext($$dpth: number, $$cr?: ErrorTracker): Nullable<ftext> {
         return this.memoise(
             () => {
-                return this.run<sender>($$dpth,
-                    () => {
-                        let $scope$A: Nullable<string>;
-                        let $scope$B: Nullable<string>;
-                        let $scope$C: Nullable<mailbox>;
-                        let $$res: Nullable<sender> = null;
-                        if (true
-                            && ($scope$A = this.regexAccept(String.raw`(?:Sender)`, $$dpth + 1, $$cr)) !== null
-                            && ($scope$B = this.regexAccept(String.raw`(?::)`, $$dpth + 1, $$cr)) !== null
-                            && ($scope$C = this.matchmailbox($$dpth + 1, $$cr)) !== null
-                            && this.matchCRLF($$dpth + 1, $$cr) !== null
-                        ) {
-                            $$res = {kind: ASTKinds.sender, A: $scope$A, B: $scope$B, C: $scope$C};
-                        }
-                        return $$res;
-                    });
-            },
-            this.$scope$sender$memo,
-        );
-    }
-    public matchreply_to($$dpth: number, $$cr?: ErrorTracker): Nullable<reply_to> {
-        return this.memoise(
-            () => {
-                return this.run<reply_to>($$dpth,
-                    () => {
-                        let $scope$A: Nullable<string>;
-                        let $scope$B: Nullable<string>;
-                        let $scope$C: Nullable<address_list>;
-                        let $$res: Nullable<reply_to> = null;
-                        if (true
-                            && ($scope$A = this.regexAccept(String.raw`(?:Reply_To)`, $$dpth + 1, $$cr)) !== null
-                            && ($scope$B = this.regexAccept(String.raw`(?::)`, $$dpth + 1, $$cr)) !== null
-                            && ($scope$C = this.matchaddress_list($$dpth + 1, $$cr)) !== null
-                            && this.matchCRLF($$dpth + 1, $$cr) !== null
-                        ) {
-                            $$res = {kind: ASTKinds.reply_to, A: $scope$A, B: $scope$B, C: $scope$C};
-                        }
-                        return $$res;
-                    });
-            },
-            this.$scope$reply_to$memo,
-        );
-    }
-    public matchto($$dpth: number, $$cr?: ErrorTracker): Nullable<to> {
-        return this.memoise(
-            () => {
-                return this.run<to>($$dpth,
-                    () => {
-                        let $scope$A: Nullable<string>;
-                        let $scope$B: Nullable<string>;
-                        let $scope$C: Nullable<address_list>;
-                        let $$res: Nullable<to> = null;
-                        if (true
-                            && ($scope$A = this.regexAccept(String.raw`(?:To)`, $$dpth + 1, $$cr)) !== null
-                            && ($scope$B = this.regexAccept(String.raw`(?::)`, $$dpth + 1, $$cr)) !== null
-                            && ($scope$C = this.matchaddress_list($$dpth + 1, $$cr)) !== null
-                            && this.matchCRLF($$dpth + 1, $$cr) !== null
-                        ) {
-                            $$res = {kind: ASTKinds.to, A: $scope$A, B: $scope$B, C: $scope$C};
-                        }
-                        return $$res;
-                    });
-            },
-            this.$scope$to$memo,
-        );
-    }
-    public matchcc($$dpth: number, $$cr?: ErrorTracker): Nullable<cc> {
-        return this.memoise(
-            () => {
-                return this.run<cc>($$dpth,
-                    () => {
-                        let $scope$A: Nullable<string>;
-                        let $scope$B: Nullable<string>;
-                        let $scope$C: Nullable<address_list>;
-                        let $$res: Nullable<cc> = null;
-                        if (true
-                            && ($scope$A = this.regexAccept(String.raw`(?:Cc)`, $$dpth + 1, $$cr)) !== null
-                            && ($scope$B = this.regexAccept(String.raw`(?::)`, $$dpth + 1, $$cr)) !== null
-                            && ($scope$C = this.matchaddress_list($$dpth + 1, $$cr)) !== null
-                            && this.matchCRLF($$dpth + 1, $$cr) !== null
-                        ) {
-                            $$res = {kind: ASTKinds.cc, A: $scope$A, B: $scope$B, C: $scope$C};
-                        }
-                        return $$res;
-                    });
-            },
-            this.$scope$cc$memo,
-        );
-    }
-    public matchbcc($$dpth: number, $$cr?: ErrorTracker): Nullable<bcc> {
-        return this.memoise(
-            () => {
-                return this.run<bcc>($$dpth,
-                    () => {
-                        let $scope$A: Nullable<string>;
-                        let $scope$B: Nullable<string>;
-                        let $scope$C: Nullable<Nullable<bcc_$0>>;
-                        let $$res: Nullable<bcc> = null;
-                        if (true
-                            && ($scope$A = this.regexAccept(String.raw`(?:Bcc)`, $$dpth + 1, $$cr)) !== null
-                            && ($scope$B = this.regexAccept(String.raw`(?::)`, $$dpth + 1, $$cr)) !== null
-                            && (($scope$C = this.matchbcc_$0($$dpth + 1, $$cr)) || true)
-                            && this.matchCRLF($$dpth + 1, $$cr) !== null
-                        ) {
-                            $$res = {kind: ASTKinds.bcc, A: $scope$A, B: $scope$B, C: $scope$C};
-                        }
-                        return $$res;
-                    });
-            },
-            this.$scope$bcc$memo,
-        );
-    }
-    public matchbcc_$0($$dpth: number, $$cr?: ErrorTracker): Nullable<bcc_$0> {
-        return this.memoise(
-            () => {
-                return this.choice<bcc_$0>([
-                    () => this.matchbcc_$0_1($$dpth + 1, $$cr),
-                    () => this.matchbcc_$0_2($$dpth + 1, $$cr),
+                return this.choice<ftext>([
+                    () => this.matchftext_1($$dpth + 1, $$cr),
+                    () => this.matchftext_2($$dpth + 1, $$cr),
                 ]);
             },
-            this.$scope$bcc_$0$memo,
+            this.$scope$ftext$memo,
         );
     }
-    public matchbcc_$0_1($$dpth: number, $$cr?: ErrorTracker): Nullable<bcc_$0_1> {
-        return this.matchaddress_list($$dpth + 1, $$cr);
+    public matchftext_1($$dpth: number, $$cr?: ErrorTracker): Nullable<ftext_1> {
+        return this.regexAccept(String.raw`(?:[\x21-\x39])`, $$dpth + 1, $$cr);
     }
-    public matchbcc_$0_2($$dpth: number, $$cr?: ErrorTracker): Nullable<bcc_$0_2> {
+    public matchftext_2($$dpth: number, $$cr?: ErrorTracker): Nullable<ftext_2> {
+        return this.regexAccept(String.raw`(?:[\x3b-\x7e])`, $$dpth + 1, $$cr);
+    }
+    public matchgroup($$dpth: number, $$cr?: ErrorTracker): Nullable<group> {
+        return this.memoise(
+            () => {
+                return this.run<group>($$dpth,
+                    () => {
+                        let $scope$A: Nullable<display_name>;
+                        let $scope$B: Nullable<string>;
+                        let $scope$C: Nullable<Nullable<group_list>>;
+                        let $scope$D: Nullable<string>;
+                        let $$res: Nullable<group> = null;
+                        if (true
+                            && ($scope$A = this.matchdisplay_name($$dpth + 1, $$cr)) !== null
+                            && ($scope$B = this.regexAccept(String.raw`(?::)`, $$dpth + 1, $$cr)) !== null
+                            && (($scope$C = this.matchgroup_list($$dpth + 1, $$cr)) || true)
+                            && ($scope$D = this.regexAccept(String.raw`(?:;)`, $$dpth + 1, $$cr)) !== null
+                            && ((this.matchCFWS($$dpth + 1, $$cr)) || true)
+                        ) {
+                            $$res = {kind: ASTKinds.group, A: $scope$A, B: $scope$B, C: $scope$C, D: $scope$D};
+                        }
+                        return $$res;
+                    });
+            },
+            this.$scope$group$memo,
+        );
+    }
+    public matchgroup_list($$dpth: number, $$cr?: ErrorTracker): Nullable<group_list> {
+        return this.memoise(
+            () => {
+                return this.choice<group_list>([
+                    () => this.matchgroup_list_1($$dpth + 1, $$cr),
+                    () => this.matchgroup_list_2($$dpth + 1, $$cr),
+                    () => this.matchgroup_list_3($$dpth + 1, $$cr),
+                ]);
+            },
+            this.$scope$group_list$memo,
+        );
+    }
+    public matchgroup_list_1($$dpth: number, $$cr?: ErrorTracker): Nullable<group_list_1> {
+        return this.matchmailbox_list($$dpth + 1, $$cr);
+    }
+    public matchgroup_list_2($$dpth: number, $$cr?: ErrorTracker): Nullable<group_list_2> {
         return this.matchCFWS($$dpth + 1, $$cr);
     }
-    public matchmessage_id($$dpth: number, $$cr?: ErrorTracker): Nullable<message_id> {
+    public matchgroup_list_3($$dpth: number, $$cr?: ErrorTracker): Nullable<group_list_3> {
+        return this.matchobs_group_list($$dpth + 1, $$cr);
+    }
+    public matchhour($$dpth: number, $$cr?: ErrorTracker): Nullable<hour> {
         return this.memoise(
             () => {
-                return this.run<message_id>($$dpth,
-                    () => {
-                        let $scope$A: Nullable<string>;
-                        let $scope$B: Nullable<string>;
-                        let $scope$C: Nullable<msg_id>;
-                        let $$res: Nullable<message_id> = null;
-                        if (true
-                            && ($scope$A = this.regexAccept(String.raw`(?:Message-ID)`, $$dpth + 1, $$cr)) !== null
-                            && ($scope$B = this.regexAccept(String.raw`(?::)`, $$dpth + 1, $$cr)) !== null
-                            && ($scope$C = this.matchmsg_id($$dpth + 1, $$cr)) !== null
-                            && this.matchCRLF($$dpth + 1, $$cr) !== null
-                        ) {
-                            $$res = {kind: ASTKinds.message_id, A: $scope$A, B: $scope$B, C: $scope$C};
-                        }
-                        return $$res;
-                    });
+                return this.choice<hour>([
+                    () => this.matchhour_1($$dpth + 1, $$cr),
+                    () => this.matchhour_2($$dpth + 1, $$cr),
+                ]);
             },
-            this.$scope$message_id$memo,
+            this.$scope$hour$memo,
         );
     }
-    public matchin_reply_to($$dpth: number, $$cr?: ErrorTracker): Nullable<in_reply_to> {
-        return this.memoise(
+    public matchhour_1($$dpth: number, $$cr?: ErrorTracker): Nullable<hour_1> {
+        return this.run<hour_1>($$dpth,
             () => {
-                return this.run<in_reply_to>($$dpth,
-                    () => {
-                        let $scope$A: Nullable<string>;
-                        let $scope$B: Nullable<string>;
-                        let $scope$C: Nullable<msg_id[]>;
-                        let $$res: Nullable<in_reply_to> = null;
-                        if (true
-                            && ($scope$A = this.regexAccept(String.raw`(?:In-Reply-To)`, $$dpth + 1, $$cr)) !== null
-                            && ($scope$B = this.regexAccept(String.raw`(?::)`, $$dpth + 1, $$cr)) !== null
-                            && ($scope$C = this.loop<msg_id>(() => this.matchmsg_id($$dpth + 1, $$cr), false)) !== null
-                            && this.matchCRLF($$dpth + 1, $$cr) !== null
-                        ) {
-                            $$res = {kind: ASTKinds.in_reply_to, A: $scope$A, B: $scope$B, C: $scope$C};
-                        }
-                        return $$res;
-                    });
-            },
-            this.$scope$in_reply_to$memo,
-        );
+                let $scope$A: Nullable<TWO_DIGIT>;
+                let $$res: Nullable<hour_1> = null;
+                if (true
+                    && ($scope$A = this.matchTWO_DIGIT($$dpth + 1, $$cr)) !== null
+                ) {
+                    $$res = {kind: ASTKinds.hour_1, A: $scope$A};
+                }
+                return $$res;
+            });
     }
-    public matchreferences($$dpth: number, $$cr?: ErrorTracker): Nullable<references> {
-        return this.memoise(
+    public matchhour_2($$dpth: number, $$cr?: ErrorTracker): Nullable<hour_2> {
+        return this.run<hour_2>($$dpth,
             () => {
-                return this.run<references>($$dpth,
-                    () => {
-                        let $scope$A: Nullable<string>;
-                        let $scope$B: Nullable<string>;
-                        let $scope$C: Nullable<msg_id[]>;
-                        let $$res: Nullable<references> = null;
-                        if (true
-                            && ($scope$A = this.regexAccept(String.raw`(?:References)`, $$dpth + 1, $$cr)) !== null
-                            && ($scope$B = this.regexAccept(String.raw`(?::)`, $$dpth + 1, $$cr)) !== null
-                            && ($scope$C = this.loop<msg_id>(() => this.matchmsg_id($$dpth + 1, $$cr), false)) !== null
-                            && this.matchCRLF($$dpth + 1, $$cr) !== null
-                        ) {
-                            $$res = {kind: ASTKinds.references, A: $scope$A, B: $scope$B, C: $scope$C};
-                        }
-                        return $$res;
-                    });
-            },
-            this.$scope$references$memo,
-        );
-    }
-    public matchmsg_id($$dpth: number, $$cr?: ErrorTracker): Nullable<msg_id> {
-        return this.memoise(
-            () => {
-                return this.run<msg_id>($$dpth,
-                    () => {
-                        let $scope$B: Nullable<string>;
-                        let $scope$C: Nullable<id_left>;
-                        let $scope$D: Nullable<string>;
-                        let $scope$E: Nullable<id_right>;
-                        let $scope$G: Nullable<Nullable<CFWS>>;
-                        let $$res: Nullable<msg_id> = null;
-                        if (true
-                            && ((this.matchCFWS($$dpth + 1, $$cr)) || true)
-                            && ($scope$B = this.regexAccept(String.raw`(?:<)`, $$dpth + 1, $$cr)) !== null
-                            && ($scope$C = this.matchid_left($$dpth + 1, $$cr)) !== null
-                            && ($scope$D = this.regexAccept(String.raw`(?:@)`, $$dpth + 1, $$cr)) !== null
-                            && ($scope$E = this.matchid_right($$dpth + 1, $$cr)) !== null
-                            && this.regexAccept(String.raw`(?:>)`, $$dpth + 1, $$cr) !== null
-                            && (($scope$G = this.matchCFWS($$dpth + 1, $$cr)) || true)
-                        ) {
-                            $$res = {kind: ASTKinds.msg_id, B: $scope$B, C: $scope$C, D: $scope$D, E: $scope$E, G: $scope$G};
-                        }
-                        return $$res;
-                    });
-            },
-            this.$scope$msg_id$memo,
-        );
+                let $scope$B: Nullable<obs_hour>;
+                let $$res: Nullable<hour_2> = null;
+                if (true
+                    && ($scope$B = this.matchobs_hour($$dpth + 1, $$cr)) !== null
+                ) {
+                    $$res = {kind: ASTKinds.hour_2, B: $scope$B};
+                }
+                return $$res;
+            });
     }
     public matchid_left($$dpth: number, $$cr?: ErrorTracker): Nullable<id_left> {
         return this.memoise(
@@ -4698,73 +3644,27 @@ export class Parser {
     public matchid_right_3($$dpth: number, $$cr?: ErrorTracker): Nullable<id_right_3> {
         return this.matchobs_id_right($$dpth + 1, $$cr);
     }
-    public matchno_fold_literal($$dpth: number, $$cr?: ErrorTracker): Nullable<no_fold_literal> {
+    public matchin_reply_to($$dpth: number, $$cr?: ErrorTracker): Nullable<in_reply_to> {
         return this.memoise(
             () => {
-                return this.run<no_fold_literal>($$dpth,
-                    () => {
-                        let $scope$A: Nullable<string>;
-                        let $scope$B: Nullable<dtext[]>;
-                        let $scope$C: Nullable<string>;
-                        let $$res: Nullable<no_fold_literal> = null;
-                        if (true
-                            && ($scope$A = this.regexAccept(String.raw`(?:\[)`, $$dpth + 1, $$cr)) !== null
-                            && ($scope$B = this.loop<dtext>(() => this.matchdtext($$dpth + 1, $$cr), true)) !== null
-                            && ($scope$C = this.regexAccept(String.raw`(?:\])`, $$dpth + 1, $$cr)) !== null
-                        ) {
-                            $$res = {kind: ASTKinds.no_fold_literal, A: $scope$A, B: $scope$B, C: $scope$C};
-                        }
-                        return $$res;
-                    });
-            },
-            this.$scope$no_fold_literal$memo,
-        );
-    }
-    public matchsubject($$dpth: number, $$cr?: ErrorTracker): Nullable<subject> {
-        return this.memoise(
-            () => {
-                return this.run<subject>($$dpth,
-                    () => {
-                        let $scope$name: Nullable<string>;
-                        let $scope$B: Nullable<string>;
-                        let $scope$_value: Nullable<unstructured>;
-                        let $scope$D: Nullable<CRLF>;
-                        let $$res: Nullable<subject> = null;
-                        if (true
-                            && ($scope$name = this.regexAccept(String.raw`(?:Subject)`, $$dpth + 1, $$cr)) !== null
-                            && ($scope$B = this.regexAccept(String.raw`(?::)`, $$dpth + 1, $$cr)) !== null
-                            && ($scope$_value = this.matchunstructured($$dpth + 1, $$cr)) !== null
-                            && ($scope$D = this.matchCRLF($$dpth + 1, $$cr)) !== null
-                        ) {
-                            $$res = new subject($scope$name, $scope$B, $scope$_value, $scope$D);
-                        }
-                        return $$res;
-                    });
-            },
-            this.$scope$subject$memo,
-        );
-    }
-    public matchcomments($$dpth: number, $$cr?: ErrorTracker): Nullable<comments> {
-        return this.memoise(
-            () => {
-                return this.run<comments>($$dpth,
+                return this.run<in_reply_to>($$dpth,
                     () => {
                         let $scope$A: Nullable<string>;
                         let $scope$B: Nullable<string>;
-                        let $scope$C: Nullable<unstructured>;
-                        let $$res: Nullable<comments> = null;
+                        let $scope$C: Nullable<msg_id[]>;
+                        let $$res: Nullable<in_reply_to> = null;
                         if (true
-                            && ($scope$A = this.regexAccept(String.raw`(?:Comments)`, $$dpth + 1, $$cr)) !== null
+                            && ($scope$A = this.regexAccept(String.raw`(?:In-Reply-To)`, $$dpth + 1, $$cr)) !== null
                             && ($scope$B = this.regexAccept(String.raw`(?::)`, $$dpth + 1, $$cr)) !== null
-                            && ($scope$C = this.matchunstructured($$dpth + 1, $$cr)) !== null
+                            && ($scope$C = this.loop<msg_id>(() => this.matchmsg_id($$dpth + 1, $$cr), false)) !== null
                             && this.matchCRLF($$dpth + 1, $$cr) !== null
                         ) {
-                            $$res = {kind: ASTKinds.comments, A: $scope$A, B: $scope$B, C: $scope$C};
+                            $$res = {kind: ASTKinds.in_reply_to, A: $scope$A, B: $scope$B, C: $scope$C};
                         }
                         return $$res;
                     });
             },
-            this.$scope$comments$memo,
+            this.$scope$in_reply_to$memo,
         );
     }
     public matchkeywords($$dpth: number, $$cr?: ErrorTracker): Nullable<keywords> {
@@ -4812,374 +3712,400 @@ export class Parser {
             this.$scope$keywords_$0$memo,
         );
     }
-    public matchresent_date($$dpth: number, $$cr?: ErrorTracker): Nullable<resent_date> {
+    public matchlocal_part($$dpth: number, $$cr?: ErrorTracker): Nullable<local_part> {
         return this.memoise(
             () => {
-                return this.run<resent_date>($$dpth,
-                    () => {
-                        let $scope$A: Nullable<string>;
-                        let $scope$B: Nullable<string>;
-                        let $scope$C: Nullable<date_time>;
-                        let $$res: Nullable<resent_date> = null;
-                        if (true
-                            && ($scope$A = this.regexAccept(String.raw`(?:Resent-Date)`, $$dpth + 1, $$cr)) !== null
-                            && ($scope$B = this.regexAccept(String.raw`(?::)`, $$dpth + 1, $$cr)) !== null
-                            && ($scope$C = this.matchdate_time($$dpth + 1, $$cr)) !== null
-                            && this.matchCRLF($$dpth + 1, $$cr) !== null
-                        ) {
-                            $$res = {kind: ASTKinds.resent_date, A: $scope$A, B: $scope$B, C: $scope$C};
-                        }
-                        return $$res;
-                    });
-            },
-            this.$scope$resent_date$memo,
-        );
-    }
-    public matchresent_from($$dpth: number, $$cr?: ErrorTracker): Nullable<resent_from> {
-        return this.memoise(
-            () => {
-                return this.run<resent_from>($$dpth,
-                    () => {
-                        let $scope$A: Nullable<string>;
-                        let $scope$B: Nullable<string>;
-                        let $scope$C: Nullable<mailbox_list>;
-                        let $$res: Nullable<resent_from> = null;
-                        if (true
-                            && ($scope$A = this.regexAccept(String.raw`(?:Resent-From)`, $$dpth + 1, $$cr)) !== null
-                            && ($scope$B = this.regexAccept(String.raw`(?::)`, $$dpth + 1, $$cr)) !== null
-                            && ($scope$C = this.matchmailbox_list($$dpth + 1, $$cr)) !== null
-                            && this.matchCRLF($$dpth + 1, $$cr) !== null
-                        ) {
-                            $$res = {kind: ASTKinds.resent_from, A: $scope$A, B: $scope$B, C: $scope$C};
-                        }
-                        return $$res;
-                    });
-            },
-            this.$scope$resent_from$memo,
-        );
-    }
-    public matchresent_sender($$dpth: number, $$cr?: ErrorTracker): Nullable<resent_sender> {
-        return this.memoise(
-            () => {
-                return this.run<resent_sender>($$dpth,
-                    () => {
-                        let $scope$A: Nullable<string>;
-                        let $scope$B: Nullable<string>;
-                        let $scope$C: Nullable<mailbox>;
-                        let $$res: Nullable<resent_sender> = null;
-                        if (true
-                            && ($scope$A = this.regexAccept(String.raw`(?:Resent-Sender)`, $$dpth + 1, $$cr)) !== null
-                            && ($scope$B = this.regexAccept(String.raw`(?::)`, $$dpth + 1, $$cr)) !== null
-                            && ($scope$C = this.matchmailbox($$dpth + 1, $$cr)) !== null
-                            && this.matchCRLF($$dpth + 1, $$cr) !== null
-                        ) {
-                            $$res = {kind: ASTKinds.resent_sender, A: $scope$A, B: $scope$B, C: $scope$C};
-                        }
-                        return $$res;
-                    });
-            },
-            this.$scope$resent_sender$memo,
-        );
-    }
-    public matchresent_to($$dpth: number, $$cr?: ErrorTracker): Nullable<resent_to> {
-        return this.memoise(
-            () => {
-                return this.run<resent_to>($$dpth,
-                    () => {
-                        let $scope$A: Nullable<string>;
-                        let $scope$B: Nullable<string>;
-                        let $scope$C: Nullable<address_list>;
-                        let $$res: Nullable<resent_to> = null;
-                        if (true
-                            && ($scope$A = this.regexAccept(String.raw`(?:Resent-To)`, $$dpth + 1, $$cr)) !== null
-                            && ($scope$B = this.regexAccept(String.raw`(?::)`, $$dpth + 1, $$cr)) !== null
-                            && ($scope$C = this.matchaddress_list($$dpth + 1, $$cr)) !== null
-                            && this.matchCRLF($$dpth + 1, $$cr) !== null
-                        ) {
-                            $$res = {kind: ASTKinds.resent_to, A: $scope$A, B: $scope$B, C: $scope$C};
-                        }
-                        return $$res;
-                    });
-            },
-            this.$scope$resent_to$memo,
-        );
-    }
-    public matchresent_cc($$dpth: number, $$cr?: ErrorTracker): Nullable<resent_cc> {
-        return this.memoise(
-            () => {
-                return this.run<resent_cc>($$dpth,
-                    () => {
-                        let $scope$A: Nullable<string>;
-                        let $scope$B: Nullable<string>;
-                        let $scope$C: Nullable<address_list>;
-                        let $$res: Nullable<resent_cc> = null;
-                        if (true
-                            && ($scope$A = this.regexAccept(String.raw`(?:Resent-Cc)`, $$dpth + 1, $$cr)) !== null
-                            && ($scope$B = this.regexAccept(String.raw`(?::)`, $$dpth + 1, $$cr)) !== null
-                            && ($scope$C = this.matchaddress_list($$dpth + 1, $$cr)) !== null
-                            && this.matchCRLF($$dpth + 1, $$cr) !== null
-                        ) {
-                            $$res = {kind: ASTKinds.resent_cc, A: $scope$A, B: $scope$B, C: $scope$C};
-                        }
-                        return $$res;
-                    });
-            },
-            this.$scope$resent_cc$memo,
-        );
-    }
-    public matchresent_bcc($$dpth: number, $$cr?: ErrorTracker): Nullable<resent_bcc> {
-        return this.memoise(
-            () => {
-                return this.run<resent_bcc>($$dpth,
-                    () => {
-                        let $scope$A: Nullable<string>;
-                        let $scope$B: Nullable<string>;
-                        let $scope$C: Nullable<Nullable<resent_bcc_$0>>;
-                        let $$res: Nullable<resent_bcc> = null;
-                        if (true
-                            && ($scope$A = this.regexAccept(String.raw`(?:Resent-Bcc)`, $$dpth + 1, $$cr)) !== null
-                            && ($scope$B = this.regexAccept(String.raw`(?::)`, $$dpth + 1, $$cr)) !== null
-                            && (($scope$C = this.matchresent_bcc_$0($$dpth + 1, $$cr)) || true)
-                            && this.matchCRLF($$dpth + 1, $$cr) !== null
-                        ) {
-                            $$res = {kind: ASTKinds.resent_bcc, A: $scope$A, B: $scope$B, C: $scope$C};
-                        }
-                        return $$res;
-                    });
-            },
-            this.$scope$resent_bcc$memo,
-        );
-    }
-    public matchresent_bcc_$0($$dpth: number, $$cr?: ErrorTracker): Nullable<resent_bcc_$0> {
-        return this.memoise(
-            () => {
-                return this.choice<resent_bcc_$0>([
-                    () => this.matchresent_bcc_$0_1($$dpth + 1, $$cr),
-                    () => this.matchresent_bcc_$0_2($$dpth + 1, $$cr),
+                return this.choice<local_part>([
+                    () => this.matchlocal_part_1($$dpth + 1, $$cr),
+                    () => this.matchlocal_part_2($$dpth + 1, $$cr),
+                    () => this.matchlocal_part_3($$dpth + 1, $$cr),
                 ]);
             },
-            this.$scope$resent_bcc_$0$memo,
+            this.$scope$local_part$memo,
         );
     }
-    public matchresent_bcc_$0_1($$dpth: number, $$cr?: ErrorTracker): Nullable<resent_bcc_$0_1> {
-        return this.run<resent_bcc_$0_1>($$dpth,
+    public matchlocal_part_1($$dpth: number, $$cr?: ErrorTracker): Nullable<local_part_1> {
+        return this.matchdot_atom($$dpth + 1, $$cr);
+    }
+    public matchlocal_part_2($$dpth: number, $$cr?: ErrorTracker): Nullable<local_part_2> {
+        return this.matchquoted_string($$dpth + 1, $$cr);
+    }
+    public matchlocal_part_3($$dpth: number, $$cr?: ErrorTracker): Nullable<local_part_3> {
+        return this.matchobs_local_part($$dpth + 1, $$cr);
+    }
+    public matchmailbox($$dpth: number, $$cr?: ErrorTracker): Nullable<mailbox> {
+        return this.memoise(
             () => {
-                let $scope$D: Nullable<address_list>;
-                let $$res: Nullable<resent_bcc_$0_1> = null;
+                return this.choice<mailbox>([
+                    () => this.matchmailbox_1($$dpth + 1, $$cr),
+                    () => this.matchmailbox_2($$dpth + 1, $$cr),
+                ]);
+            },
+            this.$scope$mailbox$memo,
+        );
+    }
+    public matchmailbox_1($$dpth: number, $$cr?: ErrorTracker): Nullable<mailbox_1> {
+        return this.matchname_addr($$dpth + 1, $$cr);
+    }
+    public matchmailbox_2($$dpth: number, $$cr?: ErrorTracker): Nullable<mailbox_2> {
+        return this.matchaddr_spec($$dpth + 1, $$cr);
+    }
+    public matchmailbox_list($$dpth: number, $$cr?: ErrorTracker): Nullable<mailbox_list> {
+        return this.memoise(
+            () => {
+                return this.choice<mailbox_list>([
+                    () => this.matchmailbox_list_1($$dpth + 1, $$cr),
+                    () => this.matchmailbox_list_2($$dpth + 1, $$cr),
+                ]);
+            },
+            this.$scope$mailbox_list$memo,
+        );
+    }
+    public matchmailbox_list_1($$dpth: number, $$cr?: ErrorTracker): Nullable<mailbox_list_1> {
+        return this.run<mailbox_list_1>($$dpth,
+            () => {
+                let $scope$A: Nullable<mailbox_list_$0>;
+                let $$res: Nullable<mailbox_list_1> = null;
                 if (true
-                    && ($scope$D = this.matchaddress_list($$dpth + 1, $$cr)) !== null
+                    && ($scope$A = this.matchmailbox_list_$0($$dpth + 1, $$cr)) !== null
                 ) {
-                    $$res = {kind: ASTKinds.resent_bcc_$0_1, D: $scope$D};
+                    $$res = {kind: ASTKinds.mailbox_list_1, A: $scope$A};
                 }
                 return $$res;
             });
     }
-    public matchresent_bcc_$0_2($$dpth: number, $$cr?: ErrorTracker): Nullable<resent_bcc_$0_2> {
-        return this.matchCFWS($$dpth + 1, $$cr);
+    public matchmailbox_list_2($$dpth: number, $$cr?: ErrorTracker): Nullable<mailbox_list_2> {
+        return this.run<mailbox_list_2>($$dpth,
+            () => {
+                let $scope$F: Nullable<obs_mbox_list>;
+                let $$res: Nullable<mailbox_list_2> = null;
+                if (true
+                    && ($scope$F = this.matchobs_mbox_list($$dpth + 1, $$cr)) !== null
+                ) {
+                    $$res = {kind: ASTKinds.mailbox_list_2, F: $scope$F};
+                }
+                return $$res;
+            });
     }
-    public matchresent_msg_id($$dpth: number, $$cr?: ErrorTracker): Nullable<resent_msg_id> {
+    public matchmailbox_list_$0($$dpth: number, $$cr?: ErrorTracker): Nullable<mailbox_list_$0> {
         return this.memoise(
             () => {
-                return this.run<resent_msg_id>($$dpth,
+                return this.run<mailbox_list_$0>($$dpth,
+                    () => {
+                        let $scope$B: Nullable<mailbox>;
+                        let $scope$C: Nullable<mailbox_list_$0_$0[]>;
+                        let $$res: Nullable<mailbox_list_$0> = null;
+                        if (true
+                            && ($scope$B = this.matchmailbox($$dpth + 1, $$cr)) !== null
+                            && ($scope$C = this.loop<mailbox_list_$0_$0>(() => this.matchmailbox_list_$0_$0($$dpth + 1, $$cr), true)) !== null
+                        ) {
+                            $$res = {kind: ASTKinds.mailbox_list_$0, B: $scope$B, C: $scope$C};
+                        }
+                        return $$res;
+                    });
+            },
+            this.$scope$mailbox_list_$0$memo,
+        );
+    }
+    public matchmailbox_list_$0_$0($$dpth: number, $$cr?: ErrorTracker): Nullable<mailbox_list_$0_$0> {
+        return this.memoise(
+            () => {
+                return this.run<mailbox_list_$0_$0>($$dpth,
+                    () => {
+                        let $scope$D: Nullable<string>;
+                        let $scope$E: Nullable<mailbox>;
+                        let $$res: Nullable<mailbox_list_$0_$0> = null;
+                        if (true
+                            && ($scope$D = this.regexAccept(String.raw`(?:,)`, $$dpth + 1, $$cr)) !== null
+                            && ($scope$E = this.matchmailbox($$dpth + 1, $$cr)) !== null
+                        ) {
+                            $$res = {kind: ASTKinds.mailbox_list_$0_$0, D: $scope$D, E: $scope$E};
+                        }
+                        return $$res;
+                    });
+            },
+            this.$scope$mailbox_list_$0_$0$memo,
+        );
+    }
+    public matchmessage($$dpth: number, $$cr?: ErrorTracker): Nullable<message> {
+        return this.memoise(
+            () => {
+                return this.run<message>($$dpth,
+                    () => {
+                        let $scope$fields: Nullable<message_$0>;
+                        let $scope$D: Nullable<Nullable<message_$1>>;
+                        let $$res: Nullable<message> = null;
+                        if (true
+                            && ($scope$fields = this.matchmessage_$0($$dpth + 1, $$cr)) !== null
+                            && (($scope$D = this.matchmessage_$1($$dpth + 1, $$cr)) || true)
+                        ) {
+                            $$res = {kind: ASTKinds.message, fields: $scope$fields, D: $scope$D};
+                        }
+                        return $$res;
+                    });
+            },
+            this.$scope$message$memo,
+        );
+    }
+    public matchmessage_$0($$dpth: number, $$cr?: ErrorTracker): Nullable<message_$0> {
+        return this.memoise(
+            () => {
+                return this.choice<message_$0>([
+                    () => this.matchmessage_$0_1($$dpth + 1, $$cr),
+                    () => this.matchmessage_$0_2($$dpth + 1, $$cr),
+                ]);
+            },
+            this.$scope$message_$0$memo,
+        );
+    }
+    public matchmessage_$0_1($$dpth: number, $$cr?: ErrorTracker): Nullable<message_$0_1> {
+        return this.matchfields($$dpth + 1, $$cr);
+    }
+    public matchmessage_$0_2($$dpth: number, $$cr?: ErrorTracker): Nullable<message_$0_2> {
+        return this.matchobs_fields($$dpth + 1, $$cr);
+    }
+    public matchmessage_$1($$dpth: number, $$cr?: ErrorTracker): Nullable<message_$1> {
+        return this.memoise(
+            () => {
+                return this.run<message_$1>($$dpth,
+                    () => {
+                        let $scope$F: Nullable<body>;
+                        let $$res: Nullable<message_$1> = null;
+                        if (true
+                            && this.matchCRLF($$dpth + 1, $$cr) !== null
+                            && ($scope$F = this.matchbody($$dpth + 1, $$cr)) !== null
+                        ) {
+                            $$res = {kind: ASTKinds.message_$1, F: $scope$F};
+                        }
+                        return $$res;
+                    });
+            },
+            this.$scope$message_$1$memo,
+        );
+    }
+    public matchmessage_id($$dpth: number, $$cr?: ErrorTracker): Nullable<message_id> {
+        return this.memoise(
+            () => {
+                return this.run<message_id>($$dpth,
                     () => {
                         let $scope$A: Nullable<string>;
                         let $scope$B: Nullable<string>;
                         let $scope$C: Nullable<msg_id>;
-                        let $$res: Nullable<resent_msg_id> = null;
+                        let $$res: Nullable<message_id> = null;
                         if (true
-                            && ($scope$A = this.regexAccept(String.raw`(?:Resent-Message_ID)`, $$dpth + 1, $$cr)) !== null
+                            && ($scope$A = this.regexAccept(String.raw`(?:Message-ID)`, $$dpth + 1, $$cr)) !== null
                             && ($scope$B = this.regexAccept(String.raw`(?::)`, $$dpth + 1, $$cr)) !== null
                             && ($scope$C = this.matchmsg_id($$dpth + 1, $$cr)) !== null
                             && this.matchCRLF($$dpth + 1, $$cr) !== null
                         ) {
-                            $$res = {kind: ASTKinds.resent_msg_id, A: $scope$A, B: $scope$B, C: $scope$C};
+                            $$res = {kind: ASTKinds.message_id, A: $scope$A, B: $scope$B, C: $scope$C};
                         }
                         return $$res;
                     });
             },
-            this.$scope$resent_msg_id$memo,
+            this.$scope$message_id$memo,
         );
     }
-    public matchtrace($$dpth: number, $$cr?: ErrorTracker): Nullable<trace> {
+    public matchminute($$dpth: number, $$cr?: ErrorTracker): Nullable<minute> {
         return this.memoise(
             () => {
-                return this.run<trace>($$dpth,
-                    () => {
-                        let $scope$A: Nullable<Nullable<return_path>>;
-                        let $scope$B: Nullable<received[]>;
-                        let $$res: Nullable<trace> = null;
-                        if (true
-                            && (($scope$A = this.matchreturn_path($$dpth + 1, $$cr)) || true)
-                            && ($scope$B = this.loop<received>(() => this.matchreceived($$dpth + 1, $$cr), false)) !== null
-                        ) {
-                            $$res = {kind: ASTKinds.trace, A: $scope$A, B: $scope$B};
-                        }
-                        return $$res;
-                    });
-            },
-            this.$scope$trace$memo,
-        );
-    }
-    public matchreturn_path($$dpth: number, $$cr?: ErrorTracker): Nullable<return_path> {
-        return this.memoise(
-            () => {
-                return this.run<return_path>($$dpth,
-                    () => {
-                        let $scope$A: Nullable<string>;
-                        let $scope$B: Nullable<string>;
-                        let $scope$C: Nullable<path>;
-                        let $$res: Nullable<return_path> = null;
-                        if (true
-                            && ($scope$A = this.regexAccept(String.raw`(?:Return-Path)`, $$dpth + 1, $$cr)) !== null
-                            && ($scope$B = this.regexAccept(String.raw`(?::)`, $$dpth + 1, $$cr)) !== null
-                            && ($scope$C = this.matchpath($$dpth + 1, $$cr)) !== null
-                            && this.matchCRLF($$dpth + 1, $$cr) !== null
-                        ) {
-                            $$res = {kind: ASTKinds.return_path, A: $scope$A, B: $scope$B, C: $scope$C};
-                        }
-                        return $$res;
-                    });
-            },
-            this.$scope$return_path$memo,
-        );
-    }
-    public matchpath($$dpth: number, $$cr?: ErrorTracker): Nullable<path> {
-        return this.memoise(
-            () => {
-                return this.choice<path>([
-                    () => this.matchpath_1($$dpth + 1, $$cr),
-                    () => this.matchpath_2($$dpth + 1, $$cr),
+                return this.choice<minute>([
+                    () => this.matchminute_1($$dpth + 1, $$cr),
+                    () => this.matchminute_2($$dpth + 1, $$cr),
                 ]);
             },
-            this.$scope$path$memo,
+            this.$scope$minute$memo,
         );
     }
-    public matchpath_1($$dpth: number, $$cr?: ErrorTracker): Nullable<path_1> {
-        return this.matchangle_addr($$dpth + 1, $$cr);
+    public matchminute_1($$dpth: number, $$cr?: ErrorTracker): Nullable<minute_1> {
+        return this.run<minute_1>($$dpth,
+            () => {
+                let $scope$A: Nullable<TWO_DIGIT>;
+                let $$res: Nullable<minute_1> = null;
+                if (true
+                    && ($scope$A = this.matchTWO_DIGIT($$dpth + 1, $$cr)) !== null
+                ) {
+                    $$res = {kind: ASTKinds.minute_1, A: $scope$A};
+                }
+                return $$res;
+            });
     }
-    public matchpath_2($$dpth: number, $$cr?: ErrorTracker): Nullable<path_2> {
-        return this.matchpath_$0($$dpth + 1, $$cr);
+    public matchminute_2($$dpth: number, $$cr?: ErrorTracker): Nullable<minute_2> {
+        return this.run<minute_2>($$dpth,
+            () => {
+                let $scope$B: Nullable<obs_minute>;
+                let $$res: Nullable<minute_2> = null;
+                if (true
+                    && ($scope$B = this.matchobs_minute($$dpth + 1, $$cr)) !== null
+                ) {
+                    $$res = {kind: ASTKinds.minute_2, B: $scope$B};
+                }
+                return $$res;
+            });
     }
-    public matchpath_$0($$dpth: number, $$cr?: ErrorTracker): Nullable<path_$0> {
+    public matchmonth($$dpth: number, $$cr?: ErrorTracker): Nullable<month> {
         return this.memoise(
             () => {
-                return this.run<path_$0>($$dpth,
-                    () => {
-                        let $$res: Nullable<path_$0> = null;
-                        if (true
-                            && ((this.matchCFWS($$dpth + 1, $$cr)) || true)
-                            && this.regexAccept(String.raw`(?:<)`, $$dpth + 1, $$cr) !== null
-                            && this.matchCFWS($$dpth + 1, $$cr) !== null
-                            && this.regexAccept(String.raw`(?:>)`, $$dpth + 1, $$cr) !== null
-                            && ((this.matchCFWS($$dpth + 1, $$cr)) || true)
-                        ) {
-                            $$res = {kind: ASTKinds.path_$0, };
-                        }
-                        return $$res;
-                    });
+                return this.choice<month>([
+                    () => this.matchmonth_1($$dpth + 1, $$cr),
+                    () => this.matchmonth_2($$dpth + 1, $$cr),
+                    () => this.matchmonth_3($$dpth + 1, $$cr),
+                    () => this.matchmonth_4($$dpth + 1, $$cr),
+                    () => this.matchmonth_5($$dpth + 1, $$cr),
+                    () => this.matchmonth_6($$dpth + 1, $$cr),
+                    () => this.matchmonth_7($$dpth + 1, $$cr),
+                    () => this.matchmonth_8($$dpth + 1, $$cr),
+                    () => this.matchmonth_9($$dpth + 1, $$cr),
+                    () => this.matchmonth_10($$dpth + 1, $$cr),
+                    () => this.matchmonth_11($$dpth + 1, $$cr),
+                    () => this.matchmonth_12($$dpth + 1, $$cr),
+                ]);
             },
-            this.$scope$path_$0$memo,
+            this.$scope$month$memo,
         );
     }
-    public matchreceived($$dpth: number, $$cr?: ErrorTracker): Nullable<received> {
+    public matchmonth_1($$dpth: number, $$cr?: ErrorTracker): Nullable<month_1> {
+        return this.regexAccept(String.raw`(?:Jan)`, $$dpth + 1, $$cr);
+    }
+    public matchmonth_2($$dpth: number, $$cr?: ErrorTracker): Nullable<month_2> {
+        return this.regexAccept(String.raw`(?:Feb)`, $$dpth + 1, $$cr);
+    }
+    public matchmonth_3($$dpth: number, $$cr?: ErrorTracker): Nullable<month_3> {
+        return this.regexAccept(String.raw`(?:Mar)`, $$dpth + 1, $$cr);
+    }
+    public matchmonth_4($$dpth: number, $$cr?: ErrorTracker): Nullable<month_4> {
+        return this.regexAccept(String.raw`(?:Apr)`, $$dpth + 1, $$cr);
+    }
+    public matchmonth_5($$dpth: number, $$cr?: ErrorTracker): Nullable<month_5> {
+        return this.regexAccept(String.raw`(?:May)`, $$dpth + 1, $$cr);
+    }
+    public matchmonth_6($$dpth: number, $$cr?: ErrorTracker): Nullable<month_6> {
+        return this.regexAccept(String.raw`(?:Jun)`, $$dpth + 1, $$cr);
+    }
+    public matchmonth_7($$dpth: number, $$cr?: ErrorTracker): Nullable<month_7> {
+        return this.regexAccept(String.raw`(?:Jul)`, $$dpth + 1, $$cr);
+    }
+    public matchmonth_8($$dpth: number, $$cr?: ErrorTracker): Nullable<month_8> {
+        return this.regexAccept(String.raw`(?:Aug)`, $$dpth + 1, $$cr);
+    }
+    public matchmonth_9($$dpth: number, $$cr?: ErrorTracker): Nullable<month_9> {
+        return this.regexAccept(String.raw`(?:Sep)`, $$dpth + 1, $$cr);
+    }
+    public matchmonth_10($$dpth: number, $$cr?: ErrorTracker): Nullable<month_10> {
+        return this.regexAccept(String.raw`(?:Oct)`, $$dpth + 1, $$cr);
+    }
+    public matchmonth_11($$dpth: number, $$cr?: ErrorTracker): Nullable<month_11> {
+        return this.regexAccept(String.raw`(?:Nov)`, $$dpth + 1, $$cr);
+    }
+    public matchmonth_12($$dpth: number, $$cr?: ErrorTracker): Nullable<month_12> {
+        return this.regexAccept(String.raw`(?:Dec)`, $$dpth + 1, $$cr);
+    }
+    public matchmsg_id($$dpth: number, $$cr?: ErrorTracker): Nullable<msg_id> {
         return this.memoise(
             () => {
-                return this.run<received>($$dpth,
+                return this.run<msg_id>($$dpth,
                     () => {
-                        let $scope$A: Nullable<string>;
                         let $scope$B: Nullable<string>;
-                        let $scope$C: Nullable<received_token[]>;
+                        let $scope$C: Nullable<id_left>;
                         let $scope$D: Nullable<string>;
-                        let $scope$E: Nullable<date_time>;
-                        let $$res: Nullable<received> = null;
+                        let $scope$E: Nullable<id_right>;
+                        let $scope$G: Nullable<Nullable<CFWS>>;
+                        let $$res: Nullable<msg_id> = null;
                         if (true
-                            && ($scope$A = this.regexAccept(String.raw`(?:Received)`, $$dpth + 1, $$cr)) !== null
-                            && ($scope$B = this.regexAccept(String.raw`(?::)`, $$dpth + 1, $$cr)) !== null
-                            && ($scope$C = this.loop<received_token>(() => this.matchreceived_token($$dpth + 1, $$cr), true)) !== null
-                            && ($scope$D = this.regexAccept(String.raw`(?:;)`, $$dpth + 1, $$cr)) !== null
-                            && ($scope$E = this.matchdate_time($$dpth + 1, $$cr)) !== null
-                            && this.matchCRLF($$dpth + 1, $$cr) !== null
+                            && ((this.matchCFWS($$dpth + 1, $$cr)) || true)
+                            && ($scope$B = this.regexAccept(String.raw`(?:<)`, $$dpth + 1, $$cr)) !== null
+                            && ($scope$C = this.matchid_left($$dpth + 1, $$cr)) !== null
+                            && ($scope$D = this.regexAccept(String.raw`(?:@)`, $$dpth + 1, $$cr)) !== null
+                            && ($scope$E = this.matchid_right($$dpth + 1, $$cr)) !== null
+                            && this.regexAccept(String.raw`(?:>)`, $$dpth + 1, $$cr) !== null
+                            && (($scope$G = this.matchCFWS($$dpth + 1, $$cr)) || true)
                         ) {
-                            $$res = {kind: ASTKinds.received, A: $scope$A, B: $scope$B, C: $scope$C, D: $scope$D, E: $scope$E};
+                            $$res = {kind: ASTKinds.msg_id, B: $scope$B, C: $scope$C, D: $scope$D, E: $scope$E, G: $scope$G};
                         }
                         return $$res;
                     });
             },
-            this.$scope$received$memo,
+            this.$scope$msg_id$memo,
         );
     }
-    public matchreceived_token($$dpth: number, $$cr?: ErrorTracker): Nullable<received_token> {
+    public matchname_addr($$dpth: number, $$cr?: ErrorTracker): Nullable<name_addr> {
         return this.memoise(
             () => {
-                return this.choice<received_token>([
-                    () => this.matchreceived_token_1($$dpth + 1, $$cr),
-                    () => this.matchreceived_token_2($$dpth + 1, $$cr),
-                    () => this.matchreceived_token_3($$dpth + 1, $$cr),
-                    () => this.matchreceived_token_4($$dpth + 1, $$cr),
-                ]);
-            },
-            this.$scope$received_token$memo,
-        );
-    }
-    public matchreceived_token_1($$dpth: number, $$cr?: ErrorTracker): Nullable<received_token_1> {
-        return this.matchword($$dpth + 1, $$cr);
-    }
-    public matchreceived_token_2($$dpth: number, $$cr?: ErrorTracker): Nullable<received_token_2> {
-        return this.matchangle_addr($$dpth + 1, $$cr);
-    }
-    public matchreceived_token_3($$dpth: number, $$cr?: ErrorTracker): Nullable<received_token_3> {
-        return this.matchaddr_spec($$dpth + 1, $$cr);
-    }
-    public matchreceived_token_4($$dpth: number, $$cr?: ErrorTracker): Nullable<received_token_4> {
-        return this.matchdomain($$dpth + 1, $$cr);
-    }
-    public matchoptional_field($$dpth: number, $$cr?: ErrorTracker): Nullable<optional_field> {
-        return this.memoise(
-            () => {
-                return this.run<optional_field>($$dpth,
+                return this.run<name_addr>($$dpth,
                     () => {
-                        let $scope$A: Nullable<field_name>;
-                        let $scope$B: Nullable<string>;
-                        let $scope$C: Nullable<unstructured>;
-                        let $$res: Nullable<optional_field> = null;
+                        let $scope$A: Nullable<Nullable<display_name>>;
+                        let $scope$B: Nullable<angle_addr>;
+                        let $$res: Nullable<name_addr> = null;
                         if (true
-                            && ($scope$A = this.matchfield_name($$dpth + 1, $$cr)) !== null
-                            && ($scope$B = this.regexAccept(String.raw`(?::)`, $$dpth + 1, $$cr)) !== null
-                            && ($scope$C = this.matchunstructured($$dpth + 1, $$cr)) !== null
-                            && this.matchCRLF($$dpth + 1, $$cr) !== null
+                            && (($scope$A = this.matchdisplay_name($$dpth + 1, $$cr)) || true)
+                            && ($scope$B = this.matchangle_addr($$dpth + 1, $$cr)) !== null
                         ) {
-                            $$res = {kind: ASTKinds.optional_field, A: $scope$A, B: $scope$B, C: $scope$C};
+                            $$res = {kind: ASTKinds.name_addr, A: $scope$A, B: $scope$B};
                         }
                         return $$res;
                     });
             },
-            this.$scope$optional_field$memo,
+            this.$scope$name_addr$memo,
         );
     }
-    public matchfield_name($$dpth: number, $$cr?: ErrorTracker): Nullable<field_name> {
+    public matchno_fold_literal($$dpth: number, $$cr?: ErrorTracker): Nullable<no_fold_literal> {
         return this.memoise(
             () => {
-                return this.loop<ftext>(() => this.matchftext($$dpth + 1, $$cr), false);
+                return this.run<no_fold_literal>($$dpth,
+                    () => {
+                        let $scope$A: Nullable<string>;
+                        let $scope$B: Nullable<dtext[]>;
+                        let $scope$C: Nullable<string>;
+                        let $$res: Nullable<no_fold_literal> = null;
+                        if (true
+                            && ($scope$A = this.regexAccept(String.raw`(?:\[)`, $$dpth + 1, $$cr)) !== null
+                            && ($scope$B = this.loop<dtext>(() => this.matchdtext($$dpth + 1, $$cr), true)) !== null
+                            && ($scope$C = this.regexAccept(String.raw`(?:\])`, $$dpth + 1, $$cr)) !== null
+                        ) {
+                            $$res = {kind: ASTKinds.no_fold_literal, A: $scope$A, B: $scope$B, C: $scope$C};
+                        }
+                        return $$res;
+                    });
             },
-            this.$scope$field_name$memo,
+            this.$scope$no_fold_literal$memo,
         );
     }
-    public matchftext($$dpth: number, $$cr?: ErrorTracker): Nullable<ftext> {
+    public matchobs_FWS($$dpth: number, $$cr?: ErrorTracker): Nullable<obs_FWS> {
         return this.memoise(
             () => {
-                return this.choice<ftext>([
-                    () => this.matchftext_1($$dpth + 1, $$cr),
-                    () => this.matchftext_2($$dpth + 1, $$cr),
-                ]);
+                return this.run<obs_FWS>($$dpth,
+                    () => {
+                        let $scope$A: Nullable<WSP[]>;
+                        let $$res: Nullable<obs_FWS> = null;
+                        if (true
+                            && ($scope$A = this.loop<WSP>(() => this.matchWSP($$dpth + 1, $$cr), false)) !== null
+                            && this.loop<obs_FWS_$0>(() => this.matchobs_FWS_$0($$dpth + 1, $$cr), true) !== null
+                        ) {
+                            $$res = {kind: ASTKinds.obs_FWS, A: $scope$A};
+                        }
+                        return $$res;
+                    });
             },
-            this.$scope$ftext$memo,
+            this.$scope$obs_FWS$memo,
         );
     }
-    public matchftext_1($$dpth: number, $$cr?: ErrorTracker): Nullable<ftext_1> {
-        return this.regexAccept(String.raw`(?:[\x21-\x39])`, $$dpth + 1, $$cr);
-    }
-    public matchftext_2($$dpth: number, $$cr?: ErrorTracker): Nullable<ftext_2> {
-        return this.regexAccept(String.raw`(?:[\x3b-\x7e])`, $$dpth + 1, $$cr);
+    public matchobs_FWS_$0($$dpth: number, $$cr?: ErrorTracker): Nullable<obs_FWS_$0> {
+        return this.memoise(
+            () => {
+                return this.run<obs_FWS_$0>($$dpth,
+                    () => {
+                        let $$res: Nullable<obs_FWS_$0> = null;
+                        if (true
+                            && this.matchCRLF($$dpth + 1, $$cr) !== null
+                            && this.loop<WSP>(() => this.matchWSP($$dpth + 1, $$cr), false) !== null
+                        ) {
+                            $$res = {kind: ASTKinds.obs_FWS_$0, };
+                        }
+                        return $$res;
+                    });
+            },
+            this.$scope$obs_FWS_$0$memo,
+        );
     }
     public matchobs_NO_WS_CTL($$dpth: number, $$cr?: ErrorTracker): Nullable<obs_NO_WS_CTL> {
         return this.memoise(
@@ -5240,87 +4166,220 @@ export class Parser {
                 return $$res;
             });
     }
-    public matchobs_ctext($$dpth: number, $$cr?: ErrorTracker): Nullable<obs_ctext> {
+    public matchobs_addr_list($$dpth: number, $$cr?: ErrorTracker): Nullable<obs_addr_list> {
         return this.memoise(
             () => {
-                return this.matchobs_NO_WS_CTL($$dpth + 1, $$cr);
-            },
-            this.$scope$obs_ctext$memo,
-        );
-    }
-    public matchobs_qtext($$dpth: number, $$cr?: ErrorTracker): Nullable<obs_qtext> {
-        return this.memoise(
-            () => {
-                return this.matchobs_NO_WS_CTL($$dpth + 1, $$cr);
-            },
-            this.$scope$obs_qtext$memo,
-        );
-    }
-    public matchobs_utext($$dpth: number, $$cr?: ErrorTracker): Nullable<obs_utext> {
-        return this.memoise(
-            () => {
-                return this.choice<obs_utext>([
-                    () => this.matchobs_utext_1($$dpth + 1, $$cr),
-                    () => this.matchobs_utext_2($$dpth + 1, $$cr),
-                    () => this.matchobs_utext_3($$dpth + 1, $$cr),
-                ]);
-            },
-            this.$scope$obs_utext$memo,
-        );
-    }
-    public matchobs_utext_1($$dpth: number, $$cr?: ErrorTracker): Nullable<obs_utext_1> {
-        return this.regexAccept(String.raw`(?:\x00)`, $$dpth + 1, $$cr);
-    }
-    public matchobs_utext_2($$dpth: number, $$cr?: ErrorTracker): Nullable<obs_utext_2> {
-        return this.matchobs_NO_WS_CTL($$dpth + 1, $$cr);
-    }
-    public matchobs_utext_3($$dpth: number, $$cr?: ErrorTracker): Nullable<obs_utext_3> {
-        return this.matchVCHAR($$dpth + 1, $$cr);
-    }
-    public matchobs_qp($$dpth: number, $$cr?: ErrorTracker): Nullable<obs_qp> {
-        return this.memoise(
-            () => {
-                return this.run<obs_qp>($$dpth,
+                return this.run<obs_addr_list>($$dpth,
                     () => {
-                        let $scope$A: Nullable<string>;
-                        let $scope$B: Nullable<obs_qp_$0>;
-                        let $$res: Nullable<obs_qp> = null;
+                        let $scope$A: Nullable<obs_addr_list_$0[]>;
+                        let $scope$D: Nullable<address>;
+                        let $scope$E: Nullable<obs_addr_list_$1[]>;
+                        let $$res: Nullable<obs_addr_list> = null;
                         if (true
-                            && ($scope$A = this.regexAccept(String.raw`(?:\\)`, $$dpth + 1, $$cr)) !== null
-                            && ($scope$B = this.matchobs_qp_$0($$dpth + 1, $$cr)) !== null
+                            && ($scope$A = this.loop<obs_addr_list_$0>(() => this.matchobs_addr_list_$0($$dpth + 1, $$cr), true)) !== null
+                            && ($scope$D = this.matchaddress($$dpth + 1, $$cr)) !== null
+                            && ($scope$E = this.loop<obs_addr_list_$1>(() => this.matchobs_addr_list_$1($$dpth + 1, $$cr), true)) !== null
                         ) {
-                            $$res = {kind: ASTKinds.obs_qp, A: $scope$A, B: $scope$B};
+                            $$res = {kind: ASTKinds.obs_addr_list, A: $scope$A, D: $scope$D, E: $scope$E};
                         }
                         return $$res;
                     });
             },
-            this.$scope$obs_qp$memo,
+            this.$scope$obs_addr_list$memo,
         );
     }
-    public matchobs_qp_$0($$dpth: number, $$cr?: ErrorTracker): Nullable<obs_qp_$0> {
+    public matchobs_addr_list_$0($$dpth: number, $$cr?: ErrorTracker): Nullable<obs_addr_list_$0> {
         return this.memoise(
             () => {
-                return this.choice<obs_qp_$0>([
-                    () => this.matchobs_qp_$0_1($$dpth + 1, $$cr),
-                    () => this.matchobs_qp_$0_2($$dpth + 1, $$cr),
-                    () => this.matchobs_qp_$0_3($$dpth + 1, $$cr),
-                    () => this.matchobs_qp_$0_4($$dpth + 1, $$cr),
-                ]);
+                return this.run<obs_addr_list_$0>($$dpth,
+                    () => {
+                        let $scope$B: Nullable<Nullable<CFWS>>;
+                        let $scope$C: Nullable<string>;
+                        let $$res: Nullable<obs_addr_list_$0> = null;
+                        if (true
+                            && (($scope$B = this.matchCFWS($$dpth + 1, $$cr)) || true)
+                            && ($scope$C = this.regexAccept(String.raw`(?:,)`, $$dpth + 1, $$cr)) !== null
+                        ) {
+                            $$res = {kind: ASTKinds.obs_addr_list_$0, B: $scope$B, C: $scope$C};
+                        }
+                        return $$res;
+                    });
             },
-            this.$scope$obs_qp_$0$memo,
+            this.$scope$obs_addr_list_$0$memo,
         );
     }
-    public matchobs_qp_$0_1($$dpth: number, $$cr?: ErrorTracker): Nullable<obs_qp_$0_1> {
-        return this.regexAccept(String.raw`(?:\x00)`, $$dpth + 1, $$cr);
+    public matchobs_addr_list_$1($$dpth: number, $$cr?: ErrorTracker): Nullable<obs_addr_list_$1> {
+        return this.memoise(
+            () => {
+                return this.run<obs_addr_list_$1>($$dpth,
+                    () => {
+                        let $scope$F: Nullable<string>;
+                        let $scope$G: Nullable<Nullable<obs_addr_list_$1_$0>>;
+                        let $$res: Nullable<obs_addr_list_$1> = null;
+                        if (true
+                            && ($scope$F = this.regexAccept(String.raw`(?:,)`, $$dpth + 1, $$cr)) !== null
+                            && (($scope$G = this.matchobs_addr_list_$1_$0($$dpth + 1, $$cr)) || true)
+                        ) {
+                            $$res = {kind: ASTKinds.obs_addr_list_$1, F: $scope$F, G: $scope$G};
+                        }
+                        return $$res;
+                    });
+            },
+            this.$scope$obs_addr_list_$1$memo,
+        );
     }
-    public matchobs_qp_$0_2($$dpth: number, $$cr?: ErrorTracker): Nullable<obs_qp_$0_2> {
-        return this.matchobs_NO_WS_CTL($$dpth + 1, $$cr);
+    public matchobs_addr_list_$1_$0($$dpth: number, $$cr?: ErrorTracker): Nullable<obs_addr_list_$1_$0> {
+        return this.memoise(
+            () => {
+                return this.choice<obs_addr_list_$1_$0>([
+                    () => this.matchobs_addr_list_$1_$0_1($$dpth + 1, $$cr),
+                    () => this.matchobs_addr_list_$1_$0_2($$dpth + 1, $$cr),
+                ]);
+            },
+            this.$scope$obs_addr_list_$1_$0$memo,
+        );
     }
-    public matchobs_qp_$0_3($$dpth: number, $$cr?: ErrorTracker): Nullable<obs_qp_$0_3> {
-        return this.matchLF($$dpth + 1, $$cr);
+    public matchobs_addr_list_$1_$0_1($$dpth: number, $$cr?: ErrorTracker): Nullable<obs_addr_list_$1_$0_1> {
+        return this.matchaddress($$dpth + 1, $$cr);
     }
-    public matchobs_qp_$0_4($$dpth: number, $$cr?: ErrorTracker): Nullable<obs_qp_$0_4> {
-        return this.matchCR($$dpth + 1, $$cr);
+    public matchobs_addr_list_$1_$0_2($$dpth: number, $$cr?: ErrorTracker): Nullable<obs_addr_list_$1_$0_2> {
+        return this.run<obs_addr_list_$1_$0_2>($$dpth,
+            () => {
+                let $scope$I: Nullable<CFWS>;
+                let $$res: Nullable<obs_addr_list_$1_$0_2> = null;
+                if (true
+                    && ($scope$I = this.matchCFWS($$dpth + 1, $$cr)) !== null
+                ) {
+                    $$res = {kind: ASTKinds.obs_addr_list_$1_$0_2, I: $scope$I};
+                }
+                return $$res;
+            });
+    }
+    public matchobs_angle_addr($$dpth: number, $$cr?: ErrorTracker): Nullable<obs_angle_addr> {
+        return this.memoise(
+            () => {
+                return this.run<obs_angle_addr>($$dpth,
+                    () => {
+                        let $scope$B: Nullable<string>;
+                        let $scope$C: Nullable<obs_route>;
+                        let $scope$D: Nullable<addr_spec>;
+                        let $scope$E: Nullable<string>;
+                        let $$res: Nullable<obs_angle_addr> = null;
+                        if (true
+                            && ((this.matchCFWS($$dpth + 1, $$cr)) || true)
+                            && ($scope$B = this.regexAccept(String.raw`(?:<)`, $$dpth + 1, $$cr)) !== null
+                            && ($scope$C = this.matchobs_route($$dpth + 1, $$cr)) !== null
+                            && ($scope$D = this.matchaddr_spec($$dpth + 1, $$cr)) !== null
+                            && ($scope$E = this.regexAccept(String.raw`(?:>)`, $$dpth + 1, $$cr)) !== null
+                            && ((this.matchCFWS($$dpth + 1, $$cr)) || true)
+                        ) {
+                            $$res = {kind: ASTKinds.obs_angle_addr, B: $scope$B, C: $scope$C, D: $scope$D, E: $scope$E};
+                        }
+                        return $$res;
+                    });
+            },
+            this.$scope$obs_angle_addr$memo,
+        );
+    }
+    public matchobs_bcc($$dpth: number, $$cr?: ErrorTracker): Nullable<obs_bcc> {
+        return this.memoise(
+            () => {
+                return this.run<obs_bcc>($$dpth,
+                    () => {
+                        let $scope$A: Nullable<string>;
+                        let $scope$C: Nullable<string>;
+                        let $scope$D: Nullable<obs_bcc_$0>;
+                        let $$res: Nullable<obs_bcc> = null;
+                        if (true
+                            && ($scope$A = this.regexAccept(String.raw`(?:Bcc)`, $$dpth + 1, $$cr)) !== null
+                            && this.loop<WSP>(() => this.matchWSP($$dpth + 1, $$cr), true) !== null
+                            && ($scope$C = this.regexAccept(String.raw`(?::)`, $$dpth + 1, $$cr)) !== null
+                            && ($scope$D = this.matchobs_bcc_$0($$dpth + 1, $$cr)) !== null
+                            && this.matchCRLF($$dpth + 1, $$cr) !== null
+                        ) {
+                            $$res = {kind: ASTKinds.obs_bcc, A: $scope$A, C: $scope$C, D: $scope$D};
+                        }
+                        return $$res;
+                    });
+            },
+            this.$scope$obs_bcc$memo,
+        );
+    }
+    public matchobs_bcc_$0($$dpth: number, $$cr?: ErrorTracker): Nullable<obs_bcc_$0> {
+        return this.memoise(
+            () => {
+                return this.choice<obs_bcc_$0>([
+                    () => this.matchobs_bcc_$0_1($$dpth + 1, $$cr),
+                    () => this.matchobs_bcc_$0_2($$dpth + 1, $$cr),
+                ]);
+            },
+            this.$scope$obs_bcc_$0$memo,
+        );
+    }
+    public matchobs_bcc_$0_1($$dpth: number, $$cr?: ErrorTracker): Nullable<obs_bcc_$0_1> {
+        return this.run<obs_bcc_$0_1>($$dpth,
+            () => {
+                let $scope$E: Nullable<address_list>;
+                let $$res: Nullable<obs_bcc_$0_1> = null;
+                if (true
+                    && ($scope$E = this.matchaddress_list($$dpth + 1, $$cr)) !== null
+                ) {
+                    $$res = {kind: ASTKinds.obs_bcc_$0_1, E: $scope$E};
+                }
+                return $$res;
+            });
+    }
+    public matchobs_bcc_$0_2($$dpth: number, $$cr?: ErrorTracker): Nullable<obs_bcc_$0_2> {
+        return this.run<obs_bcc_$0_2>($$dpth,
+            () => {
+                let $scope$F: Nullable<obs_bcc_$0_$0>;
+                let $$res: Nullable<obs_bcc_$0_2> = null;
+                if (true
+                    && ($scope$F = this.matchobs_bcc_$0_$0($$dpth + 1, $$cr)) !== null
+                ) {
+                    $$res = {kind: ASTKinds.obs_bcc_$0_2, F: $scope$F};
+                }
+                return $$res;
+            });
+    }
+    public matchobs_bcc_$0_$0($$dpth: number, $$cr?: ErrorTracker): Nullable<obs_bcc_$0_$0> {
+        return this.memoise(
+            () => {
+                return this.run<obs_bcc_$0_$0>($$dpth,
+                    () => {
+                        let $scope$G: Nullable<obs_bcc_$0_$0_$0[]>;
+                        let $$res: Nullable<obs_bcc_$0_$0> = null;
+                        if (true
+                            && ($scope$G = this.loop<obs_bcc_$0_$0_$0>(() => this.matchobs_bcc_$0_$0_$0($$dpth + 1, $$cr), true)) !== null
+                            && ((this.matchCFWS($$dpth + 1, $$cr)) || true)
+                        ) {
+                            $$res = {kind: ASTKinds.obs_bcc_$0_$0, G: $scope$G};
+                        }
+                        return $$res;
+                    });
+            },
+            this.$scope$obs_bcc_$0_$0$memo,
+        );
+    }
+    public matchobs_bcc_$0_$0_$0($$dpth: number, $$cr?: ErrorTracker): Nullable<obs_bcc_$0_$0_$0> {
+        return this.memoise(
+            () => {
+                return this.run<obs_bcc_$0_$0_$0>($$dpth,
+                    () => {
+                        let $scope$H: Nullable<Nullable<CFWS>>;
+                        let $scope$I: Nullable<string>;
+                        let $$res: Nullable<obs_bcc_$0_$0_$0> = null;
+                        if (true
+                            && (($scope$H = this.matchCFWS($$dpth + 1, $$cr)) || true)
+                            && ($scope$I = this.regexAccept(String.raw`(?:,)`, $$dpth + 1, $$cr)) !== null
+                        ) {
+                            $$res = {kind: ASTKinds.obs_bcc_$0_$0_$0, H: $scope$H, I: $scope$I};
+                        }
+                        return $$res;
+                    });
+            },
+            this.$scope$obs_bcc_$0_$0_$0$memo,
+        );
     }
     public matchobs_body($$dpth: number, $$cr?: ErrorTracker): Nullable<obs_body> {
         return this.memoise(
@@ -5444,261 +4503,60 @@ export class Parser {
                 return $$res;
             });
     }
-    public matchobs_unstruct($$dpth: number, $$cr?: ErrorTracker): Nullable<obs_unstruct> {
+    public matchobs_cc($$dpth: number, $$cr?: ErrorTracker): Nullable<obs_cc> {
         return this.memoise(
             () => {
-                return this.run<obs_unstruct>($$dpth,
+                return this.run<obs_cc>($$dpth,
                     () => {
-                        let $scope$A: Nullable<obs_unstruct_$0[]>;
-                        let $$res: Nullable<obs_unstruct> = null;
+                        let $scope$A: Nullable<string>;
+                        let $scope$C: Nullable<string>;
+                        let $scope$D: Nullable<address_list>;
+                        let $$res: Nullable<obs_cc> = null;
                         if (true
-                            && ($scope$A = this.loop<obs_unstruct_$0>(() => this.matchobs_unstruct_$0($$dpth + 1, $$cr), true)) !== null
-                        ) {
-                            $$res = {kind: ASTKinds.obs_unstruct, A: $scope$A};
-                        }
-                        return $$res;
-                    });
-            },
-            this.$scope$obs_unstruct$memo,
-        );
-    }
-    public matchobs_unstruct_$0($$dpth: number, $$cr?: ErrorTracker): Nullable<obs_unstruct_$0> {
-        return this.memoise(
-            () => {
-                return this.choice<obs_unstruct_$0>([
-                    () => this.matchobs_unstruct_$0_1($$dpth + 1, $$cr),
-                    () => this.matchobs_unstruct_$0_2($$dpth + 1, $$cr),
-                ]);
-            },
-            this.$scope$obs_unstruct_$0$memo,
-        );
-    }
-    public matchobs_unstruct_$0_1($$dpth: number, $$cr?: ErrorTracker): Nullable<obs_unstruct_$0_1> {
-        return this.run<obs_unstruct_$0_1>($$dpth,
-            () => {
-                let $scope$B: Nullable<obs_unstruct_$0_$0>;
-                let $$res: Nullable<obs_unstruct_$0_1> = null;
-                if (true
-                    && ($scope$B = this.matchobs_unstruct_$0_$0($$dpth + 1, $$cr)) !== null
-                ) {
-                    $$res = {kind: ASTKinds.obs_unstruct_$0_1, B: $scope$B};
-                }
-                return $$res;
-            });
-    }
-    public matchobs_unstruct_$0_2($$dpth: number, $$cr?: ErrorTracker): Nullable<obs_unstruct_$0_2> {
-        return this.matchFWS($$dpth + 1, $$cr);
-    }
-    public matchobs_unstruct_$0_$0($$dpth: number, $$cr?: ErrorTracker): Nullable<obs_unstruct_$0_$0> {
-        return this.memoise(
-            () => {
-                return this.run<obs_unstruct_$0_$0>($$dpth,
-                    () => {
-                        let $scope$E: Nullable<obs_unstruct_$0_$0_$0[]>;
-                        let $$res: Nullable<obs_unstruct_$0_$0> = null;
-                        if (true
-                            && this.loop<LF>(() => this.matchLF($$dpth + 1, $$cr), true) !== null
-                            && this.loop<CR>(() => this.matchCR($$dpth + 1, $$cr), true) !== null
-                            && ($scope$E = this.loop<obs_unstruct_$0_$0_$0>(() => this.matchobs_unstruct_$0_$0_$0($$dpth + 1, $$cr), true)) !== null
-                        ) {
-                            $$res = {kind: ASTKinds.obs_unstruct_$0_$0, E: $scope$E};
-                        }
-                        return $$res;
-                    });
-            },
-            this.$scope$obs_unstruct_$0_$0$memo,
-        );
-    }
-    public matchobs_unstruct_$0_$0_$0($$dpth: number, $$cr?: ErrorTracker): Nullable<obs_unstruct_$0_$0_$0> {
-        return this.memoise(
-            () => {
-                return this.run<obs_unstruct_$0_$0_$0>($$dpth,
-                    () => {
-                        let $scope$F: Nullable<obs_utext>;
-                        let $$res: Nullable<obs_unstruct_$0_$0_$0> = null;
-                        if (true
-                            && ($scope$F = this.matchobs_utext($$dpth + 1, $$cr)) !== null
-                            && this.loop<LF>(() => this.matchLF($$dpth + 1, $$cr), true) !== null
-                            && this.loop<CR>(() => this.matchCR($$dpth + 1, $$cr), true) !== null
-                        ) {
-                            $$res = {kind: ASTKinds.obs_unstruct_$0_$0_$0, F: $scope$F};
-                        }
-                        return $$res;
-                    });
-            },
-            this.$scope$obs_unstruct_$0_$0_$0$memo,
-        );
-    }
-    public matchobs_phrase($$dpth: number, $$cr?: ErrorTracker): Nullable<obs_phrase> {
-        return this.memoise(
-            () => {
-                return this.run<obs_phrase>($$dpth,
-                    () => {
-                        let $scope$A: Nullable<word>;
-                        let $scope$B: Nullable<obs_phrase_$0>;
-                        let $$res: Nullable<obs_phrase> = null;
-                        if (true
-                            && ($scope$A = this.matchword($$dpth + 1, $$cr)) !== null
-                            && ($scope$B = this.matchobs_phrase_$0($$dpth + 1, $$cr)) !== null
-                        ) {
-                            $$res = {kind: ASTKinds.obs_phrase, A: $scope$A, B: $scope$B};
-                        }
-                        return $$res;
-                    });
-            },
-            this.$scope$obs_phrase$memo,
-        );
-    }
-    public matchobs_phrase_$0($$dpth: number, $$cr?: ErrorTracker): Nullable<obs_phrase_$0> {
-        return this.memoise(
-            () => {
-                return this.choice<obs_phrase_$0>([
-                    () => this.matchobs_phrase_$0_1($$dpth + 1, $$cr),
-                    () => this.matchobs_phrase_$0_2($$dpth + 1, $$cr),
-                    () => this.matchobs_phrase_$0_3($$dpth + 1, $$cr),
-                ]);
-            },
-            this.$scope$obs_phrase_$0$memo,
-        );
-    }
-    public matchobs_phrase_$0_1($$dpth: number, $$cr?: ErrorTracker): Nullable<obs_phrase_$0_1> {
-        return this.matchword($$dpth + 1, $$cr);
-    }
-    public matchobs_phrase_$0_2($$dpth: number, $$cr?: ErrorTracker): Nullable<obs_phrase_$0_2> {
-        return this.regexAccept(String.raw`(?:.)`, $$dpth + 1, $$cr);
-    }
-    public matchobs_phrase_$0_3($$dpth: number, $$cr?: ErrorTracker): Nullable<obs_phrase_$0_3> {
-        return this.matchCFWS($$dpth + 1, $$cr);
-    }
-    public matchobs_phrase_list($$dpth: number, $$cr?: ErrorTracker): Nullable<obs_phrase_list> {
-        return this.memoise(
-            () => {
-                return this.run<obs_phrase_list>($$dpth,
-                    () => {
-                        let $scope$A: Nullable<obs_phrase_list_$0>;
-                        let $scope$D: Nullable<obs_phrase_list_$1[]>;
-                        let $$res: Nullable<obs_phrase_list> = null;
-                        if (true
-                            && ($scope$A = this.matchobs_phrase_list_$0($$dpth + 1, $$cr)) !== null
-                            && ($scope$D = this.loop<obs_phrase_list_$1>(() => this.matchobs_phrase_list_$1($$dpth + 1, $$cr), true)) !== null
-                        ) {
-                            $$res = {kind: ASTKinds.obs_phrase_list, A: $scope$A, D: $scope$D};
-                        }
-                        return $$res;
-                    });
-            },
-            this.$scope$obs_phrase_list$memo,
-        );
-    }
-    public matchobs_phrase_list_$0($$dpth: number, $$cr?: ErrorTracker): Nullable<obs_phrase_list_$0> {
-        return this.memoise(
-            () => {
-                return this.choice<obs_phrase_list_$0>([
-                    () => this.matchobs_phrase_list_$0_1($$dpth + 1, $$cr),
-                    () => this.matchobs_phrase_list_$0_2($$dpth + 1, $$cr),
-                ]);
-            },
-            this.$scope$obs_phrase_list_$0$memo,
-        );
-    }
-    public matchobs_phrase_list_$0_1($$dpth: number, $$cr?: ErrorTracker): Nullable<obs_phrase_list_$0_1> {
-        return this.matchphrase($$dpth + 1, $$cr);
-    }
-    public matchobs_phrase_list_$0_2($$dpth: number, $$cr?: ErrorTracker): Nullable<obs_phrase_list_$0_2> {
-        return this.matchCFWS($$dpth + 1, $$cr);
-    }
-    public matchobs_phrase_list_$1($$dpth: number, $$cr?: ErrorTracker): Nullable<obs_phrase_list_$1> {
-        return this.memoise(
-            () => {
-                return this.run<obs_phrase_list_$1>($$dpth,
-                    () => {
-                        let $scope$E: Nullable<string>;
-                        let $scope$F: Nullable<Nullable<obs_phrase_list_$1_$0>>;
-                        let $$res: Nullable<obs_phrase_list_$1> = null;
-                        if (true
-                            && ($scope$E = this.regexAccept(String.raw`(?:,)`, $$dpth + 1, $$cr)) !== null
-                            && (($scope$F = this.matchobs_phrase_list_$1_$0($$dpth + 1, $$cr)) || true)
-                        ) {
-                            $$res = {kind: ASTKinds.obs_phrase_list_$1, E: $scope$E, F: $scope$F};
-                        }
-                        return $$res;
-                    });
-            },
-            this.$scope$obs_phrase_list_$1$memo,
-        );
-    }
-    public matchobs_phrase_list_$1_$0($$dpth: number, $$cr?: ErrorTracker): Nullable<obs_phrase_list_$1_$0> {
-        return this.memoise(
-            () => {
-                return this.choice<obs_phrase_list_$1_$0>([
-                    () => this.matchobs_phrase_list_$1_$0_1($$dpth + 1, $$cr),
-                    () => this.matchobs_phrase_list_$1_$0_2($$dpth + 1, $$cr),
-                ]);
-            },
-            this.$scope$obs_phrase_list_$1_$0$memo,
-        );
-    }
-    public matchobs_phrase_list_$1_$0_1($$dpth: number, $$cr?: ErrorTracker): Nullable<obs_phrase_list_$1_$0_1> {
-        return this.matchphrase($$dpth + 1, $$cr);
-    }
-    public matchobs_phrase_list_$1_$0_2($$dpth: number, $$cr?: ErrorTracker): Nullable<obs_phrase_list_$1_$0_2> {
-        return this.matchCFWS($$dpth + 1, $$cr);
-    }
-    public matchobs_FWS($$dpth: number, $$cr?: ErrorTracker): Nullable<obs_FWS> {
-        return this.memoise(
-            () => {
-                return this.run<obs_FWS>($$dpth,
-                    () => {
-                        let $scope$A: Nullable<WSP[]>;
-                        let $$res: Nullable<obs_FWS> = null;
-                        if (true
-                            && ($scope$A = this.loop<WSP>(() => this.matchWSP($$dpth + 1, $$cr), false)) !== null
-                            && this.loop<obs_FWS_$0>(() => this.matchobs_FWS_$0($$dpth + 1, $$cr), true) !== null
-                        ) {
-                            $$res = {kind: ASTKinds.obs_FWS, A: $scope$A};
-                        }
-                        return $$res;
-                    });
-            },
-            this.$scope$obs_FWS$memo,
-        );
-    }
-    public matchobs_FWS_$0($$dpth: number, $$cr?: ErrorTracker): Nullable<obs_FWS_$0> {
-        return this.memoise(
-            () => {
-                return this.run<obs_FWS_$0>($$dpth,
-                    () => {
-                        let $$res: Nullable<obs_FWS_$0> = null;
-                        if (true
+                            && ($scope$A = this.regexAccept(String.raw`(?:Cc)`, $$dpth + 1, $$cr)) !== null
+                            && this.loop<WSP>(() => this.matchWSP($$dpth + 1, $$cr), true) !== null
+                            && ($scope$C = this.regexAccept(String.raw`(?::)`, $$dpth + 1, $$cr)) !== null
+                            && ($scope$D = this.matchaddress_list($$dpth + 1, $$cr)) !== null
                             && this.matchCRLF($$dpth + 1, $$cr) !== null
-                            && this.loop<WSP>(() => this.matchWSP($$dpth + 1, $$cr), false) !== null
                         ) {
-                            $$res = {kind: ASTKinds.obs_FWS_$0, };
+                            $$res = {kind: ASTKinds.obs_cc, A: $scope$A, C: $scope$C, D: $scope$D};
                         }
                         return $$res;
                     });
             },
-            this.$scope$obs_FWS_$0$memo,
+            this.$scope$obs_cc$memo,
         );
     }
-    public matchobs_day_of_week($$dpth: number, $$cr?: ErrorTracker): Nullable<obs_day_of_week> {
+    public matchobs_comments($$dpth: number, $$cr?: ErrorTracker): Nullable<obs_comments> {
         return this.memoise(
             () => {
-                return this.run<obs_day_of_week>($$dpth,
+                return this.run<obs_comments>($$dpth,
                     () => {
-                        let $scope$B: Nullable<day_name>;
-                        let $$res: Nullable<obs_day_of_week> = null;
+                        let $scope$A: Nullable<string>;
+                        let $scope$C: Nullable<string>;
+                        let $scope$D: Nullable<unstructured>;
+                        let $$res: Nullable<obs_comments> = null;
                         if (true
-                            && ((this.matchCFWS($$dpth + 1, $$cr)) || true)
-                            && ($scope$B = this.matchday_name($$dpth + 1, $$cr)) !== null
-                            && ((this.matchCFWS($$dpth + 1, $$cr)) || true)
+                            && ($scope$A = this.regexAccept(String.raw`(?:Comments)`, $$dpth + 1, $$cr)) !== null
+                            && this.loop<WSP>(() => this.matchWSP($$dpth + 1, $$cr), true) !== null
+                            && ($scope$C = this.regexAccept(String.raw`(?::)`, $$dpth + 1, $$cr)) !== null
+                            && ($scope$D = this.matchunstructured($$dpth + 1, $$cr)) !== null
+                            && this.matchCRLF($$dpth + 1, $$cr) !== null
                         ) {
-                            $$res = {kind: ASTKinds.obs_day_of_week, B: $scope$B};
+                            $$res = {kind: ASTKinds.obs_comments, A: $scope$A, C: $scope$C, D: $scope$D};
                         }
                         return $$res;
                     });
             },
-            this.$scope$obs_day_of_week$memo,
+            this.$scope$obs_comments$memo,
+        );
+    }
+    public matchobs_ctext($$dpth: number, $$cr?: ErrorTracker): Nullable<obs_ctext> {
+        return this.memoise(
+            () => {
+                return this.matchobs_NO_WS_CTL($$dpth + 1, $$cr);
+            },
+            this.$scope$obs_ctext$memo,
         );
     }
     public matchobs_day($$dpth: number, $$cr?: ErrorTracker): Nullable<obs_day> {
@@ -5724,197 +4582,64 @@ export class Parser {
             this.$scope$obs_day$memo,
         );
     }
-    public matchobs_year($$dpth: number, $$cr?: ErrorTracker): Nullable<obs_year> {
+    public matchobs_day_of_week($$dpth: number, $$cr?: ErrorTracker): Nullable<obs_day_of_week> {
         return this.memoise(
             () => {
-                return this.run<obs_year>($$dpth,
+                return this.run<obs_day_of_week>($$dpth,
                     () => {
-                        let $scope$A: Nullable<Nullable<CFWS>>;
-                        let $scope$B: Nullable<TWO_DIGIT>;
-                        let $scope$C: Nullable<DIGIT[]>;
-                        let $$res: Nullable<obs_year> = null;
+                        let $scope$B: Nullable<day_name>;
+                        let $$res: Nullable<obs_day_of_week> = null;
                         if (true
-                            && (($scope$A = this.matchCFWS($$dpth + 1, $$cr)) || true)
-                            && ($scope$B = this.matchTWO_DIGIT($$dpth + 1, $$cr)) !== null
-                            && ($scope$C = this.loop<DIGIT>(() => this.matchDIGIT($$dpth + 1, $$cr), true)) !== null
+                            && ((this.matchCFWS($$dpth + 1, $$cr)) || true)
+                            && ($scope$B = this.matchday_name($$dpth + 1, $$cr)) !== null
                             && ((this.matchCFWS($$dpth + 1, $$cr)) || true)
                         ) {
-                            $$res = {kind: ASTKinds.obs_year, A: $scope$A, B: $scope$B, C: $scope$C};
+                            $$res = {kind: ASTKinds.obs_day_of_week, B: $scope$B};
                         }
                         return $$res;
                     });
             },
-            this.$scope$obs_year$memo,
+            this.$scope$obs_day_of_week$memo,
         );
     }
-    public matchobs_hour($$dpth: number, $$cr?: ErrorTracker): Nullable<obs_hour> {
+    public matchobs_domain($$dpth: number, $$cr?: ErrorTracker): Nullable<obs_domain> {
         return this.memoise(
             () => {
-                return this.run<obs_hour>($$dpth,
+                return this.run<obs_domain>($$dpth,
                     () => {
-                        let $scope$B: Nullable<TWO_DIGIT>;
-                        let $$res: Nullable<obs_hour> = null;
+                        let $scope$A: Nullable<atom>;
+                        let $scope$B: Nullable<obs_domain_$0[]>;
+                        let $$res: Nullable<obs_domain> = null;
                         if (true
-                            && ((this.matchCFWS($$dpth + 1, $$cr)) || true)
-                            && ($scope$B = this.matchTWO_DIGIT($$dpth + 1, $$cr)) !== null
-                            && ((this.matchCFWS($$dpth + 1, $$cr)) || true)
+                            && ($scope$A = this.matchatom($$dpth + 1, $$cr)) !== null
+                            && ($scope$B = this.loop<obs_domain_$0>(() => this.matchobs_domain_$0($$dpth + 1, $$cr), true)) !== null
                         ) {
-                            $$res = {kind: ASTKinds.obs_hour, B: $scope$B};
+                            $$res = {kind: ASTKinds.obs_domain, A: $scope$A, B: $scope$B};
                         }
                         return $$res;
                     });
             },
-            this.$scope$obs_hour$memo,
+            this.$scope$obs_domain$memo,
         );
     }
-    public matchobs_minute($$dpth: number, $$cr?: ErrorTracker): Nullable<obs_minute> {
+    public matchobs_domain_$0($$dpth: number, $$cr?: ErrorTracker): Nullable<obs_domain_$0> {
         return this.memoise(
             () => {
-                return this.run<obs_minute>($$dpth,
+                return this.run<obs_domain_$0>($$dpth,
                     () => {
-                        let $scope$B: Nullable<TWO_DIGIT>;
-                        let $$res: Nullable<obs_minute> = null;
+                        let $scope$C: Nullable<string>;
+                        let $scope$D: Nullable<atom>;
+                        let $$res: Nullable<obs_domain_$0> = null;
                         if (true
-                            && ((this.matchCFWS($$dpth + 1, $$cr)) || true)
-                            && ($scope$B = this.matchTWO_DIGIT($$dpth + 1, $$cr)) !== null
-                            && ((this.matchCFWS($$dpth + 1, $$cr)) || true)
+                            && ($scope$C = this.regexAccept(String.raw`(?:\.)`, $$dpth + 1, $$cr)) !== null
+                            && ($scope$D = this.matchatom($$dpth + 1, $$cr)) !== null
                         ) {
-                            $$res = {kind: ASTKinds.obs_minute, B: $scope$B};
+                            $$res = {kind: ASTKinds.obs_domain_$0, C: $scope$C, D: $scope$D};
                         }
                         return $$res;
                     });
             },
-            this.$scope$obs_minute$memo,
-        );
-    }
-    public matchobs_second($$dpth: number, $$cr?: ErrorTracker): Nullable<obs_second> {
-        return this.memoise(
-            () => {
-                return this.run<obs_second>($$dpth,
-                    () => {
-                        let $scope$B: Nullable<TWO_DIGIT>;
-                        let $$res: Nullable<obs_second> = null;
-                        if (true
-                            && ((this.matchCFWS($$dpth + 1, $$cr)) || true)
-                            && ($scope$B = this.matchTWO_DIGIT($$dpth + 1, $$cr)) !== null
-                            && ((this.matchCFWS($$dpth + 1, $$cr)) || true)
-                        ) {
-                            $$res = {kind: ASTKinds.obs_second, B: $scope$B};
-                        }
-                        return $$res;
-                    });
-            },
-            this.$scope$obs_second$memo,
-        );
-    }
-    public matchobs_zone($$dpth: number, $$cr?: ErrorTracker): Nullable<obs_zone> {
-        return this.memoise(
-            () => {
-                return this.choice<obs_zone>([
-                    () => this.matchobs_zone_1($$dpth + 1, $$cr),
-                    () => this.matchobs_zone_2($$dpth + 1, $$cr),
-                    () => this.matchobs_zone_3($$dpth + 1, $$cr),
-                    () => this.matchobs_zone_4($$dpth + 1, $$cr),
-                    () => this.matchobs_zone_5($$dpth + 1, $$cr),
-                    () => this.matchobs_zone_6($$dpth + 1, $$cr),
-                    () => this.matchobs_zone_7($$dpth + 1, $$cr),
-                    () => this.matchobs_zone_8($$dpth + 1, $$cr),
-                    () => this.matchobs_zone_9($$dpth + 1, $$cr),
-                    () => this.matchobs_zone_10($$dpth + 1, $$cr),
-                    () => this.matchobs_zone_11($$dpth + 1, $$cr),
-                    () => this.matchobs_zone_12($$dpth + 1, $$cr),
-                    () => this.matchobs_zone_13($$dpth + 1, $$cr),
-                    () => this.matchobs_zone_14($$dpth + 1, $$cr),
-                ]);
-            },
-            this.$scope$obs_zone$memo,
-        );
-    }
-    public matchobs_zone_1($$dpth: number, $$cr?: ErrorTracker): Nullable<obs_zone_1> {
-        return this.regexAccept(String.raw`(?:UT)`, $$dpth + 1, $$cr);
-    }
-    public matchobs_zone_2($$dpth: number, $$cr?: ErrorTracker): Nullable<obs_zone_2> {
-        return this.regexAccept(String.raw`(?:GMT)`, $$dpth + 1, $$cr);
-    }
-    public matchobs_zone_3($$dpth: number, $$cr?: ErrorTracker): Nullable<obs_zone_3> {
-        return this.regexAccept(String.raw`(?:EST)`, $$dpth + 1, $$cr);
-    }
-    public matchobs_zone_4($$dpth: number, $$cr?: ErrorTracker): Nullable<obs_zone_4> {
-        return this.regexAccept(String.raw`(?:EDT)`, $$dpth + 1, $$cr);
-    }
-    public matchobs_zone_5($$dpth: number, $$cr?: ErrorTracker): Nullable<obs_zone_5> {
-        return this.regexAccept(String.raw`(?:CST)`, $$dpth + 1, $$cr);
-    }
-    public matchobs_zone_6($$dpth: number, $$cr?: ErrorTracker): Nullable<obs_zone_6> {
-        return this.regexAccept(String.raw`(?:CDT)`, $$dpth + 1, $$cr);
-    }
-    public matchobs_zone_7($$dpth: number, $$cr?: ErrorTracker): Nullable<obs_zone_7> {
-        return this.regexAccept(String.raw`(?:MST)`, $$dpth + 1, $$cr);
-    }
-    public matchobs_zone_8($$dpth: number, $$cr?: ErrorTracker): Nullable<obs_zone_8> {
-        return this.regexAccept(String.raw`(?:MDT)`, $$dpth + 1, $$cr);
-    }
-    public matchobs_zone_9($$dpth: number, $$cr?: ErrorTracker): Nullable<obs_zone_9> {
-        return this.regexAccept(String.raw`(?:PST)`, $$dpth + 1, $$cr);
-    }
-    public matchobs_zone_10($$dpth: number, $$cr?: ErrorTracker): Nullable<obs_zone_10> {
-        return this.regexAccept(String.raw`(?:PDT)`, $$dpth + 1, $$cr);
-    }
-    public matchobs_zone_11($$dpth: number, $$cr?: ErrorTracker): Nullable<obs_zone_11> {
-        return this.regexAccept(String.raw`(?:[\x41-\x49])`, $$dpth + 1, $$cr);
-    }
-    public matchobs_zone_12($$dpth: number, $$cr?: ErrorTracker): Nullable<obs_zone_12> {
-        return this.regexAccept(String.raw`(?:[\x4b-\x5a])`, $$dpth + 1, $$cr);
-    }
-    public matchobs_zone_13($$dpth: number, $$cr?: ErrorTracker): Nullable<obs_zone_13> {
-        return this.regexAccept(String.raw`(?:[\x61-\x69])`, $$dpth + 1, $$cr);
-    }
-    public matchobs_zone_14($$dpth: number, $$cr?: ErrorTracker): Nullable<obs_zone_14> {
-        return this.regexAccept(String.raw`(?:[\x6b-\x7a])`, $$dpth + 1, $$cr);
-    }
-    public matchobs_angle_addr($$dpth: number, $$cr?: ErrorTracker): Nullable<obs_angle_addr> {
-        return this.memoise(
-            () => {
-                return this.run<obs_angle_addr>($$dpth,
-                    () => {
-                        let $scope$B: Nullable<string>;
-                        let $scope$C: Nullable<obs_route>;
-                        let $scope$D: Nullable<addr_spec>;
-                        let $scope$E: Nullable<string>;
-                        let $$res: Nullable<obs_angle_addr> = null;
-                        if (true
-                            && ((this.matchCFWS($$dpth + 1, $$cr)) || true)
-                            && ($scope$B = this.regexAccept(String.raw`(?:<)`, $$dpth + 1, $$cr)) !== null
-                            && ($scope$C = this.matchobs_route($$dpth + 1, $$cr)) !== null
-                            && ($scope$D = this.matchaddr_spec($$dpth + 1, $$cr)) !== null
-                            && ($scope$E = this.regexAccept(String.raw`(?:>)`, $$dpth + 1, $$cr)) !== null
-                            && ((this.matchCFWS($$dpth + 1, $$cr)) || true)
-                        ) {
-                            $$res = {kind: ASTKinds.obs_angle_addr, B: $scope$B, C: $scope$C, D: $scope$D, E: $scope$E};
-                        }
-                        return $$res;
-                    });
-            },
-            this.$scope$obs_angle_addr$memo,
-        );
-    }
-    public matchobs_route($$dpth: number, $$cr?: ErrorTracker): Nullable<obs_route> {
-        return this.memoise(
-            () => {
-                return this.run<obs_route>($$dpth,
-                    () => {
-                        let $scope$B: Nullable<string>;
-                        let $$res: Nullable<obs_route> = null;
-                        if (true
-                            && this.matchobs_domain_list($$dpth + 1, $$cr) !== null
-                            && ($scope$B = this.regexAccept(String.raw`(?::)`, $$dpth + 1, $$cr)) !== null
-                        ) {
-                            $$res = {kind: ASTKinds.obs_route, B: $scope$B};
-                        }
-                        return $$res;
-                    });
-            },
-            this.$scope$obs_route$memo,
+            this.$scope$obs_domain_$0$memo,
         );
     }
     public matchobs_domain_list($$dpth: number, $$cr?: ErrorTracker): Nullable<obs_domain_list> {
@@ -6017,303 +4742,6 @@ export class Parser {
                     });
             },
             this.$scope$obs_domain_list_$1_$0$memo,
-        );
-    }
-    public matchobs_mbox_list($$dpth: number, $$cr?: ErrorTracker): Nullable<obs_mbox_list> {
-        return this.memoise(
-            () => {
-                return this.run<obs_mbox_list>($$dpth,
-                    () => {
-                        let $scope$A: Nullable<obs_mbox_list_$0[]>;
-                        let $scope$D: Nullable<mailbox>;
-                        let $scope$E: Nullable<obs_mbox_list_$1[]>;
-                        let $$res: Nullable<obs_mbox_list> = null;
-                        if (true
-                            && ($scope$A = this.loop<obs_mbox_list_$0>(() => this.matchobs_mbox_list_$0($$dpth + 1, $$cr), true)) !== null
-                            && ($scope$D = this.matchmailbox($$dpth + 1, $$cr)) !== null
-                            && ($scope$E = this.loop<obs_mbox_list_$1>(() => this.matchobs_mbox_list_$1($$dpth + 1, $$cr), true)) !== null
-                        ) {
-                            $$res = {kind: ASTKinds.obs_mbox_list, A: $scope$A, D: $scope$D, E: $scope$E};
-                        }
-                        return $$res;
-                    });
-            },
-            this.$scope$obs_mbox_list$memo,
-        );
-    }
-    public matchobs_mbox_list_$0($$dpth: number, $$cr?: ErrorTracker): Nullable<obs_mbox_list_$0> {
-        return this.memoise(
-            () => {
-                return this.run<obs_mbox_list_$0>($$dpth,
-                    () => {
-                        let $scope$B: Nullable<Nullable<CFWS>>;
-                        let $scope$C: Nullable<string>;
-                        let $$res: Nullable<obs_mbox_list_$0> = null;
-                        if (true
-                            && (($scope$B = this.matchCFWS($$dpth + 1, $$cr)) || true)
-                            && ($scope$C = this.regexAccept(String.raw`(?:,)`, $$dpth + 1, $$cr)) !== null
-                        ) {
-                            $$res = {kind: ASTKinds.obs_mbox_list_$0, B: $scope$B, C: $scope$C};
-                        }
-                        return $$res;
-                    });
-            },
-            this.$scope$obs_mbox_list_$0$memo,
-        );
-    }
-    public matchobs_mbox_list_$1($$dpth: number, $$cr?: ErrorTracker): Nullable<obs_mbox_list_$1> {
-        return this.memoise(
-            () => {
-                return this.run<obs_mbox_list_$1>($$dpth,
-                    () => {
-                        let $scope$F: Nullable<string>;
-                        let $scope$G: Nullable<Nullable<obs_mbox_list_$1_$0>>;
-                        let $$res: Nullable<obs_mbox_list_$1> = null;
-                        if (true
-                            && ($scope$F = this.regexAccept(String.raw`(?:,)`, $$dpth + 1, $$cr)) !== null
-                            && (($scope$G = this.matchobs_mbox_list_$1_$0($$dpth + 1, $$cr)) || true)
-                        ) {
-                            $$res = {kind: ASTKinds.obs_mbox_list_$1, F: $scope$F, G: $scope$G};
-                        }
-                        return $$res;
-                    });
-            },
-            this.$scope$obs_mbox_list_$1$memo,
-        );
-    }
-    public matchobs_mbox_list_$1_$0($$dpth: number, $$cr?: ErrorTracker): Nullable<obs_mbox_list_$1_$0> {
-        return this.memoise(
-            () => {
-                return this.choice<obs_mbox_list_$1_$0>([
-                    () => this.matchobs_mbox_list_$1_$0_1($$dpth + 1, $$cr),
-                    () => this.matchobs_mbox_list_$1_$0_2($$dpth + 1, $$cr),
-                ]);
-            },
-            this.$scope$obs_mbox_list_$1_$0$memo,
-        );
-    }
-    public matchobs_mbox_list_$1_$0_1($$dpth: number, $$cr?: ErrorTracker): Nullable<obs_mbox_list_$1_$0_1> {
-        return this.matchmailbox($$dpth + 1, $$cr);
-    }
-    public matchobs_mbox_list_$1_$0_2($$dpth: number, $$cr?: ErrorTracker): Nullable<obs_mbox_list_$1_$0_2> {
-        return this.run<obs_mbox_list_$1_$0_2>($$dpth,
-            () => {
-                let $scope$I: Nullable<CFWS>;
-                let $$res: Nullable<obs_mbox_list_$1_$0_2> = null;
-                if (true
-                    && ($scope$I = this.matchCFWS($$dpth + 1, $$cr)) !== null
-                ) {
-                    $$res = {kind: ASTKinds.obs_mbox_list_$1_$0_2, I: $scope$I};
-                }
-                return $$res;
-            });
-    }
-    public matchobs_addr_list($$dpth: number, $$cr?: ErrorTracker): Nullable<obs_addr_list> {
-        return this.memoise(
-            () => {
-                return this.run<obs_addr_list>($$dpth,
-                    () => {
-                        let $scope$A: Nullable<obs_addr_list_$0[]>;
-                        let $scope$D: Nullable<address>;
-                        let $scope$E: Nullable<obs_addr_list_$1[]>;
-                        let $$res: Nullable<obs_addr_list> = null;
-                        if (true
-                            && ($scope$A = this.loop<obs_addr_list_$0>(() => this.matchobs_addr_list_$0($$dpth + 1, $$cr), true)) !== null
-                            && ($scope$D = this.matchaddress($$dpth + 1, $$cr)) !== null
-                            && ($scope$E = this.loop<obs_addr_list_$1>(() => this.matchobs_addr_list_$1($$dpth + 1, $$cr), true)) !== null
-                        ) {
-                            $$res = {kind: ASTKinds.obs_addr_list, A: $scope$A, D: $scope$D, E: $scope$E};
-                        }
-                        return $$res;
-                    });
-            },
-            this.$scope$obs_addr_list$memo,
-        );
-    }
-    public matchobs_addr_list_$0($$dpth: number, $$cr?: ErrorTracker): Nullable<obs_addr_list_$0> {
-        return this.memoise(
-            () => {
-                return this.run<obs_addr_list_$0>($$dpth,
-                    () => {
-                        let $scope$B: Nullable<Nullable<CFWS>>;
-                        let $scope$C: Nullable<string>;
-                        let $$res: Nullable<obs_addr_list_$0> = null;
-                        if (true
-                            && (($scope$B = this.matchCFWS($$dpth + 1, $$cr)) || true)
-                            && ($scope$C = this.regexAccept(String.raw`(?:,)`, $$dpth + 1, $$cr)) !== null
-                        ) {
-                            $$res = {kind: ASTKinds.obs_addr_list_$0, B: $scope$B, C: $scope$C};
-                        }
-                        return $$res;
-                    });
-            },
-            this.$scope$obs_addr_list_$0$memo,
-        );
-    }
-    public matchobs_addr_list_$1($$dpth: number, $$cr?: ErrorTracker): Nullable<obs_addr_list_$1> {
-        return this.memoise(
-            () => {
-                return this.run<obs_addr_list_$1>($$dpth,
-                    () => {
-                        let $scope$F: Nullable<string>;
-                        let $scope$G: Nullable<Nullable<obs_addr_list_$1_$0>>;
-                        let $$res: Nullable<obs_addr_list_$1> = null;
-                        if (true
-                            && ($scope$F = this.regexAccept(String.raw`(?:,)`, $$dpth + 1, $$cr)) !== null
-                            && (($scope$G = this.matchobs_addr_list_$1_$0($$dpth + 1, $$cr)) || true)
-                        ) {
-                            $$res = {kind: ASTKinds.obs_addr_list_$1, F: $scope$F, G: $scope$G};
-                        }
-                        return $$res;
-                    });
-            },
-            this.$scope$obs_addr_list_$1$memo,
-        );
-    }
-    public matchobs_addr_list_$1_$0($$dpth: number, $$cr?: ErrorTracker): Nullable<obs_addr_list_$1_$0> {
-        return this.memoise(
-            () => {
-                return this.choice<obs_addr_list_$1_$0>([
-                    () => this.matchobs_addr_list_$1_$0_1($$dpth + 1, $$cr),
-                    () => this.matchobs_addr_list_$1_$0_2($$dpth + 1, $$cr),
-                ]);
-            },
-            this.$scope$obs_addr_list_$1_$0$memo,
-        );
-    }
-    public matchobs_addr_list_$1_$0_1($$dpth: number, $$cr?: ErrorTracker): Nullable<obs_addr_list_$1_$0_1> {
-        return this.matchaddress($$dpth + 1, $$cr);
-    }
-    public matchobs_addr_list_$1_$0_2($$dpth: number, $$cr?: ErrorTracker): Nullable<obs_addr_list_$1_$0_2> {
-        return this.run<obs_addr_list_$1_$0_2>($$dpth,
-            () => {
-                let $scope$I: Nullable<CFWS>;
-                let $$res: Nullable<obs_addr_list_$1_$0_2> = null;
-                if (true
-                    && ($scope$I = this.matchCFWS($$dpth + 1, $$cr)) !== null
-                ) {
-                    $$res = {kind: ASTKinds.obs_addr_list_$1_$0_2, I: $scope$I};
-                }
-                return $$res;
-            });
-    }
-    public matchobs_group_list($$dpth: number, $$cr?: ErrorTracker): Nullable<obs_group_list> {
-        return this.memoise(
-            () => {
-                return this.run<obs_group_list>($$dpth,
-                    () => {
-                        let $scope$A: Nullable<obs_group_list_$0[]>;
-                        let $$res: Nullable<obs_group_list> = null;
-                        if (true
-                            && ($scope$A = this.loop<obs_group_list_$0>(() => this.matchobs_group_list_$0($$dpth + 1, $$cr), false)) !== null
-                            && ((this.matchCFWS($$dpth + 1, $$cr)) || true)
-                        ) {
-                            $$res = {kind: ASTKinds.obs_group_list, A: $scope$A};
-                        }
-                        return $$res;
-                    });
-            },
-            this.$scope$obs_group_list$memo,
-        );
-    }
-    public matchobs_group_list_$0($$dpth: number, $$cr?: ErrorTracker): Nullable<obs_group_list_$0> {
-        return this.memoise(
-            () => {
-                return this.run<obs_group_list_$0>($$dpth,
-                    () => {
-                        let $scope$B: Nullable<Nullable<CFWS>>;
-                        let $scope$C: Nullable<string>;
-                        let $$res: Nullable<obs_group_list_$0> = null;
-                        if (true
-                            && (($scope$B = this.matchCFWS($$dpth + 1, $$cr)) || true)
-                            && ($scope$C = this.regexAccept(String.raw`(?:,)`, $$dpth + 1, $$cr)) !== null
-                        ) {
-                            $$res = {kind: ASTKinds.obs_group_list_$0, B: $scope$B, C: $scope$C};
-                        }
-                        return $$res;
-                    });
-            },
-            this.$scope$obs_group_list_$0$memo,
-        );
-    }
-    public matchobs_local_part($$dpth: number, $$cr?: ErrorTracker): Nullable<obs_local_part> {
-        return this.memoise(
-            () => {
-                return this.run<obs_local_part>($$dpth,
-                    () => {
-                        let $scope$A: Nullable<word>;
-                        let $scope$B: Nullable<obs_local_part_$0[]>;
-                        let $$res: Nullable<obs_local_part> = null;
-                        if (true
-                            && ($scope$A = this.matchword($$dpth + 1, $$cr)) !== null
-                            && ($scope$B = this.loop<obs_local_part_$0>(() => this.matchobs_local_part_$0($$dpth + 1, $$cr), true)) !== null
-                        ) {
-                            $$res = {kind: ASTKinds.obs_local_part, A: $scope$A, B: $scope$B};
-                        }
-                        return $$res;
-                    });
-            },
-            this.$scope$obs_local_part$memo,
-        );
-    }
-    public matchobs_local_part_$0($$dpth: number, $$cr?: ErrorTracker): Nullable<obs_local_part_$0> {
-        return this.memoise(
-            () => {
-                return this.run<obs_local_part_$0>($$dpth,
-                    () => {
-                        let $scope$C: Nullable<string>;
-                        let $scope$D: Nullable<word>;
-                        let $$res: Nullable<obs_local_part_$0> = null;
-                        if (true
-                            && ($scope$C = this.regexAccept(String.raw`(?:\.)`, $$dpth + 1, $$cr)) !== null
-                            && ($scope$D = this.matchword($$dpth + 1, $$cr)) !== null
-                        ) {
-                            $$res = {kind: ASTKinds.obs_local_part_$0, C: $scope$C, D: $scope$D};
-                        }
-                        return $$res;
-                    });
-            },
-            this.$scope$obs_local_part_$0$memo,
-        );
-    }
-    public matchobs_domain($$dpth: number, $$cr?: ErrorTracker): Nullable<obs_domain> {
-        return this.memoise(
-            () => {
-                return this.run<obs_domain>($$dpth,
-                    () => {
-                        let $scope$A: Nullable<atom>;
-                        let $scope$B: Nullable<obs_domain_$0[]>;
-                        let $$res: Nullable<obs_domain> = null;
-                        if (true
-                            && ($scope$A = this.matchatom($$dpth + 1, $$cr)) !== null
-                            && ($scope$B = this.loop<obs_domain_$0>(() => this.matchobs_domain_$0($$dpth + 1, $$cr), true)) !== null
-                        ) {
-                            $$res = {kind: ASTKinds.obs_domain, A: $scope$A, B: $scope$B};
-                        }
-                        return $$res;
-                    });
-            },
-            this.$scope$obs_domain$memo,
-        );
-    }
-    public matchobs_domain_$0($$dpth: number, $$cr?: ErrorTracker): Nullable<obs_domain_$0> {
-        return this.memoise(
-            () => {
-                return this.run<obs_domain_$0>($$dpth,
-                    () => {
-                        let $scope$C: Nullable<string>;
-                        let $scope$D: Nullable<atom>;
-                        let $$res: Nullable<obs_domain_$0> = null;
-                        if (true
-                            && ($scope$C = this.regexAccept(String.raw`(?:\.)`, $$dpth + 1, $$cr)) !== null
-                            && ($scope$D = this.matchatom($$dpth + 1, $$cr)) !== null
-                        ) {
-                            $$res = {kind: ASTKinds.obs_domain_$0, C: $scope$C, D: $scope$D};
-                        }
-                        return $$res;
-                    });
-            },
-            this.$scope$obs_domain_$0$memo,
         );
     }
     public matchobs_dtext($$dpth: number, $$cr?: ErrorTracker): Nullable<obs_dtext> {
@@ -6506,30 +4934,6 @@ export class Parser {
     public matchobs_fields_$0_24($$dpth: number, $$cr?: ErrorTracker): Nullable<obs_fields_$0_24> {
         return this.matchobs_optional($$dpth + 1, $$cr);
     }
-    public matchobs_orig_date($$dpth: number, $$cr?: ErrorTracker): Nullable<obs_orig_date> {
-        return this.memoise(
-            () => {
-                return this.run<obs_orig_date>($$dpth,
-                    () => {
-                        let $scope$A: Nullable<string>;
-                        let $scope$C: Nullable<string>;
-                        let $scope$D: Nullable<date_time>;
-                        let $$res: Nullable<obs_orig_date> = null;
-                        if (true
-                            && ($scope$A = this.regexAccept(String.raw`(?:Date)`, $$dpth + 1, $$cr)) !== null
-                            && this.loop<WSP>(() => this.matchWSP($$dpth + 1, $$cr), true) !== null
-                            && ($scope$C = this.regexAccept(String.raw`(?::)`, $$dpth + 1, $$cr)) !== null
-                            && ($scope$D = this.matchdate_time($$dpth + 1, $$cr)) !== null
-                            && this.matchCRLF($$dpth + 1, $$cr) !== null
-                        ) {
-                            $$res = {kind: ASTKinds.obs_orig_date, A: $scope$A, C: $scope$C, D: $scope$D};
-                        }
-                        return $$res;
-                    });
-            },
-            this.$scope$obs_orig_date$memo,
-        );
-    }
     public matchobs_from($$dpth: number, $$cr?: ErrorTracker): Nullable<obs_from> {
         return this.memoise(
             () => {
@@ -6554,224 +4958,79 @@ export class Parser {
             this.$scope$obs_from$memo,
         );
     }
-    public matchobs_sender($$dpth: number, $$cr?: ErrorTracker): Nullable<obs_sender> {
+    public matchobs_group_list($$dpth: number, $$cr?: ErrorTracker): Nullable<obs_group_list> {
         return this.memoise(
             () => {
-                return this.run<obs_sender>($$dpth,
+                return this.run<obs_group_list>($$dpth,
                     () => {
-                        let $scope$A: Nullable<string>;
-                        let $scope$C: Nullable<string>;
-                        let $scope$D: Nullable<mailbox>;
-                        let $$res: Nullable<obs_sender> = null;
+                        let $scope$A: Nullable<obs_group_list_$0[]>;
+                        let $$res: Nullable<obs_group_list> = null;
                         if (true
-                            && ($scope$A = this.regexAccept(String.raw`(?:Sender)`, $$dpth + 1, $$cr)) !== null
-                            && this.loop<WSP>(() => this.matchWSP($$dpth + 1, $$cr), true) !== null
-                            && ($scope$C = this.regexAccept(String.raw`(?::)`, $$dpth + 1, $$cr)) !== null
-                            && ($scope$D = this.matchmailbox($$dpth + 1, $$cr)) !== null
-                            && this.matchCRLF($$dpth + 1, $$cr) !== null
-                        ) {
-                            $$res = {kind: ASTKinds.obs_sender, A: $scope$A, C: $scope$C, D: $scope$D};
-                        }
-                        return $$res;
-                    });
-            },
-            this.$scope$obs_sender$memo,
-        );
-    }
-    public matchobs_reply_to($$dpth: number, $$cr?: ErrorTracker): Nullable<obs_reply_to> {
-        return this.memoise(
-            () => {
-                return this.run<obs_reply_to>($$dpth,
-                    () => {
-                        let $scope$A: Nullable<string>;
-                        let $scope$C: Nullable<string>;
-                        let $scope$D: Nullable<address_list>;
-                        let $$res: Nullable<obs_reply_to> = null;
-                        if (true
-                            && ($scope$A = this.regexAccept(String.raw`(?:Reply-To)`, $$dpth + 1, $$cr)) !== null
-                            && this.loop<WSP>(() => this.matchWSP($$dpth + 1, $$cr), true) !== null
-                            && ($scope$C = this.regexAccept(String.raw`(?::)`, $$dpth + 1, $$cr)) !== null
-                            && ($scope$D = this.matchaddress_list($$dpth + 1, $$cr)) !== null
-                            && this.matchCRLF($$dpth + 1, $$cr) !== null
-                        ) {
-                            $$res = {kind: ASTKinds.obs_reply_to, A: $scope$A, C: $scope$C, D: $scope$D};
-                        }
-                        return $$res;
-                    });
-            },
-            this.$scope$obs_reply_to$memo,
-        );
-    }
-    public matchobs_to($$dpth: number, $$cr?: ErrorTracker): Nullable<obs_to> {
-        return this.memoise(
-            () => {
-                return this.run<obs_to>($$dpth,
-                    () => {
-                        let $scope$A: Nullable<string>;
-                        let $scope$C: Nullable<string>;
-                        let $scope$D: Nullable<address_list>;
-                        let $$res: Nullable<obs_to> = null;
-                        if (true
-                            && ($scope$A = this.regexAccept(String.raw`(?:To)`, $$dpth + 1, $$cr)) !== null
-                            && this.loop<WSP>(() => this.matchWSP($$dpth + 1, $$cr), true) !== null
-                            && ($scope$C = this.regexAccept(String.raw`(?::)`, $$dpth + 1, $$cr)) !== null
-                            && ($scope$D = this.matchaddress_list($$dpth + 1, $$cr)) !== null
-                            && this.matchCRLF($$dpth + 1, $$cr) !== null
-                        ) {
-                            $$res = {kind: ASTKinds.obs_to, A: $scope$A, C: $scope$C, D: $scope$D};
-                        }
-                        return $$res;
-                    });
-            },
-            this.$scope$obs_to$memo,
-        );
-    }
-    public matchobs_cc($$dpth: number, $$cr?: ErrorTracker): Nullable<obs_cc> {
-        return this.memoise(
-            () => {
-                return this.run<obs_cc>($$dpth,
-                    () => {
-                        let $scope$A: Nullable<string>;
-                        let $scope$C: Nullable<string>;
-                        let $scope$D: Nullable<address_list>;
-                        let $$res: Nullable<obs_cc> = null;
-                        if (true
-                            && ($scope$A = this.regexAccept(String.raw`(?:Cc)`, $$dpth + 1, $$cr)) !== null
-                            && this.loop<WSP>(() => this.matchWSP($$dpth + 1, $$cr), true) !== null
-                            && ($scope$C = this.regexAccept(String.raw`(?::)`, $$dpth + 1, $$cr)) !== null
-                            && ($scope$D = this.matchaddress_list($$dpth + 1, $$cr)) !== null
-                            && this.matchCRLF($$dpth + 1, $$cr) !== null
-                        ) {
-                            $$res = {kind: ASTKinds.obs_cc, A: $scope$A, C: $scope$C, D: $scope$D};
-                        }
-                        return $$res;
-                    });
-            },
-            this.$scope$obs_cc$memo,
-        );
-    }
-    public matchobs_bcc($$dpth: number, $$cr?: ErrorTracker): Nullable<obs_bcc> {
-        return this.memoise(
-            () => {
-                return this.run<obs_bcc>($$dpth,
-                    () => {
-                        let $scope$A: Nullable<string>;
-                        let $scope$C: Nullable<string>;
-                        let $scope$D: Nullable<obs_bcc_$0>;
-                        let $$res: Nullable<obs_bcc> = null;
-                        if (true
-                            && ($scope$A = this.regexAccept(String.raw`(?:Bcc)`, $$dpth + 1, $$cr)) !== null
-                            && this.loop<WSP>(() => this.matchWSP($$dpth + 1, $$cr), true) !== null
-                            && ($scope$C = this.regexAccept(String.raw`(?::)`, $$dpth + 1, $$cr)) !== null
-                            && ($scope$D = this.matchobs_bcc_$0($$dpth + 1, $$cr)) !== null
-                            && this.matchCRLF($$dpth + 1, $$cr) !== null
-                        ) {
-                            $$res = {kind: ASTKinds.obs_bcc, A: $scope$A, C: $scope$C, D: $scope$D};
-                        }
-                        return $$res;
-                    });
-            },
-            this.$scope$obs_bcc$memo,
-        );
-    }
-    public matchobs_bcc_$0($$dpth: number, $$cr?: ErrorTracker): Nullable<obs_bcc_$0> {
-        return this.memoise(
-            () => {
-                return this.choice<obs_bcc_$0>([
-                    () => this.matchobs_bcc_$0_1($$dpth + 1, $$cr),
-                    () => this.matchobs_bcc_$0_2($$dpth + 1, $$cr),
-                ]);
-            },
-            this.$scope$obs_bcc_$0$memo,
-        );
-    }
-    public matchobs_bcc_$0_1($$dpth: number, $$cr?: ErrorTracker): Nullable<obs_bcc_$0_1> {
-        return this.run<obs_bcc_$0_1>($$dpth,
-            () => {
-                let $scope$E: Nullable<address_list>;
-                let $$res: Nullable<obs_bcc_$0_1> = null;
-                if (true
-                    && ($scope$E = this.matchaddress_list($$dpth + 1, $$cr)) !== null
-                ) {
-                    $$res = {kind: ASTKinds.obs_bcc_$0_1, E: $scope$E};
-                }
-                return $$res;
-            });
-    }
-    public matchobs_bcc_$0_2($$dpth: number, $$cr?: ErrorTracker): Nullable<obs_bcc_$0_2> {
-        return this.run<obs_bcc_$0_2>($$dpth,
-            () => {
-                let $scope$F: Nullable<obs_bcc_$0_$0>;
-                let $$res: Nullable<obs_bcc_$0_2> = null;
-                if (true
-                    && ($scope$F = this.matchobs_bcc_$0_$0($$dpth + 1, $$cr)) !== null
-                ) {
-                    $$res = {kind: ASTKinds.obs_bcc_$0_2, F: $scope$F};
-                }
-                return $$res;
-            });
-    }
-    public matchobs_bcc_$0_$0($$dpth: number, $$cr?: ErrorTracker): Nullable<obs_bcc_$0_$0> {
-        return this.memoise(
-            () => {
-                return this.run<obs_bcc_$0_$0>($$dpth,
-                    () => {
-                        let $scope$G: Nullable<obs_bcc_$0_$0_$0[]>;
-                        let $$res: Nullable<obs_bcc_$0_$0> = null;
-                        if (true
-                            && ($scope$G = this.loop<obs_bcc_$0_$0_$0>(() => this.matchobs_bcc_$0_$0_$0($$dpth + 1, $$cr), true)) !== null
+                            && ($scope$A = this.loop<obs_group_list_$0>(() => this.matchobs_group_list_$0($$dpth + 1, $$cr), false)) !== null
                             && ((this.matchCFWS($$dpth + 1, $$cr)) || true)
                         ) {
-                            $$res = {kind: ASTKinds.obs_bcc_$0_$0, G: $scope$G};
+                            $$res = {kind: ASTKinds.obs_group_list, A: $scope$A};
                         }
                         return $$res;
                     });
             },
-            this.$scope$obs_bcc_$0_$0$memo,
+            this.$scope$obs_group_list$memo,
         );
     }
-    public matchobs_bcc_$0_$0_$0($$dpth: number, $$cr?: ErrorTracker): Nullable<obs_bcc_$0_$0_$0> {
+    public matchobs_group_list_$0($$dpth: number, $$cr?: ErrorTracker): Nullable<obs_group_list_$0> {
         return this.memoise(
             () => {
-                return this.run<obs_bcc_$0_$0_$0>($$dpth,
+                return this.run<obs_group_list_$0>($$dpth,
                     () => {
-                        let $scope$H: Nullable<Nullable<CFWS>>;
-                        let $scope$I: Nullable<string>;
-                        let $$res: Nullable<obs_bcc_$0_$0_$0> = null;
-                        if (true
-                            && (($scope$H = this.matchCFWS($$dpth + 1, $$cr)) || true)
-                            && ($scope$I = this.regexAccept(String.raw`(?:,)`, $$dpth + 1, $$cr)) !== null
-                        ) {
-                            $$res = {kind: ASTKinds.obs_bcc_$0_$0_$0, H: $scope$H, I: $scope$I};
-                        }
-                        return $$res;
-                    });
-            },
-            this.$scope$obs_bcc_$0_$0_$0$memo,
-        );
-    }
-    public matchobs_message_id($$dpth: number, $$cr?: ErrorTracker): Nullable<obs_message_id> {
-        return this.memoise(
-            () => {
-                return this.run<obs_message_id>($$dpth,
-                    () => {
-                        let $scope$A: Nullable<string>;
+                        let $scope$B: Nullable<Nullable<CFWS>>;
                         let $scope$C: Nullable<string>;
-                        let $scope$D: Nullable<msg_id>;
-                        let $$res: Nullable<obs_message_id> = null;
+                        let $$res: Nullable<obs_group_list_$0> = null;
                         if (true
-                            && ($scope$A = this.regexAccept(String.raw`(?:Message-ID)`, $$dpth + 1, $$cr)) !== null
-                            && this.loop<WSP>(() => this.matchWSP($$dpth + 1, $$cr), true) !== null
-                            && ($scope$C = this.regexAccept(String.raw`(?::)`, $$dpth + 1, $$cr)) !== null
-                            && ($scope$D = this.matchmsg_id($$dpth + 1, $$cr)) !== null
-                            && this.matchCRLF($$dpth + 1, $$cr) !== null
+                            && (($scope$B = this.matchCFWS($$dpth + 1, $$cr)) || true)
+                            && ($scope$C = this.regexAccept(String.raw`(?:,)`, $$dpth + 1, $$cr)) !== null
                         ) {
-                            $$res = {kind: ASTKinds.obs_message_id, A: $scope$A, C: $scope$C, D: $scope$D};
+                            $$res = {kind: ASTKinds.obs_group_list_$0, B: $scope$B, C: $scope$C};
                         }
                         return $$res;
                     });
             },
-            this.$scope$obs_message_id$memo,
+            this.$scope$obs_group_list_$0$memo,
+        );
+    }
+    public matchobs_hour($$dpth: number, $$cr?: ErrorTracker): Nullable<obs_hour> {
+        return this.memoise(
+            () => {
+                return this.run<obs_hour>($$dpth,
+                    () => {
+                        let $scope$B: Nullable<TWO_DIGIT>;
+                        let $$res: Nullable<obs_hour> = null;
+                        if (true
+                            && ((this.matchCFWS($$dpth + 1, $$cr)) || true)
+                            && ($scope$B = this.matchTWO_DIGIT($$dpth + 1, $$cr)) !== null
+                            && ((this.matchCFWS($$dpth + 1, $$cr)) || true)
+                        ) {
+                            $$res = {kind: ASTKinds.obs_hour, B: $scope$B};
+                        }
+                        return $$res;
+                    });
+            },
+            this.$scope$obs_hour$memo,
+        );
+    }
+    public matchobs_id_left($$dpth: number, $$cr?: ErrorTracker): Nullable<obs_id_left> {
+        return this.memoise(
+            () => {
+                return this.matchlocal_part($$dpth + 1, $$cr);
+            },
+            this.$scope$obs_id_left$memo,
+        );
+    }
+    public matchobs_id_right($$dpth: number, $$cr?: ErrorTracker): Nullable<obs_id_right> {
+        return this.memoise(
+            () => {
+                return this.matchdomain($$dpth + 1, $$cr);
+            },
+            this.$scope$obs_id_right$memo,
         );
     }
     public matchobs_in_reply_to($$dpth: number, $$cr?: ErrorTracker): Nullable<obs_in_reply_to> {
@@ -6815,6 +5074,444 @@ export class Parser {
     public matchobs_in_reply_to_$0_2($$dpth: number, $$cr?: ErrorTracker): Nullable<obs_in_reply_to_$0_2> {
         return this.matchmsg_id($$dpth + 1, $$cr);
     }
+    public matchobs_keywords($$dpth: number, $$cr?: ErrorTracker): Nullable<obs_keywords> {
+        return this.memoise(
+            () => {
+                return this.run<obs_keywords>($$dpth,
+                    () => {
+                        let $scope$A: Nullable<string>;
+                        let $scope$C: Nullable<string>;
+                        let $scope$D: Nullable<obs_phrase_list>;
+                        let $$res: Nullable<obs_keywords> = null;
+                        if (true
+                            && ($scope$A = this.regexAccept(String.raw`(?:Keywords)`, $$dpth + 1, $$cr)) !== null
+                            && this.loop<WSP>(() => this.matchWSP($$dpth + 1, $$cr), true) !== null
+                            && ($scope$C = this.regexAccept(String.raw`(?::)`, $$dpth + 1, $$cr)) !== null
+                            && ($scope$D = this.matchobs_phrase_list($$dpth + 1, $$cr)) !== null
+                            && this.matchCRLF($$dpth + 1, $$cr) !== null
+                        ) {
+                            $$res = {kind: ASTKinds.obs_keywords, A: $scope$A, C: $scope$C, D: $scope$D};
+                        }
+                        return $$res;
+                    });
+            },
+            this.$scope$obs_keywords$memo,
+        );
+    }
+    public matchobs_local_part($$dpth: number, $$cr?: ErrorTracker): Nullable<obs_local_part> {
+        return this.memoise(
+            () => {
+                return this.run<obs_local_part>($$dpth,
+                    () => {
+                        let $scope$A: Nullable<word>;
+                        let $scope$B: Nullable<obs_local_part_$0[]>;
+                        let $$res: Nullable<obs_local_part> = null;
+                        if (true
+                            && ($scope$A = this.matchword($$dpth + 1, $$cr)) !== null
+                            && ($scope$B = this.loop<obs_local_part_$0>(() => this.matchobs_local_part_$0($$dpth + 1, $$cr), true)) !== null
+                        ) {
+                            $$res = {kind: ASTKinds.obs_local_part, A: $scope$A, B: $scope$B};
+                        }
+                        return $$res;
+                    });
+            },
+            this.$scope$obs_local_part$memo,
+        );
+    }
+    public matchobs_local_part_$0($$dpth: number, $$cr?: ErrorTracker): Nullable<obs_local_part_$0> {
+        return this.memoise(
+            () => {
+                return this.run<obs_local_part_$0>($$dpth,
+                    () => {
+                        let $scope$C: Nullable<string>;
+                        let $scope$D: Nullable<word>;
+                        let $$res: Nullable<obs_local_part_$0> = null;
+                        if (true
+                            && ($scope$C = this.regexAccept(String.raw`(?:\.)`, $$dpth + 1, $$cr)) !== null
+                            && ($scope$D = this.matchword($$dpth + 1, $$cr)) !== null
+                        ) {
+                            $$res = {kind: ASTKinds.obs_local_part_$0, C: $scope$C, D: $scope$D};
+                        }
+                        return $$res;
+                    });
+            },
+            this.$scope$obs_local_part_$0$memo,
+        );
+    }
+    public matchobs_mbox_list($$dpth: number, $$cr?: ErrorTracker): Nullable<obs_mbox_list> {
+        return this.memoise(
+            () => {
+                return this.run<obs_mbox_list>($$dpth,
+                    () => {
+                        let $scope$A: Nullable<obs_mbox_list_$0[]>;
+                        let $scope$D: Nullable<mailbox>;
+                        let $scope$E: Nullable<obs_mbox_list_$1[]>;
+                        let $$res: Nullable<obs_mbox_list> = null;
+                        if (true
+                            && ($scope$A = this.loop<obs_mbox_list_$0>(() => this.matchobs_mbox_list_$0($$dpth + 1, $$cr), true)) !== null
+                            && ($scope$D = this.matchmailbox($$dpth + 1, $$cr)) !== null
+                            && ($scope$E = this.loop<obs_mbox_list_$1>(() => this.matchobs_mbox_list_$1($$dpth + 1, $$cr), true)) !== null
+                        ) {
+                            $$res = {kind: ASTKinds.obs_mbox_list, A: $scope$A, D: $scope$D, E: $scope$E};
+                        }
+                        return $$res;
+                    });
+            },
+            this.$scope$obs_mbox_list$memo,
+        );
+    }
+    public matchobs_mbox_list_$0($$dpth: number, $$cr?: ErrorTracker): Nullable<obs_mbox_list_$0> {
+        return this.memoise(
+            () => {
+                return this.run<obs_mbox_list_$0>($$dpth,
+                    () => {
+                        let $scope$B: Nullable<Nullable<CFWS>>;
+                        let $scope$C: Nullable<string>;
+                        let $$res: Nullable<obs_mbox_list_$0> = null;
+                        if (true
+                            && (($scope$B = this.matchCFWS($$dpth + 1, $$cr)) || true)
+                            && ($scope$C = this.regexAccept(String.raw`(?:,)`, $$dpth + 1, $$cr)) !== null
+                        ) {
+                            $$res = {kind: ASTKinds.obs_mbox_list_$0, B: $scope$B, C: $scope$C};
+                        }
+                        return $$res;
+                    });
+            },
+            this.$scope$obs_mbox_list_$0$memo,
+        );
+    }
+    public matchobs_mbox_list_$1($$dpth: number, $$cr?: ErrorTracker): Nullable<obs_mbox_list_$1> {
+        return this.memoise(
+            () => {
+                return this.run<obs_mbox_list_$1>($$dpth,
+                    () => {
+                        let $scope$F: Nullable<string>;
+                        let $scope$G: Nullable<Nullable<obs_mbox_list_$1_$0>>;
+                        let $$res: Nullable<obs_mbox_list_$1> = null;
+                        if (true
+                            && ($scope$F = this.regexAccept(String.raw`(?:,)`, $$dpth + 1, $$cr)) !== null
+                            && (($scope$G = this.matchobs_mbox_list_$1_$0($$dpth + 1, $$cr)) || true)
+                        ) {
+                            $$res = {kind: ASTKinds.obs_mbox_list_$1, F: $scope$F, G: $scope$G};
+                        }
+                        return $$res;
+                    });
+            },
+            this.$scope$obs_mbox_list_$1$memo,
+        );
+    }
+    public matchobs_mbox_list_$1_$0($$dpth: number, $$cr?: ErrorTracker): Nullable<obs_mbox_list_$1_$0> {
+        return this.memoise(
+            () => {
+                return this.choice<obs_mbox_list_$1_$0>([
+                    () => this.matchobs_mbox_list_$1_$0_1($$dpth + 1, $$cr),
+                    () => this.matchobs_mbox_list_$1_$0_2($$dpth + 1, $$cr),
+                ]);
+            },
+            this.$scope$obs_mbox_list_$1_$0$memo,
+        );
+    }
+    public matchobs_mbox_list_$1_$0_1($$dpth: number, $$cr?: ErrorTracker): Nullable<obs_mbox_list_$1_$0_1> {
+        return this.matchmailbox($$dpth + 1, $$cr);
+    }
+    public matchobs_mbox_list_$1_$0_2($$dpth: number, $$cr?: ErrorTracker): Nullable<obs_mbox_list_$1_$0_2> {
+        return this.run<obs_mbox_list_$1_$0_2>($$dpth,
+            () => {
+                let $scope$I: Nullable<CFWS>;
+                let $$res: Nullable<obs_mbox_list_$1_$0_2> = null;
+                if (true
+                    && ($scope$I = this.matchCFWS($$dpth + 1, $$cr)) !== null
+                ) {
+                    $$res = {kind: ASTKinds.obs_mbox_list_$1_$0_2, I: $scope$I};
+                }
+                return $$res;
+            });
+    }
+    public matchobs_message_id($$dpth: number, $$cr?: ErrorTracker): Nullable<obs_message_id> {
+        return this.memoise(
+            () => {
+                return this.run<obs_message_id>($$dpth,
+                    () => {
+                        let $scope$A: Nullable<string>;
+                        let $scope$C: Nullable<string>;
+                        let $scope$D: Nullable<msg_id>;
+                        let $$res: Nullable<obs_message_id> = null;
+                        if (true
+                            && ($scope$A = this.regexAccept(String.raw`(?:Message-ID)`, $$dpth + 1, $$cr)) !== null
+                            && this.loop<WSP>(() => this.matchWSP($$dpth + 1, $$cr), true) !== null
+                            && ($scope$C = this.regexAccept(String.raw`(?::)`, $$dpth + 1, $$cr)) !== null
+                            && ($scope$D = this.matchmsg_id($$dpth + 1, $$cr)) !== null
+                            && this.matchCRLF($$dpth + 1, $$cr) !== null
+                        ) {
+                            $$res = {kind: ASTKinds.obs_message_id, A: $scope$A, C: $scope$C, D: $scope$D};
+                        }
+                        return $$res;
+                    });
+            },
+            this.$scope$obs_message_id$memo,
+        );
+    }
+    public matchobs_minute($$dpth: number, $$cr?: ErrorTracker): Nullable<obs_minute> {
+        return this.memoise(
+            () => {
+                return this.run<obs_minute>($$dpth,
+                    () => {
+                        let $scope$B: Nullable<TWO_DIGIT>;
+                        let $$res: Nullable<obs_minute> = null;
+                        if (true
+                            && ((this.matchCFWS($$dpth + 1, $$cr)) || true)
+                            && ($scope$B = this.matchTWO_DIGIT($$dpth + 1, $$cr)) !== null
+                            && ((this.matchCFWS($$dpth + 1, $$cr)) || true)
+                        ) {
+                            $$res = {kind: ASTKinds.obs_minute, B: $scope$B};
+                        }
+                        return $$res;
+                    });
+            },
+            this.$scope$obs_minute$memo,
+        );
+    }
+    public matchobs_optional($$dpth: number, $$cr?: ErrorTracker): Nullable<obs_optional> {
+        return this.memoise(
+            () => {
+                return this.run<obs_optional>($$dpth,
+                    () => {
+                        let $scope$A: Nullable<field_name>;
+                        let $scope$C: Nullable<string>;
+                        let $scope$D: Nullable<unstructured>;
+                        let $$res: Nullable<obs_optional> = null;
+                        if (true
+                            && ($scope$A = this.matchfield_name($$dpth + 1, $$cr)) !== null
+                            && this.loop<WSP>(() => this.matchWSP($$dpth + 1, $$cr), true) !== null
+                            && ($scope$C = this.regexAccept(String.raw`(?::)`, $$dpth + 1, $$cr)) !== null
+                            && ($scope$D = this.matchunstructured($$dpth + 1, $$cr)) !== null
+                            && this.matchCRLF($$dpth + 1, $$cr) !== null
+                        ) {
+                            $$res = {kind: ASTKinds.obs_optional, A: $scope$A, C: $scope$C, D: $scope$D};
+                        }
+                        return $$res;
+                    });
+            },
+            this.$scope$obs_optional$memo,
+        );
+    }
+    public matchobs_orig_date($$dpth: number, $$cr?: ErrorTracker): Nullable<obs_orig_date> {
+        return this.memoise(
+            () => {
+                return this.run<obs_orig_date>($$dpth,
+                    () => {
+                        let $scope$A: Nullable<string>;
+                        let $scope$C: Nullable<string>;
+                        let $scope$D: Nullable<date_time>;
+                        let $$res: Nullable<obs_orig_date> = null;
+                        if (true
+                            && ($scope$A = this.regexAccept(String.raw`(?:Date)`, $$dpth + 1, $$cr)) !== null
+                            && this.loop<WSP>(() => this.matchWSP($$dpth + 1, $$cr), true) !== null
+                            && ($scope$C = this.regexAccept(String.raw`(?::)`, $$dpth + 1, $$cr)) !== null
+                            && ($scope$D = this.matchdate_time($$dpth + 1, $$cr)) !== null
+                            && this.matchCRLF($$dpth + 1, $$cr) !== null
+                        ) {
+                            $$res = {kind: ASTKinds.obs_orig_date, A: $scope$A, C: $scope$C, D: $scope$D};
+                        }
+                        return $$res;
+                    });
+            },
+            this.$scope$obs_orig_date$memo,
+        );
+    }
+    public matchobs_phrase($$dpth: number, $$cr?: ErrorTracker): Nullable<obs_phrase> {
+        return this.memoise(
+            () => {
+                return this.run<obs_phrase>($$dpth,
+                    () => {
+                        let $scope$A: Nullable<word>;
+                        let $scope$B: Nullable<obs_phrase_$0>;
+                        let $$res: Nullable<obs_phrase> = null;
+                        if (true
+                            && ($scope$A = this.matchword($$dpth + 1, $$cr)) !== null
+                            && ($scope$B = this.matchobs_phrase_$0($$dpth + 1, $$cr)) !== null
+                        ) {
+                            $$res = {kind: ASTKinds.obs_phrase, A: $scope$A, B: $scope$B};
+                        }
+                        return $$res;
+                    });
+            },
+            this.$scope$obs_phrase$memo,
+        );
+    }
+    public matchobs_phrase_$0($$dpth: number, $$cr?: ErrorTracker): Nullable<obs_phrase_$0> {
+        return this.memoise(
+            () => {
+                return this.choice<obs_phrase_$0>([
+                    () => this.matchobs_phrase_$0_1($$dpth + 1, $$cr),
+                    () => this.matchobs_phrase_$0_2($$dpth + 1, $$cr),
+                    () => this.matchobs_phrase_$0_3($$dpth + 1, $$cr),
+                ]);
+            },
+            this.$scope$obs_phrase_$0$memo,
+        );
+    }
+    public matchobs_phrase_$0_1($$dpth: number, $$cr?: ErrorTracker): Nullable<obs_phrase_$0_1> {
+        return this.matchword($$dpth + 1, $$cr);
+    }
+    public matchobs_phrase_$0_2($$dpth: number, $$cr?: ErrorTracker): Nullable<obs_phrase_$0_2> {
+        return this.regexAccept(String.raw`(?:.)`, $$dpth + 1, $$cr);
+    }
+    public matchobs_phrase_$0_3($$dpth: number, $$cr?: ErrorTracker): Nullable<obs_phrase_$0_3> {
+        return this.matchCFWS($$dpth + 1, $$cr);
+    }
+    public matchobs_phrase_list($$dpth: number, $$cr?: ErrorTracker): Nullable<obs_phrase_list> {
+        return this.memoise(
+            () => {
+                return this.run<obs_phrase_list>($$dpth,
+                    () => {
+                        let $scope$A: Nullable<obs_phrase_list_$0>;
+                        let $scope$D: Nullable<obs_phrase_list_$1[]>;
+                        let $$res: Nullable<obs_phrase_list> = null;
+                        if (true
+                            && ($scope$A = this.matchobs_phrase_list_$0($$dpth + 1, $$cr)) !== null
+                            && ($scope$D = this.loop<obs_phrase_list_$1>(() => this.matchobs_phrase_list_$1($$dpth + 1, $$cr), true)) !== null
+                        ) {
+                            $$res = {kind: ASTKinds.obs_phrase_list, A: $scope$A, D: $scope$D};
+                        }
+                        return $$res;
+                    });
+            },
+            this.$scope$obs_phrase_list$memo,
+        );
+    }
+    public matchobs_phrase_list_$0($$dpth: number, $$cr?: ErrorTracker): Nullable<obs_phrase_list_$0> {
+        return this.memoise(
+            () => {
+                return this.choice<obs_phrase_list_$0>([
+                    () => this.matchobs_phrase_list_$0_1($$dpth + 1, $$cr),
+                    () => this.matchobs_phrase_list_$0_2($$dpth + 1, $$cr),
+                ]);
+            },
+            this.$scope$obs_phrase_list_$0$memo,
+        );
+    }
+    public matchobs_phrase_list_$0_1($$dpth: number, $$cr?: ErrorTracker): Nullable<obs_phrase_list_$0_1> {
+        return this.matchphrase($$dpth + 1, $$cr);
+    }
+    public matchobs_phrase_list_$0_2($$dpth: number, $$cr?: ErrorTracker): Nullable<obs_phrase_list_$0_2> {
+        return this.matchCFWS($$dpth + 1, $$cr);
+    }
+    public matchobs_phrase_list_$1($$dpth: number, $$cr?: ErrorTracker): Nullable<obs_phrase_list_$1> {
+        return this.memoise(
+            () => {
+                return this.run<obs_phrase_list_$1>($$dpth,
+                    () => {
+                        let $scope$E: Nullable<string>;
+                        let $scope$F: Nullable<Nullable<obs_phrase_list_$1_$0>>;
+                        let $$res: Nullable<obs_phrase_list_$1> = null;
+                        if (true
+                            && ($scope$E = this.regexAccept(String.raw`(?:,)`, $$dpth + 1, $$cr)) !== null
+                            && (($scope$F = this.matchobs_phrase_list_$1_$0($$dpth + 1, $$cr)) || true)
+                        ) {
+                            $$res = {kind: ASTKinds.obs_phrase_list_$1, E: $scope$E, F: $scope$F};
+                        }
+                        return $$res;
+                    });
+            },
+            this.$scope$obs_phrase_list_$1$memo,
+        );
+    }
+    public matchobs_phrase_list_$1_$0($$dpth: number, $$cr?: ErrorTracker): Nullable<obs_phrase_list_$1_$0> {
+        return this.memoise(
+            () => {
+                return this.choice<obs_phrase_list_$1_$0>([
+                    () => this.matchobs_phrase_list_$1_$0_1($$dpth + 1, $$cr),
+                    () => this.matchobs_phrase_list_$1_$0_2($$dpth + 1, $$cr),
+                ]);
+            },
+            this.$scope$obs_phrase_list_$1_$0$memo,
+        );
+    }
+    public matchobs_phrase_list_$1_$0_1($$dpth: number, $$cr?: ErrorTracker): Nullable<obs_phrase_list_$1_$0_1> {
+        return this.matchphrase($$dpth + 1, $$cr);
+    }
+    public matchobs_phrase_list_$1_$0_2($$dpth: number, $$cr?: ErrorTracker): Nullable<obs_phrase_list_$1_$0_2> {
+        return this.matchCFWS($$dpth + 1, $$cr);
+    }
+    public matchobs_qp($$dpth: number, $$cr?: ErrorTracker): Nullable<obs_qp> {
+        return this.memoise(
+            () => {
+                return this.run<obs_qp>($$dpth,
+                    () => {
+                        let $scope$A: Nullable<string>;
+                        let $scope$B: Nullable<obs_qp_$0>;
+                        let $$res: Nullable<obs_qp> = null;
+                        if (true
+                            && ($scope$A = this.regexAccept(String.raw`(?:\\)`, $$dpth + 1, $$cr)) !== null
+                            && ($scope$B = this.matchobs_qp_$0($$dpth + 1, $$cr)) !== null
+                        ) {
+                            $$res = {kind: ASTKinds.obs_qp, A: $scope$A, B: $scope$B};
+                        }
+                        return $$res;
+                    });
+            },
+            this.$scope$obs_qp$memo,
+        );
+    }
+    public matchobs_qp_$0($$dpth: number, $$cr?: ErrorTracker): Nullable<obs_qp_$0> {
+        return this.memoise(
+            () => {
+                return this.choice<obs_qp_$0>([
+                    () => this.matchobs_qp_$0_1($$dpth + 1, $$cr),
+                    () => this.matchobs_qp_$0_2($$dpth + 1, $$cr),
+                    () => this.matchobs_qp_$0_3($$dpth + 1, $$cr),
+                    () => this.matchobs_qp_$0_4($$dpth + 1, $$cr),
+                ]);
+            },
+            this.$scope$obs_qp_$0$memo,
+        );
+    }
+    public matchobs_qp_$0_1($$dpth: number, $$cr?: ErrorTracker): Nullable<obs_qp_$0_1> {
+        return this.regexAccept(String.raw`(?:\x00)`, $$dpth + 1, $$cr);
+    }
+    public matchobs_qp_$0_2($$dpth: number, $$cr?: ErrorTracker): Nullable<obs_qp_$0_2> {
+        return this.matchobs_NO_WS_CTL($$dpth + 1, $$cr);
+    }
+    public matchobs_qp_$0_3($$dpth: number, $$cr?: ErrorTracker): Nullable<obs_qp_$0_3> {
+        return this.matchLF($$dpth + 1, $$cr);
+    }
+    public matchobs_qp_$0_4($$dpth: number, $$cr?: ErrorTracker): Nullable<obs_qp_$0_4> {
+        return this.matchCR($$dpth + 1, $$cr);
+    }
+    public matchobs_qtext($$dpth: number, $$cr?: ErrorTracker): Nullable<obs_qtext> {
+        return this.memoise(
+            () => {
+                return this.matchobs_NO_WS_CTL($$dpth + 1, $$cr);
+            },
+            this.$scope$obs_qtext$memo,
+        );
+    }
+    public matchobs_received($$dpth: number, $$cr?: ErrorTracker): Nullable<obs_received> {
+        return this.memoise(
+            () => {
+                return this.run<obs_received>($$dpth,
+                    () => {
+                        let $scope$A: Nullable<string>;
+                        let $scope$C: Nullable<string>;
+                        let $scope$D: Nullable<received_token[]>;
+                        let $scope$E: Nullable<CRLF>;
+                        let $$res: Nullable<obs_received> = null;
+                        if (true
+                            && ($scope$A = this.regexAccept(String.raw`(?:Received)`, $$dpth + 1, $$cr)) !== null
+                            && this.loop<WSP>(() => this.matchWSP($$dpth + 1, $$cr), true) !== null
+                            && ($scope$C = this.regexAccept(String.raw`(?::)`, $$dpth + 1, $$cr)) !== null
+                            && ($scope$D = this.loop<received_token>(() => this.matchreceived_token($$dpth + 1, $$cr), true)) !== null
+                            && ($scope$E = this.matchCRLF($$dpth + 1, $$cr)) !== null
+                        ) {
+                            $$res = {kind: ASTKinds.obs_received, A: $scope$A, C: $scope$C, D: $scope$D, E: $scope$E};
+                        }
+                        return $$res;
+                    });
+            },
+            this.$scope$obs_received$memo,
+        );
+    }
     public matchobs_references($$dpth: number, $$cr?: ErrorTracker): Nullable<obs_references> {
         return this.memoise(
             () => {
@@ -6856,213 +5553,28 @@ export class Parser {
     public matchobs_references_$0_2($$dpth: number, $$cr?: ErrorTracker): Nullable<obs_references_$0_2> {
         return this.matchmsg_id($$dpth + 1, $$cr);
     }
-    public matchobs_id_left($$dpth: number, $$cr?: ErrorTracker): Nullable<obs_id_left> {
+    public matchobs_reply_to($$dpth: number, $$cr?: ErrorTracker): Nullable<obs_reply_to> {
         return this.memoise(
             () => {
-                return this.matchlocal_part($$dpth + 1, $$cr);
-            },
-            this.$scope$obs_id_left$memo,
-        );
-    }
-    public matchobs_id_right($$dpth: number, $$cr?: ErrorTracker): Nullable<obs_id_right> {
-        return this.memoise(
-            () => {
-                return this.matchdomain($$dpth + 1, $$cr);
-            },
-            this.$scope$obs_id_right$memo,
-        );
-    }
-    public matchobs_subject($$dpth: number, $$cr?: ErrorTracker): Nullable<obs_subject> {
-        return this.memoise(
-            () => {
-                return this.run<obs_subject>($$dpth,
-                    () => {
-                        let $scope$A: Nullable<string>;
-                        let $scope$C: Nullable<string>;
-                        let $scope$D: Nullable<unstructured>;
-                        let $$res: Nullable<obs_subject> = null;
-                        if (true
-                            && ($scope$A = this.regexAccept(String.raw`(?:Subject)`, $$dpth + 1, $$cr)) !== null
-                            && this.loop<WSP>(() => this.matchWSP($$dpth + 1, $$cr), true) !== null
-                            && ($scope$C = this.regexAccept(String.raw`(?::)`, $$dpth + 1, $$cr)) !== null
-                            && ($scope$D = this.matchunstructured($$dpth + 1, $$cr)) !== null
-                            && this.matchCRLF($$dpth + 1, $$cr) !== null
-                        ) {
-                            $$res = {kind: ASTKinds.obs_subject, A: $scope$A, C: $scope$C, D: $scope$D};
-                        }
-                        return $$res;
-                    });
-            },
-            this.$scope$obs_subject$memo,
-        );
-    }
-    public matchobs_comments($$dpth: number, $$cr?: ErrorTracker): Nullable<obs_comments> {
-        return this.memoise(
-            () => {
-                return this.run<obs_comments>($$dpth,
-                    () => {
-                        let $scope$A: Nullable<string>;
-                        let $scope$C: Nullable<string>;
-                        let $scope$D: Nullable<unstructured>;
-                        let $$res: Nullable<obs_comments> = null;
-                        if (true
-                            && ($scope$A = this.regexAccept(String.raw`(?:Comments)`, $$dpth + 1, $$cr)) !== null
-                            && this.loop<WSP>(() => this.matchWSP($$dpth + 1, $$cr), true) !== null
-                            && ($scope$C = this.regexAccept(String.raw`(?::)`, $$dpth + 1, $$cr)) !== null
-                            && ($scope$D = this.matchunstructured($$dpth + 1, $$cr)) !== null
-                            && this.matchCRLF($$dpth + 1, $$cr) !== null
-                        ) {
-                            $$res = {kind: ASTKinds.obs_comments, A: $scope$A, C: $scope$C, D: $scope$D};
-                        }
-                        return $$res;
-                    });
-            },
-            this.$scope$obs_comments$memo,
-        );
-    }
-    public matchobs_keywords($$dpth: number, $$cr?: ErrorTracker): Nullable<obs_keywords> {
-        return this.memoise(
-            () => {
-                return this.run<obs_keywords>($$dpth,
-                    () => {
-                        let $scope$A: Nullable<string>;
-                        let $scope$C: Nullable<string>;
-                        let $scope$D: Nullable<obs_phrase_list>;
-                        let $$res: Nullable<obs_keywords> = null;
-                        if (true
-                            && ($scope$A = this.regexAccept(String.raw`(?:Keywords)`, $$dpth + 1, $$cr)) !== null
-                            && this.loop<WSP>(() => this.matchWSP($$dpth + 1, $$cr), true) !== null
-                            && ($scope$C = this.regexAccept(String.raw`(?::)`, $$dpth + 1, $$cr)) !== null
-                            && ($scope$D = this.matchobs_phrase_list($$dpth + 1, $$cr)) !== null
-                            && this.matchCRLF($$dpth + 1, $$cr) !== null
-                        ) {
-                            $$res = {kind: ASTKinds.obs_keywords, A: $scope$A, C: $scope$C, D: $scope$D};
-                        }
-                        return $$res;
-                    });
-            },
-            this.$scope$obs_keywords$memo,
-        );
-    }
-    public matchobs_resent_from($$dpth: number, $$cr?: ErrorTracker): Nullable<obs_resent_from> {
-        return this.memoise(
-            () => {
-                return this.run<obs_resent_from>($$dpth,
-                    () => {
-                        let $scope$A: Nullable<string>;
-                        let $scope$C: Nullable<string>;
-                        let $scope$D: Nullable<mailbox_list>;
-                        let $$res: Nullable<obs_resent_from> = null;
-                        if (true
-                            && ($scope$A = this.regexAccept(String.raw`(?:Resent-From)`, $$dpth + 1, $$cr)) !== null
-                            && this.loop<WSP>(() => this.matchWSP($$dpth + 1, $$cr), true) !== null
-                            && ($scope$C = this.regexAccept(String.raw`(?::)`, $$dpth + 1, $$cr)) !== null
-                            && ($scope$D = this.matchmailbox_list($$dpth + 1, $$cr)) !== null
-                            && this.matchCRLF($$dpth + 1, $$cr) !== null
-                        ) {
-                            $$res = {kind: ASTKinds.obs_resent_from, A: $scope$A, C: $scope$C, D: $scope$D};
-                        }
-                        return $$res;
-                    });
-            },
-            this.$scope$obs_resent_from$memo,
-        );
-    }
-    public matchobs_resent_send($$dpth: number, $$cr?: ErrorTracker): Nullable<obs_resent_send> {
-        return this.memoise(
-            () => {
-                return this.run<obs_resent_send>($$dpth,
-                    () => {
-                        let $scope$A: Nullable<string>;
-                        let $scope$C: Nullable<string>;
-                        let $scope$D: Nullable<mailbox>;
-                        let $$res: Nullable<obs_resent_send> = null;
-                        if (true
-                            && ($scope$A = this.regexAccept(String.raw`(?:Resent-Sender)`, $$dpth + 1, $$cr)) !== null
-                            && this.loop<WSP>(() => this.matchWSP($$dpth + 1, $$cr), true) !== null
-                            && ($scope$C = this.regexAccept(String.raw`(?::)`, $$dpth + 1, $$cr)) !== null
-                            && ($scope$D = this.matchmailbox($$dpth + 1, $$cr)) !== null
-                            && this.matchCRLF($$dpth + 1, $$cr) !== null
-                        ) {
-                            $$res = {kind: ASTKinds.obs_resent_send, A: $scope$A, C: $scope$C, D: $scope$D};
-                        }
-                        return $$res;
-                    });
-            },
-            this.$scope$obs_resent_send$memo,
-        );
-    }
-    public matchobs_resent_date($$dpth: number, $$cr?: ErrorTracker): Nullable<obs_resent_date> {
-        return this.memoise(
-            () => {
-                return this.run<obs_resent_date>($$dpth,
-                    () => {
-                        let $scope$A: Nullable<string>;
-                        let $scope$C: Nullable<string>;
-                        let $scope$D: Nullable<date_time>;
-                        let $$res: Nullable<obs_resent_date> = null;
-                        if (true
-                            && ($scope$A = this.regexAccept(String.raw`(?:Resent-Date)`, $$dpth + 1, $$cr)) !== null
-                            && this.loop<WSP>(() => this.matchWSP($$dpth + 1, $$cr), true) !== null
-                            && ($scope$C = this.regexAccept(String.raw`(?::)`, $$dpth + 1, $$cr)) !== null
-                            && ($scope$D = this.matchdate_time($$dpth + 1, $$cr)) !== null
-                            && this.matchCRLF($$dpth + 1, $$cr) !== null
-                        ) {
-                            $$res = {kind: ASTKinds.obs_resent_date, A: $scope$A, C: $scope$C, D: $scope$D};
-                        }
-                        return $$res;
-                    });
-            },
-            this.$scope$obs_resent_date$memo,
-        );
-    }
-    public matchobs_resent_to($$dpth: number, $$cr?: ErrorTracker): Nullable<obs_resent_to> {
-        return this.memoise(
-            () => {
-                return this.run<obs_resent_to>($$dpth,
+                return this.run<obs_reply_to>($$dpth,
                     () => {
                         let $scope$A: Nullable<string>;
                         let $scope$C: Nullable<string>;
                         let $scope$D: Nullable<address_list>;
-                        let $scope$E: Nullable<CRLF>;
-                        let $$res: Nullable<obs_resent_to> = null;
+                        let $$res: Nullable<obs_reply_to> = null;
                         if (true
-                            && ($scope$A = this.regexAccept(String.raw`(?:Resent-To)`, $$dpth + 1, $$cr)) !== null
-                            && this.loop<WSP>(() => this.matchWSP($$dpth + 1, $$cr), true) !== null
-                            && ($scope$C = this.regexAccept(String.raw`(?::)`, $$dpth + 1, $$cr)) !== null
-                            && ($scope$D = this.matchaddress_list($$dpth + 1, $$cr)) !== null
-                            && ($scope$E = this.matchCRLF($$dpth + 1, $$cr)) !== null
-                        ) {
-                            $$res = {kind: ASTKinds.obs_resent_to, A: $scope$A, C: $scope$C, D: $scope$D, E: $scope$E};
-                        }
-                        return $$res;
-                    });
-            },
-            this.$scope$obs_resent_to$memo,
-        );
-    }
-    public matchobs_resent_cc($$dpth: number, $$cr?: ErrorTracker): Nullable<obs_resent_cc> {
-        return this.memoise(
-            () => {
-                return this.run<obs_resent_cc>($$dpth,
-                    () => {
-                        let $scope$A: Nullable<string>;
-                        let $scope$C: Nullable<string>;
-                        let $scope$D: Nullable<address_list>;
-                        let $$res: Nullable<obs_resent_cc> = null;
-                        if (true
-                            && ($scope$A = this.regexAccept(String.raw`(?:Resent-Cc)`, $$dpth + 1, $$cr)) !== null
+                            && ($scope$A = this.regexAccept(String.raw`(?:Reply-To)`, $$dpth + 1, $$cr)) !== null
                             && this.loop<WSP>(() => this.matchWSP($$dpth + 1, $$cr), true) !== null
                             && ($scope$C = this.regexAccept(String.raw`(?::)`, $$dpth + 1, $$cr)) !== null
                             && ($scope$D = this.matchaddress_list($$dpth + 1, $$cr)) !== null
                             && this.matchCRLF($$dpth + 1, $$cr) !== null
                         ) {
-                            $$res = {kind: ASTKinds.obs_resent_cc, A: $scope$A, C: $scope$C, D: $scope$D};
+                            $$res = {kind: ASTKinds.obs_reply_to, A: $scope$A, C: $scope$C, D: $scope$D};
                         }
                         return $$res;
                     });
             },
-            this.$scope$obs_resent_cc$memo,
+            this.$scope$obs_reply_to$memo,
         );
     }
     public matchobs_resent_bcc($$dpth: number, $$cr?: ErrorTracker): Nullable<obs_resent_bcc> {
@@ -7165,6 +5677,78 @@ export class Parser {
             this.$scope$obs_resent_bcc_$0_$0_$0$memo,
         );
     }
+    public matchobs_resent_cc($$dpth: number, $$cr?: ErrorTracker): Nullable<obs_resent_cc> {
+        return this.memoise(
+            () => {
+                return this.run<obs_resent_cc>($$dpth,
+                    () => {
+                        let $scope$A: Nullable<string>;
+                        let $scope$C: Nullable<string>;
+                        let $scope$D: Nullable<address_list>;
+                        let $$res: Nullable<obs_resent_cc> = null;
+                        if (true
+                            && ($scope$A = this.regexAccept(String.raw`(?:Resent-Cc)`, $$dpth + 1, $$cr)) !== null
+                            && this.loop<WSP>(() => this.matchWSP($$dpth + 1, $$cr), true) !== null
+                            && ($scope$C = this.regexAccept(String.raw`(?::)`, $$dpth + 1, $$cr)) !== null
+                            && ($scope$D = this.matchaddress_list($$dpth + 1, $$cr)) !== null
+                            && this.matchCRLF($$dpth + 1, $$cr) !== null
+                        ) {
+                            $$res = {kind: ASTKinds.obs_resent_cc, A: $scope$A, C: $scope$C, D: $scope$D};
+                        }
+                        return $$res;
+                    });
+            },
+            this.$scope$obs_resent_cc$memo,
+        );
+    }
+    public matchobs_resent_date($$dpth: number, $$cr?: ErrorTracker): Nullable<obs_resent_date> {
+        return this.memoise(
+            () => {
+                return this.run<obs_resent_date>($$dpth,
+                    () => {
+                        let $scope$A: Nullable<string>;
+                        let $scope$C: Nullable<string>;
+                        let $scope$D: Nullable<date_time>;
+                        let $$res: Nullable<obs_resent_date> = null;
+                        if (true
+                            && ($scope$A = this.regexAccept(String.raw`(?:Resent-Date)`, $$dpth + 1, $$cr)) !== null
+                            && this.loop<WSP>(() => this.matchWSP($$dpth + 1, $$cr), true) !== null
+                            && ($scope$C = this.regexAccept(String.raw`(?::)`, $$dpth + 1, $$cr)) !== null
+                            && ($scope$D = this.matchdate_time($$dpth + 1, $$cr)) !== null
+                            && this.matchCRLF($$dpth + 1, $$cr) !== null
+                        ) {
+                            $$res = {kind: ASTKinds.obs_resent_date, A: $scope$A, C: $scope$C, D: $scope$D};
+                        }
+                        return $$res;
+                    });
+            },
+            this.$scope$obs_resent_date$memo,
+        );
+    }
+    public matchobs_resent_from($$dpth: number, $$cr?: ErrorTracker): Nullable<obs_resent_from> {
+        return this.memoise(
+            () => {
+                return this.run<obs_resent_from>($$dpth,
+                    () => {
+                        let $scope$A: Nullable<string>;
+                        let $scope$C: Nullable<string>;
+                        let $scope$D: Nullable<mailbox_list>;
+                        let $$res: Nullable<obs_resent_from> = null;
+                        if (true
+                            && ($scope$A = this.regexAccept(String.raw`(?:Resent-From)`, $$dpth + 1, $$cr)) !== null
+                            && this.loop<WSP>(() => this.matchWSP($$dpth + 1, $$cr), true) !== null
+                            && ($scope$C = this.regexAccept(String.raw`(?::)`, $$dpth + 1, $$cr)) !== null
+                            && ($scope$D = this.matchmailbox_list($$dpth + 1, $$cr)) !== null
+                            && this.matchCRLF($$dpth + 1, $$cr) !== null
+                        ) {
+                            $$res = {kind: ASTKinds.obs_resent_from, A: $scope$A, C: $scope$C, D: $scope$D};
+                        }
+                        return $$res;
+                    });
+            },
+            this.$scope$obs_resent_from$memo,
+        );
+    }
     public matchobs_resent_mid($$dpth: number, $$cr?: ErrorTracker): Nullable<obs_resent_mid> {
         return this.memoise(
             () => {
@@ -7213,6 +5797,55 @@ export class Parser {
             this.$scope$obs_resent_rply$memo,
         );
     }
+    public matchobs_resent_send($$dpth: number, $$cr?: ErrorTracker): Nullable<obs_resent_send> {
+        return this.memoise(
+            () => {
+                return this.run<obs_resent_send>($$dpth,
+                    () => {
+                        let $scope$A: Nullable<string>;
+                        let $scope$C: Nullable<string>;
+                        let $scope$D: Nullable<mailbox>;
+                        let $$res: Nullable<obs_resent_send> = null;
+                        if (true
+                            && ($scope$A = this.regexAccept(String.raw`(?:Resent-Sender)`, $$dpth + 1, $$cr)) !== null
+                            && this.loop<WSP>(() => this.matchWSP($$dpth + 1, $$cr), true) !== null
+                            && ($scope$C = this.regexAccept(String.raw`(?::)`, $$dpth + 1, $$cr)) !== null
+                            && ($scope$D = this.matchmailbox($$dpth + 1, $$cr)) !== null
+                            && this.matchCRLF($$dpth + 1, $$cr) !== null
+                        ) {
+                            $$res = {kind: ASTKinds.obs_resent_send, A: $scope$A, C: $scope$C, D: $scope$D};
+                        }
+                        return $$res;
+                    });
+            },
+            this.$scope$obs_resent_send$memo,
+        );
+    }
+    public matchobs_resent_to($$dpth: number, $$cr?: ErrorTracker): Nullable<obs_resent_to> {
+        return this.memoise(
+            () => {
+                return this.run<obs_resent_to>($$dpth,
+                    () => {
+                        let $scope$A: Nullable<string>;
+                        let $scope$C: Nullable<string>;
+                        let $scope$D: Nullable<address_list>;
+                        let $scope$E: Nullable<CRLF>;
+                        let $$res: Nullable<obs_resent_to> = null;
+                        if (true
+                            && ($scope$A = this.regexAccept(String.raw`(?:Resent-To)`, $$dpth + 1, $$cr)) !== null
+                            && this.loop<WSP>(() => this.matchWSP($$dpth + 1, $$cr), true) !== null
+                            && ($scope$C = this.regexAccept(String.raw`(?::)`, $$dpth + 1, $$cr)) !== null
+                            && ($scope$D = this.matchaddress_list($$dpth + 1, $$cr)) !== null
+                            && ($scope$E = this.matchCRLF($$dpth + 1, $$cr)) !== null
+                        ) {
+                            $$res = {kind: ASTKinds.obs_resent_to, A: $scope$A, C: $scope$C, D: $scope$D, E: $scope$E};
+                        }
+                        return $$res;
+                    });
+            },
+            this.$scope$obs_resent_to$memo,
+        );
+    }
     public matchobs_return($$dpth: number, $$cr?: ErrorTracker): Nullable<obs_return> {
         return this.memoise(
             () => {
@@ -7237,54 +5870,1403 @@ export class Parser {
             this.$scope$obs_return$memo,
         );
     }
-    public matchobs_received($$dpth: number, $$cr?: ErrorTracker): Nullable<obs_received> {
+    public matchobs_route($$dpth: number, $$cr?: ErrorTracker): Nullable<obs_route> {
         return this.memoise(
             () => {
-                return this.run<obs_received>($$dpth,
+                return this.run<obs_route>($$dpth,
+                    () => {
+                        let $scope$B: Nullable<string>;
+                        let $$res: Nullable<obs_route> = null;
+                        if (true
+                            && this.matchobs_domain_list($$dpth + 1, $$cr) !== null
+                            && ($scope$B = this.regexAccept(String.raw`(?::)`, $$dpth + 1, $$cr)) !== null
+                        ) {
+                            $$res = {kind: ASTKinds.obs_route, B: $scope$B};
+                        }
+                        return $$res;
+                    });
+            },
+            this.$scope$obs_route$memo,
+        );
+    }
+    public matchobs_second($$dpth: number, $$cr?: ErrorTracker): Nullable<obs_second> {
+        return this.memoise(
+            () => {
+                return this.run<obs_second>($$dpth,
+                    () => {
+                        let $scope$B: Nullable<TWO_DIGIT>;
+                        let $$res: Nullable<obs_second> = null;
+                        if (true
+                            && ((this.matchCFWS($$dpth + 1, $$cr)) || true)
+                            && ($scope$B = this.matchTWO_DIGIT($$dpth + 1, $$cr)) !== null
+                            && ((this.matchCFWS($$dpth + 1, $$cr)) || true)
+                        ) {
+                            $$res = {kind: ASTKinds.obs_second, B: $scope$B};
+                        }
+                        return $$res;
+                    });
+            },
+            this.$scope$obs_second$memo,
+        );
+    }
+    public matchobs_sender($$dpth: number, $$cr?: ErrorTracker): Nullable<obs_sender> {
+        return this.memoise(
+            () => {
+                return this.run<obs_sender>($$dpth,
                     () => {
                         let $scope$A: Nullable<string>;
                         let $scope$C: Nullable<string>;
-                        let $scope$D: Nullable<received_token[]>;
-                        let $scope$E: Nullable<CRLF>;
-                        let $$res: Nullable<obs_received> = null;
+                        let $scope$D: Nullable<mailbox>;
+                        let $$res: Nullable<obs_sender> = null;
                         if (true
-                            && ($scope$A = this.regexAccept(String.raw`(?:Received)`, $$dpth + 1, $$cr)) !== null
+                            && ($scope$A = this.regexAccept(String.raw`(?:Sender)`, $$dpth + 1, $$cr)) !== null
                             && this.loop<WSP>(() => this.matchWSP($$dpth + 1, $$cr), true) !== null
                             && ($scope$C = this.regexAccept(String.raw`(?::)`, $$dpth + 1, $$cr)) !== null
-                            && ($scope$D = this.loop<received_token>(() => this.matchreceived_token($$dpth + 1, $$cr), true)) !== null
-                            && ($scope$E = this.matchCRLF($$dpth + 1, $$cr)) !== null
-                        ) {
-                            $$res = {kind: ASTKinds.obs_received, A: $scope$A, C: $scope$C, D: $scope$D, E: $scope$E};
-                        }
-                        return $$res;
-                    });
-            },
-            this.$scope$obs_received$memo,
-        );
-    }
-    public matchobs_optional($$dpth: number, $$cr?: ErrorTracker): Nullable<obs_optional> {
-        return this.memoise(
-            () => {
-                return this.run<obs_optional>($$dpth,
-                    () => {
-                        let $scope$A: Nullable<field_name>;
-                        let $scope$C: Nullable<string>;
-                        let $scope$D: Nullable<unstructured>;
-                        let $$res: Nullable<obs_optional> = null;
-                        if (true
-                            && ($scope$A = this.matchfield_name($$dpth + 1, $$cr)) !== null
-                            && this.loop<WSP>(() => this.matchWSP($$dpth + 1, $$cr), true) !== null
-                            && ($scope$C = this.regexAccept(String.raw`(?::)`, $$dpth + 1, $$cr)) !== null
-                            && ($scope$D = this.matchunstructured($$dpth + 1, $$cr)) !== null
+                            && ($scope$D = this.matchmailbox($$dpth + 1, $$cr)) !== null
                             && this.matchCRLF($$dpth + 1, $$cr) !== null
                         ) {
-                            $$res = {kind: ASTKinds.obs_optional, A: $scope$A, C: $scope$C, D: $scope$D};
+                            $$res = {kind: ASTKinds.obs_sender, A: $scope$A, C: $scope$C, D: $scope$D};
                         }
                         return $$res;
                     });
             },
-            this.$scope$obs_optional$memo,
+            this.$scope$obs_sender$memo,
         );
+    }
+    public matchobs_subject($$dpth: number, $$cr?: ErrorTracker): Nullable<obs_subject> {
+        return this.memoise(
+            () => {
+                return this.run<obs_subject>($$dpth,
+                    () => {
+                        let $scope$_name: Nullable<string>;
+                        let $scope$C: Nullable<string>;
+                        let $scope$_value: Nullable<unstructured>;
+                        let $$res: Nullable<obs_subject> = null;
+                        if (true
+                            && ($scope$_name = this.regexAccept(String.raw`(?:Subject)`, $$dpth + 1, $$cr)) !== null
+                            && this.loop<WSP>(() => this.matchWSP($$dpth + 1, $$cr), true) !== null
+                            && ($scope$C = this.regexAccept(String.raw`(?::)`, $$dpth + 1, $$cr)) !== null
+                            && ($scope$_value = this.matchunstructured($$dpth + 1, $$cr)) !== null
+                            && this.matchCRLF($$dpth + 1, $$cr) !== null
+                        ) {
+                            $$res = {kind: ASTKinds.obs_subject, _name: $scope$_name, C: $scope$C, _value: $scope$_value};
+                        }
+                        return $$res;
+                    });
+            },
+            this.$scope$obs_subject$memo,
+        );
+    }
+    public matchobs_to($$dpth: number, $$cr?: ErrorTracker): Nullable<obs_to> {
+        return this.memoise(
+            () => {
+                return this.run<obs_to>($$dpth,
+                    () => {
+                        let $scope$A: Nullable<string>;
+                        let $scope$C: Nullable<string>;
+                        let $scope$D: Nullable<address_list>;
+                        let $$res: Nullable<obs_to> = null;
+                        if (true
+                            && ($scope$A = this.regexAccept(String.raw`(?:To)`, $$dpth + 1, $$cr)) !== null
+                            && this.loop<WSP>(() => this.matchWSP($$dpth + 1, $$cr), true) !== null
+                            && ($scope$C = this.regexAccept(String.raw`(?::)`, $$dpth + 1, $$cr)) !== null
+                            && ($scope$D = this.matchaddress_list($$dpth + 1, $$cr)) !== null
+                            && this.matchCRLF($$dpth + 1, $$cr) !== null
+                        ) {
+                            $$res = {kind: ASTKinds.obs_to, A: $scope$A, C: $scope$C, D: $scope$D};
+                        }
+                        return $$res;
+                    });
+            },
+            this.$scope$obs_to$memo,
+        );
+    }
+    public matchobs_unstruct($$dpth: number, $$cr?: ErrorTracker): Nullable<obs_unstruct> {
+        return this.memoise(
+            () => {
+                return this.run<obs_unstruct>($$dpth,
+                    () => {
+                        let $scope$A: Nullable<obs_unstruct_$0[]>;
+                        let $$res: Nullable<obs_unstruct> = null;
+                        if (true
+                            && ($scope$A = this.loop<obs_unstruct_$0>(() => this.matchobs_unstruct_$0($$dpth + 1, $$cr), true)) !== null
+                        ) {
+                            $$res = {kind: ASTKinds.obs_unstruct, A: $scope$A};
+                        }
+                        return $$res;
+                    });
+            },
+            this.$scope$obs_unstruct$memo,
+        );
+    }
+    public matchobs_unstruct_$0($$dpth: number, $$cr?: ErrorTracker): Nullable<obs_unstruct_$0> {
+        return this.memoise(
+            () => {
+                return this.choice<obs_unstruct_$0>([
+                    () => this.matchobs_unstruct_$0_1($$dpth + 1, $$cr),
+                    () => this.matchobs_unstruct_$0_2($$dpth + 1, $$cr),
+                ]);
+            },
+            this.$scope$obs_unstruct_$0$memo,
+        );
+    }
+    public matchobs_unstruct_$0_1($$dpth: number, $$cr?: ErrorTracker): Nullable<obs_unstruct_$0_1> {
+        return this.run<obs_unstruct_$0_1>($$dpth,
+            () => {
+                let $scope$B: Nullable<obs_unstruct_$0_$0>;
+                let $$res: Nullable<obs_unstruct_$0_1> = null;
+                if (true
+                    && ($scope$B = this.matchobs_unstruct_$0_$0($$dpth + 1, $$cr)) !== null
+                ) {
+                    $$res = {kind: ASTKinds.obs_unstruct_$0_1, B: $scope$B};
+                }
+                return $$res;
+            });
+    }
+    public matchobs_unstruct_$0_2($$dpth: number, $$cr?: ErrorTracker): Nullable<obs_unstruct_$0_2> {
+        return this.matchFWS($$dpth + 1, $$cr);
+    }
+    public matchobs_unstruct_$0_$0($$dpth: number, $$cr?: ErrorTracker): Nullable<obs_unstruct_$0_$0> {
+        return this.memoise(
+            () => {
+                return this.run<obs_unstruct_$0_$0>($$dpth,
+                    () => {
+                        let $scope$E: Nullable<obs_unstruct_$0_$0_$0[]>;
+                        let $$res: Nullable<obs_unstruct_$0_$0> = null;
+                        if (true
+                            && this.loop<LF>(() => this.matchLF($$dpth + 1, $$cr), true) !== null
+                            && this.loop<CR>(() => this.matchCR($$dpth + 1, $$cr), true) !== null
+                            && ($scope$E = this.loop<obs_unstruct_$0_$0_$0>(() => this.matchobs_unstruct_$0_$0_$0($$dpth + 1, $$cr), true)) !== null
+                        ) {
+                            $$res = {kind: ASTKinds.obs_unstruct_$0_$0, E: $scope$E};
+                        }
+                        return $$res;
+                    });
+            },
+            this.$scope$obs_unstruct_$0_$0$memo,
+        );
+    }
+    public matchobs_unstruct_$0_$0_$0($$dpth: number, $$cr?: ErrorTracker): Nullable<obs_unstruct_$0_$0_$0> {
+        return this.memoise(
+            () => {
+                return this.run<obs_unstruct_$0_$0_$0>($$dpth,
+                    () => {
+                        let $scope$F: Nullable<obs_utext>;
+                        let $$res: Nullable<obs_unstruct_$0_$0_$0> = null;
+                        if (true
+                            && ($scope$F = this.matchobs_utext($$dpth + 1, $$cr)) !== null
+                            && this.loop<LF>(() => this.matchLF($$dpth + 1, $$cr), true) !== null
+                            && this.loop<CR>(() => this.matchCR($$dpth + 1, $$cr), true) !== null
+                        ) {
+                            $$res = {kind: ASTKinds.obs_unstruct_$0_$0_$0, F: $scope$F};
+                        }
+                        return $$res;
+                    });
+            },
+            this.$scope$obs_unstruct_$0_$0_$0$memo,
+        );
+    }
+    public matchobs_utext($$dpth: number, $$cr?: ErrorTracker): Nullable<obs_utext> {
+        return this.memoise(
+            () => {
+                return this.choice<obs_utext>([
+                    () => this.matchobs_utext_1($$dpth + 1, $$cr),
+                    () => this.matchobs_utext_2($$dpth + 1, $$cr),
+                    () => this.matchobs_utext_3($$dpth + 1, $$cr),
+                ]);
+            },
+            this.$scope$obs_utext$memo,
+        );
+    }
+    public matchobs_utext_1($$dpth: number, $$cr?: ErrorTracker): Nullable<obs_utext_1> {
+        return this.regexAccept(String.raw`(?:\x00)`, $$dpth + 1, $$cr);
+    }
+    public matchobs_utext_2($$dpth: number, $$cr?: ErrorTracker): Nullable<obs_utext_2> {
+        return this.matchobs_NO_WS_CTL($$dpth + 1, $$cr);
+    }
+    public matchobs_utext_3($$dpth: number, $$cr?: ErrorTracker): Nullable<obs_utext_3> {
+        return this.matchVCHAR($$dpth + 1, $$cr);
+    }
+    public matchobs_year($$dpth: number, $$cr?: ErrorTracker): Nullable<obs_year> {
+        return this.memoise(
+            () => {
+                return this.run<obs_year>($$dpth,
+                    () => {
+                        let $scope$A: Nullable<Nullable<CFWS>>;
+                        let $scope$B: Nullable<TWO_DIGIT>;
+                        let $scope$C: Nullable<DIGIT[]>;
+                        let $$res: Nullable<obs_year> = null;
+                        if (true
+                            && (($scope$A = this.matchCFWS($$dpth + 1, $$cr)) || true)
+                            && ($scope$B = this.matchTWO_DIGIT($$dpth + 1, $$cr)) !== null
+                            && ($scope$C = this.loop<DIGIT>(() => this.matchDIGIT($$dpth + 1, $$cr), true)) !== null
+                            && ((this.matchCFWS($$dpth + 1, $$cr)) || true)
+                        ) {
+                            $$res = {kind: ASTKinds.obs_year, A: $scope$A, B: $scope$B, C: $scope$C};
+                        }
+                        return $$res;
+                    });
+            },
+            this.$scope$obs_year$memo,
+        );
+    }
+    public matchobs_zone($$dpth: number, $$cr?: ErrorTracker): Nullable<obs_zone> {
+        return this.memoise(
+            () => {
+                return this.choice<obs_zone>([
+                    () => this.matchobs_zone_1($$dpth + 1, $$cr),
+                    () => this.matchobs_zone_2($$dpth + 1, $$cr),
+                    () => this.matchobs_zone_3($$dpth + 1, $$cr),
+                    () => this.matchobs_zone_4($$dpth + 1, $$cr),
+                    () => this.matchobs_zone_5($$dpth + 1, $$cr),
+                    () => this.matchobs_zone_6($$dpth + 1, $$cr),
+                    () => this.matchobs_zone_7($$dpth + 1, $$cr),
+                    () => this.matchobs_zone_8($$dpth + 1, $$cr),
+                    () => this.matchobs_zone_9($$dpth + 1, $$cr),
+                    () => this.matchobs_zone_10($$dpth + 1, $$cr),
+                    () => this.matchobs_zone_11($$dpth + 1, $$cr),
+                    () => this.matchobs_zone_12($$dpth + 1, $$cr),
+                    () => this.matchobs_zone_13($$dpth + 1, $$cr),
+                    () => this.matchobs_zone_14($$dpth + 1, $$cr),
+                ]);
+            },
+            this.$scope$obs_zone$memo,
+        );
+    }
+    public matchobs_zone_1($$dpth: number, $$cr?: ErrorTracker): Nullable<obs_zone_1> {
+        return this.regexAccept(String.raw`(?:UT)`, $$dpth + 1, $$cr);
+    }
+    public matchobs_zone_2($$dpth: number, $$cr?: ErrorTracker): Nullable<obs_zone_2> {
+        return this.regexAccept(String.raw`(?:GMT)`, $$dpth + 1, $$cr);
+    }
+    public matchobs_zone_3($$dpth: number, $$cr?: ErrorTracker): Nullable<obs_zone_3> {
+        return this.regexAccept(String.raw`(?:EST)`, $$dpth + 1, $$cr);
+    }
+    public matchobs_zone_4($$dpth: number, $$cr?: ErrorTracker): Nullable<obs_zone_4> {
+        return this.regexAccept(String.raw`(?:EDT)`, $$dpth + 1, $$cr);
+    }
+    public matchobs_zone_5($$dpth: number, $$cr?: ErrorTracker): Nullable<obs_zone_5> {
+        return this.regexAccept(String.raw`(?:CST)`, $$dpth + 1, $$cr);
+    }
+    public matchobs_zone_6($$dpth: number, $$cr?: ErrorTracker): Nullable<obs_zone_6> {
+        return this.regexAccept(String.raw`(?:CDT)`, $$dpth + 1, $$cr);
+    }
+    public matchobs_zone_7($$dpth: number, $$cr?: ErrorTracker): Nullable<obs_zone_7> {
+        return this.regexAccept(String.raw`(?:MST)`, $$dpth + 1, $$cr);
+    }
+    public matchobs_zone_8($$dpth: number, $$cr?: ErrorTracker): Nullable<obs_zone_8> {
+        return this.regexAccept(String.raw`(?:MDT)`, $$dpth + 1, $$cr);
+    }
+    public matchobs_zone_9($$dpth: number, $$cr?: ErrorTracker): Nullable<obs_zone_9> {
+        return this.regexAccept(String.raw`(?:PST)`, $$dpth + 1, $$cr);
+    }
+    public matchobs_zone_10($$dpth: number, $$cr?: ErrorTracker): Nullable<obs_zone_10> {
+        return this.regexAccept(String.raw`(?:PDT)`, $$dpth + 1, $$cr);
+    }
+    public matchobs_zone_11($$dpth: number, $$cr?: ErrorTracker): Nullable<obs_zone_11> {
+        return this.regexAccept(String.raw`(?:[\x41-\x49])`, $$dpth + 1, $$cr);
+    }
+    public matchobs_zone_12($$dpth: number, $$cr?: ErrorTracker): Nullable<obs_zone_12> {
+        return this.regexAccept(String.raw`(?:[\x4b-\x5a])`, $$dpth + 1, $$cr);
+    }
+    public matchobs_zone_13($$dpth: number, $$cr?: ErrorTracker): Nullable<obs_zone_13> {
+        return this.regexAccept(String.raw`(?:[\x61-\x69])`, $$dpth + 1, $$cr);
+    }
+    public matchobs_zone_14($$dpth: number, $$cr?: ErrorTracker): Nullable<obs_zone_14> {
+        return this.regexAccept(String.raw`(?:[\x6b-\x7a])`, $$dpth + 1, $$cr);
+    }
+    public matchoptional_field($$dpth: number, $$cr?: ErrorTracker): Nullable<optional_field> {
+        return this.memoise(
+            () => {
+                return this.run<optional_field>($$dpth,
+                    () => {
+                        let $scope$A: Nullable<field_name>;
+                        let $scope$B: Nullable<string>;
+                        let $scope$C: Nullable<unstructured>;
+                        let $$res: Nullable<optional_field> = null;
+                        if (true
+                            && ($scope$A = this.matchfield_name($$dpth + 1, $$cr)) !== null
+                            && ($scope$B = this.regexAccept(String.raw`(?::)`, $$dpth + 1, $$cr)) !== null
+                            && ($scope$C = this.matchunstructured($$dpth + 1, $$cr)) !== null
+                            && this.matchCRLF($$dpth + 1, $$cr) !== null
+                        ) {
+                            $$res = {kind: ASTKinds.optional_field, A: $scope$A, B: $scope$B, C: $scope$C};
+                        }
+                        return $$res;
+                    });
+            },
+            this.$scope$optional_field$memo,
+        );
+    }
+    public matchorig_date($$dpth: number, $$cr?: ErrorTracker): Nullable<orig_date> {
+        return this.memoise(
+            () => {
+                return this.run<orig_date>($$dpth,
+                    () => {
+                        let $scope$A: Nullable<string>;
+                        let $scope$B: Nullable<string>;
+                        let $scope$C: Nullable<date_time>;
+                        let $$res: Nullable<orig_date> = null;
+                        if (true
+                            && ($scope$A = this.regexAccept(String.raw`(?:Date)`, $$dpth + 1, $$cr)) !== null
+                            && ($scope$B = this.regexAccept(String.raw`(?::)`, $$dpth + 1, $$cr)) !== null
+                            && ($scope$C = this.matchdate_time($$dpth + 1, $$cr)) !== null
+                            && this.matchCRLF($$dpth + 1, $$cr) !== null
+                        ) {
+                            $$res = {kind: ASTKinds.orig_date, A: $scope$A, B: $scope$B, C: $scope$C};
+                        }
+                        return $$res;
+                    });
+            },
+            this.$scope$orig_date$memo,
+        );
+    }
+    public matchpath($$dpth: number, $$cr?: ErrorTracker): Nullable<path> {
+        return this.memoise(
+            () => {
+                return this.choice<path>([
+                    () => this.matchpath_1($$dpth + 1, $$cr),
+                    () => this.matchpath_2($$dpth + 1, $$cr),
+                ]);
+            },
+            this.$scope$path$memo,
+        );
+    }
+    public matchpath_1($$dpth: number, $$cr?: ErrorTracker): Nullable<path_1> {
+        return this.matchangle_addr($$dpth + 1, $$cr);
+    }
+    public matchpath_2($$dpth: number, $$cr?: ErrorTracker): Nullable<path_2> {
+        return this.matchpath_$0($$dpth + 1, $$cr);
+    }
+    public matchpath_$0($$dpth: number, $$cr?: ErrorTracker): Nullable<path_$0> {
+        return this.memoise(
+            () => {
+                return this.run<path_$0>($$dpth,
+                    () => {
+                        let $$res: Nullable<path_$0> = null;
+                        if (true
+                            && ((this.matchCFWS($$dpth + 1, $$cr)) || true)
+                            && this.regexAccept(String.raw`(?:<)`, $$dpth + 1, $$cr) !== null
+                            && this.matchCFWS($$dpth + 1, $$cr) !== null
+                            && this.regexAccept(String.raw`(?:>)`, $$dpth + 1, $$cr) !== null
+                            && ((this.matchCFWS($$dpth + 1, $$cr)) || true)
+                        ) {
+                            $$res = {kind: ASTKinds.path_$0, };
+                        }
+                        return $$res;
+                    });
+            },
+            this.$scope$path_$0$memo,
+        );
+    }
+    public matchphrase($$dpth: number, $$cr?: ErrorTracker): Nullable<phrase> {
+        return this.memoise(
+            () => {
+                return this.choice<phrase>([
+                    () => this.matchphrase_1($$dpth + 1, $$cr),
+                    () => this.matchphrase_2($$dpth + 1, $$cr),
+                ]);
+            },
+            this.$scope$phrase$memo,
+        );
+    }
+    public matchphrase_1($$dpth: number, $$cr?: ErrorTracker): Nullable<phrase_1> {
+        return this.loop<word>(() => this.matchword($$dpth + 1, $$cr), false);
+    }
+    public matchphrase_2($$dpth: number, $$cr?: ErrorTracker): Nullable<phrase_2> {
+        return this.matchobs_phrase($$dpth + 1, $$cr);
+    }
+    public matchqcontent($$dpth: number, $$cr?: ErrorTracker): Nullable<qcontent> {
+        return this.memoise(
+            () => {
+                return this.choice<qcontent>([
+                    () => this.matchqcontent_1($$dpth + 1, $$cr),
+                    () => this.matchqcontent_2($$dpth + 1, $$cr),
+                ]);
+            },
+            this.$scope$qcontent$memo,
+        );
+    }
+    public matchqcontent_1($$dpth: number, $$cr?: ErrorTracker): Nullable<qcontent_1> {
+        return this.matchqtext($$dpth + 1, $$cr);
+    }
+    public matchqcontent_2($$dpth: number, $$cr?: ErrorTracker): Nullable<qcontent_2> {
+        return this.matchquoted_pair($$dpth + 1, $$cr);
+    }
+    public matchqtext($$dpth: number, $$cr?: ErrorTracker): Nullable<qtext> {
+        return this.memoise(
+            () => {
+                return this.choice<qtext>([
+                    () => this.matchqtext_1($$dpth + 1, $$cr),
+                    () => this.matchqtext_2($$dpth + 1, $$cr),
+                    () => this.matchqtext_3($$dpth + 1, $$cr),
+                    () => this.matchqtext_4($$dpth + 1, $$cr),
+                ]);
+            },
+            this.$scope$qtext$memo,
+        );
+    }
+    public matchqtext_1($$dpth: number, $$cr?: ErrorTracker): Nullable<qtext_1> {
+        return this.regexAccept(String.raw`(?:\x21)`, $$dpth + 1, $$cr);
+    }
+    public matchqtext_2($$dpth: number, $$cr?: ErrorTracker): Nullable<qtext_2> {
+        return this.regexAccept(String.raw`(?:[\x23-\x5b])`, $$dpth + 1, $$cr);
+    }
+    public matchqtext_3($$dpth: number, $$cr?: ErrorTracker): Nullable<qtext_3> {
+        return this.regexAccept(String.raw`(?:[\x5d-\x7e])`, $$dpth + 1, $$cr);
+    }
+    public matchqtext_4($$dpth: number, $$cr?: ErrorTracker): Nullable<qtext_4> {
+        return this.matchobs_qtext($$dpth + 1, $$cr);
+    }
+    public matchquoted_pair($$dpth: number, $$cr?: ErrorTracker): Nullable<quoted_pair> {
+        return this.memoise(
+            () => {
+                return this.choice<quoted_pair>([
+                    () => this.matchquoted_pair_1($$dpth + 1, $$cr),
+                    () => this.matchquoted_pair_2($$dpth + 1, $$cr),
+                ]);
+            },
+            this.$scope$quoted_pair$memo,
+        );
+    }
+    public matchquoted_pair_1($$dpth: number, $$cr?: ErrorTracker): Nullable<quoted_pair_1> {
+        return this.run<quoted_pair_1>($$dpth,
+            () => {
+                let $scope$A: Nullable<quoted_pair_$0>;
+                let $$res: Nullable<quoted_pair_1> = null;
+                if (true
+                    && ($scope$A = this.matchquoted_pair_$0($$dpth + 1, $$cr)) !== null
+                ) {
+                    $$res = {kind: ASTKinds.quoted_pair_1, A: $scope$A};
+                }
+                return $$res;
+            });
+    }
+    public matchquoted_pair_2($$dpth: number, $$cr?: ErrorTracker): Nullable<quoted_pair_2> {
+        return this.run<quoted_pair_2>($$dpth,
+            () => {
+                let $scope$F: Nullable<obs_qp>;
+                let $$res: Nullable<quoted_pair_2> = null;
+                if (true
+                    && ($scope$F = this.matchobs_qp($$dpth + 1, $$cr)) !== null
+                ) {
+                    $$res = {kind: ASTKinds.quoted_pair_2, F: $scope$F};
+                }
+                return $$res;
+            });
+    }
+    public matchquoted_pair_$0($$dpth: number, $$cr?: ErrorTracker): Nullable<quoted_pair_$0> {
+        return this.memoise(
+            () => {
+                return this.run<quoted_pair_$0>($$dpth,
+                    () => {
+                        let $scope$B: Nullable<string>;
+                        let $scope$C: Nullable<quoted_pair_$0_$0>;
+                        let $$res: Nullable<quoted_pair_$0> = null;
+                        if (true
+                            && ($scope$B = this.regexAccept(String.raw`(?:\\)`, $$dpth + 1, $$cr)) !== null
+                            && ($scope$C = this.matchquoted_pair_$0_$0($$dpth + 1, $$cr)) !== null
+                        ) {
+                            $$res = {kind: ASTKinds.quoted_pair_$0, B: $scope$B, C: $scope$C};
+                        }
+                        return $$res;
+                    });
+            },
+            this.$scope$quoted_pair_$0$memo,
+        );
+    }
+    public matchquoted_pair_$0_$0($$dpth: number, $$cr?: ErrorTracker): Nullable<quoted_pair_$0_$0> {
+        return this.memoise(
+            () => {
+                return this.choice<quoted_pair_$0_$0>([
+                    () => this.matchquoted_pair_$0_$0_1($$dpth + 1, $$cr),
+                    () => this.matchquoted_pair_$0_$0_2($$dpth + 1, $$cr),
+                ]);
+            },
+            this.$scope$quoted_pair_$0_$0$memo,
+        );
+    }
+    public matchquoted_pair_$0_$0_1($$dpth: number, $$cr?: ErrorTracker): Nullable<quoted_pair_$0_$0_1> {
+        return this.run<quoted_pair_$0_$0_1>($$dpth,
+            () => {
+                let $scope$D: Nullable<VCHAR>;
+                let $$res: Nullable<quoted_pair_$0_$0_1> = null;
+                if (true
+                    && ($scope$D = this.matchVCHAR($$dpth + 1, $$cr)) !== null
+                ) {
+                    $$res = {kind: ASTKinds.quoted_pair_$0_$0_1, D: $scope$D};
+                }
+                return $$res;
+            });
+    }
+    public matchquoted_pair_$0_$0_2($$dpth: number, $$cr?: ErrorTracker): Nullable<quoted_pair_$0_$0_2> {
+        return this.matchWSP($$dpth + 1, $$cr);
+    }
+    public matchquoted_string($$dpth: number, $$cr?: ErrorTracker): Nullable<quoted_string> {
+        return this.memoise(
+            () => {
+                return this.run<quoted_string>($$dpth,
+                    () => {
+                        let $scope$B: Nullable<DQUOTE>;
+                        let $scope$C: Nullable<quoted_string_$0[]>;
+                        let $scope$G: Nullable<DQUOTE>;
+                        let $$res: Nullable<quoted_string> = null;
+                        if (true
+                            && ((this.matchCFWS($$dpth + 1, $$cr)) || true)
+                            && ($scope$B = this.matchDQUOTE($$dpth + 1, $$cr)) !== null
+                            && ($scope$C = this.loop<quoted_string_$0>(() => this.matchquoted_string_$0($$dpth + 1, $$cr), true)) !== null
+                            && ((this.matchFWS($$dpth + 1, $$cr)) || true)
+                            && ($scope$G = this.matchDQUOTE($$dpth + 1, $$cr)) !== null
+                            && ((this.matchCFWS($$dpth + 1, $$cr)) || true)
+                        ) {
+                            $$res = {kind: ASTKinds.quoted_string, B: $scope$B, C: $scope$C, G: $scope$G};
+                        }
+                        return $$res;
+                    });
+            },
+            this.$scope$quoted_string$memo,
+        );
+    }
+    public matchquoted_string_$0($$dpth: number, $$cr?: ErrorTracker): Nullable<quoted_string_$0> {
+        return this.memoise(
+            () => {
+                return this.run<quoted_string_$0>($$dpth,
+                    () => {
+                        let $scope$E: Nullable<qcontent>;
+                        let $$res: Nullable<quoted_string_$0> = null;
+                        if (true
+                            && ((this.matchFWS($$dpth + 1, $$cr)) || true)
+                            && ($scope$E = this.matchqcontent($$dpth + 1, $$cr)) !== null
+                        ) {
+                            $$res = {kind: ASTKinds.quoted_string_$0, E: $scope$E};
+                        }
+                        return $$res;
+                    });
+            },
+            this.$scope$quoted_string_$0$memo,
+        );
+    }
+    public matchreceived($$dpth: number, $$cr?: ErrorTracker): Nullable<received> {
+        return this.memoise(
+            () => {
+                return this.run<received>($$dpth,
+                    () => {
+                        let $scope$A: Nullable<string>;
+                        let $scope$B: Nullable<string>;
+                        let $scope$C: Nullable<received_token[]>;
+                        let $scope$D: Nullable<string>;
+                        let $scope$E: Nullable<date_time>;
+                        let $$res: Nullable<received> = null;
+                        if (true
+                            && ($scope$A = this.regexAccept(String.raw`(?:Received)`, $$dpth + 1, $$cr)) !== null
+                            && ($scope$B = this.regexAccept(String.raw`(?::)`, $$dpth + 1, $$cr)) !== null
+                            && ($scope$C = this.loop<received_token>(() => this.matchreceived_token($$dpth + 1, $$cr), true)) !== null
+                            && ($scope$D = this.regexAccept(String.raw`(?:;)`, $$dpth + 1, $$cr)) !== null
+                            && ($scope$E = this.matchdate_time($$dpth + 1, $$cr)) !== null
+                            && this.matchCRLF($$dpth + 1, $$cr) !== null
+                        ) {
+                            $$res = {kind: ASTKinds.received, A: $scope$A, B: $scope$B, C: $scope$C, D: $scope$D, E: $scope$E};
+                        }
+                        return $$res;
+                    });
+            },
+            this.$scope$received$memo,
+        );
+    }
+    public matchreceived_token($$dpth: number, $$cr?: ErrorTracker): Nullable<received_token> {
+        return this.memoise(
+            () => {
+                return this.choice<received_token>([
+                    () => this.matchreceived_token_1($$dpth + 1, $$cr),
+                    () => this.matchreceived_token_2($$dpth + 1, $$cr),
+                    () => this.matchreceived_token_3($$dpth + 1, $$cr),
+                    () => this.matchreceived_token_4($$dpth + 1, $$cr),
+                ]);
+            },
+            this.$scope$received_token$memo,
+        );
+    }
+    public matchreceived_token_1($$dpth: number, $$cr?: ErrorTracker): Nullable<received_token_1> {
+        return this.matchword($$dpth + 1, $$cr);
+    }
+    public matchreceived_token_2($$dpth: number, $$cr?: ErrorTracker): Nullable<received_token_2> {
+        return this.matchangle_addr($$dpth + 1, $$cr);
+    }
+    public matchreceived_token_3($$dpth: number, $$cr?: ErrorTracker): Nullable<received_token_3> {
+        return this.matchaddr_spec($$dpth + 1, $$cr);
+    }
+    public matchreceived_token_4($$dpth: number, $$cr?: ErrorTracker): Nullable<received_token_4> {
+        return this.matchdomain($$dpth + 1, $$cr);
+    }
+    public matchreferences($$dpth: number, $$cr?: ErrorTracker): Nullable<references> {
+        return this.memoise(
+            () => {
+                return this.run<references>($$dpth,
+                    () => {
+                        let $scope$A: Nullable<string>;
+                        let $scope$B: Nullable<string>;
+                        let $scope$C: Nullable<msg_id[]>;
+                        let $$res: Nullable<references> = null;
+                        if (true
+                            && ($scope$A = this.regexAccept(String.raw`(?:References)`, $$dpth + 1, $$cr)) !== null
+                            && ($scope$B = this.regexAccept(String.raw`(?::)`, $$dpth + 1, $$cr)) !== null
+                            && ($scope$C = this.loop<msg_id>(() => this.matchmsg_id($$dpth + 1, $$cr), false)) !== null
+                            && this.matchCRLF($$dpth + 1, $$cr) !== null
+                        ) {
+                            $$res = {kind: ASTKinds.references, A: $scope$A, B: $scope$B, C: $scope$C};
+                        }
+                        return $$res;
+                    });
+            },
+            this.$scope$references$memo,
+        );
+    }
+    public matchreply_to($$dpth: number, $$cr?: ErrorTracker): Nullable<reply_to> {
+        return this.memoise(
+            () => {
+                return this.run<reply_to>($$dpth,
+                    () => {
+                        let $scope$A: Nullable<string>;
+                        let $scope$B: Nullable<string>;
+                        let $scope$C: Nullable<address_list>;
+                        let $$res: Nullable<reply_to> = null;
+                        if (true
+                            && ($scope$A = this.regexAccept(String.raw`(?:Reply_To)`, $$dpth + 1, $$cr)) !== null
+                            && ($scope$B = this.regexAccept(String.raw`(?::)`, $$dpth + 1, $$cr)) !== null
+                            && ($scope$C = this.matchaddress_list($$dpth + 1, $$cr)) !== null
+                            && this.matchCRLF($$dpth + 1, $$cr) !== null
+                        ) {
+                            $$res = {kind: ASTKinds.reply_to, A: $scope$A, B: $scope$B, C: $scope$C};
+                        }
+                        return $$res;
+                    });
+            },
+            this.$scope$reply_to$memo,
+        );
+    }
+    public matchresent_bcc($$dpth: number, $$cr?: ErrorTracker): Nullable<resent_bcc> {
+        return this.memoise(
+            () => {
+                return this.run<resent_bcc>($$dpth,
+                    () => {
+                        let $scope$A: Nullable<string>;
+                        let $scope$B: Nullable<string>;
+                        let $scope$C: Nullable<Nullable<resent_bcc_$0>>;
+                        let $$res: Nullable<resent_bcc> = null;
+                        if (true
+                            && ($scope$A = this.regexAccept(String.raw`(?:Resent-Bcc)`, $$dpth + 1, $$cr)) !== null
+                            && ($scope$B = this.regexAccept(String.raw`(?::)`, $$dpth + 1, $$cr)) !== null
+                            && (($scope$C = this.matchresent_bcc_$0($$dpth + 1, $$cr)) || true)
+                            && this.matchCRLF($$dpth + 1, $$cr) !== null
+                        ) {
+                            $$res = {kind: ASTKinds.resent_bcc, A: $scope$A, B: $scope$B, C: $scope$C};
+                        }
+                        return $$res;
+                    });
+            },
+            this.$scope$resent_bcc$memo,
+        );
+    }
+    public matchresent_bcc_$0($$dpth: number, $$cr?: ErrorTracker): Nullable<resent_bcc_$0> {
+        return this.memoise(
+            () => {
+                return this.choice<resent_bcc_$0>([
+                    () => this.matchresent_bcc_$0_1($$dpth + 1, $$cr),
+                    () => this.matchresent_bcc_$0_2($$dpth + 1, $$cr),
+                ]);
+            },
+            this.$scope$resent_bcc_$0$memo,
+        );
+    }
+    public matchresent_bcc_$0_1($$dpth: number, $$cr?: ErrorTracker): Nullable<resent_bcc_$0_1> {
+        return this.run<resent_bcc_$0_1>($$dpth,
+            () => {
+                let $scope$D: Nullable<address_list>;
+                let $$res: Nullable<resent_bcc_$0_1> = null;
+                if (true
+                    && ($scope$D = this.matchaddress_list($$dpth + 1, $$cr)) !== null
+                ) {
+                    $$res = {kind: ASTKinds.resent_bcc_$0_1, D: $scope$D};
+                }
+                return $$res;
+            });
+    }
+    public matchresent_bcc_$0_2($$dpth: number, $$cr?: ErrorTracker): Nullable<resent_bcc_$0_2> {
+        return this.matchCFWS($$dpth + 1, $$cr);
+    }
+    public matchresent_cc($$dpth: number, $$cr?: ErrorTracker): Nullable<resent_cc> {
+        return this.memoise(
+            () => {
+                return this.run<resent_cc>($$dpth,
+                    () => {
+                        let $scope$A: Nullable<string>;
+                        let $scope$B: Nullable<string>;
+                        let $scope$C: Nullable<address_list>;
+                        let $$res: Nullable<resent_cc> = null;
+                        if (true
+                            && ($scope$A = this.regexAccept(String.raw`(?:Resent-Cc)`, $$dpth + 1, $$cr)) !== null
+                            && ($scope$B = this.regexAccept(String.raw`(?::)`, $$dpth + 1, $$cr)) !== null
+                            && ($scope$C = this.matchaddress_list($$dpth + 1, $$cr)) !== null
+                            && this.matchCRLF($$dpth + 1, $$cr) !== null
+                        ) {
+                            $$res = {kind: ASTKinds.resent_cc, A: $scope$A, B: $scope$B, C: $scope$C};
+                        }
+                        return $$res;
+                    });
+            },
+            this.$scope$resent_cc$memo,
+        );
+    }
+    public matchresent_date($$dpth: number, $$cr?: ErrorTracker): Nullable<resent_date> {
+        return this.memoise(
+            () => {
+                return this.run<resent_date>($$dpth,
+                    () => {
+                        let $scope$A: Nullable<string>;
+                        let $scope$B: Nullable<string>;
+                        let $scope$C: Nullable<date_time>;
+                        let $$res: Nullable<resent_date> = null;
+                        if (true
+                            && ($scope$A = this.regexAccept(String.raw`(?:Resent-Date)`, $$dpth + 1, $$cr)) !== null
+                            && ($scope$B = this.regexAccept(String.raw`(?::)`, $$dpth + 1, $$cr)) !== null
+                            && ($scope$C = this.matchdate_time($$dpth + 1, $$cr)) !== null
+                            && this.matchCRLF($$dpth + 1, $$cr) !== null
+                        ) {
+                            $$res = {kind: ASTKinds.resent_date, A: $scope$A, B: $scope$B, C: $scope$C};
+                        }
+                        return $$res;
+                    });
+            },
+            this.$scope$resent_date$memo,
+        );
+    }
+    public matchresent_from($$dpth: number, $$cr?: ErrorTracker): Nullable<resent_from> {
+        return this.memoise(
+            () => {
+                return this.run<resent_from>($$dpth,
+                    () => {
+                        let $scope$A: Nullable<string>;
+                        let $scope$B: Nullable<string>;
+                        let $scope$C: Nullable<mailbox_list>;
+                        let $$res: Nullable<resent_from> = null;
+                        if (true
+                            && ($scope$A = this.regexAccept(String.raw`(?:Resent-From)`, $$dpth + 1, $$cr)) !== null
+                            && ($scope$B = this.regexAccept(String.raw`(?::)`, $$dpth + 1, $$cr)) !== null
+                            && ($scope$C = this.matchmailbox_list($$dpth + 1, $$cr)) !== null
+                            && this.matchCRLF($$dpth + 1, $$cr) !== null
+                        ) {
+                            $$res = {kind: ASTKinds.resent_from, A: $scope$A, B: $scope$B, C: $scope$C};
+                        }
+                        return $$res;
+                    });
+            },
+            this.$scope$resent_from$memo,
+        );
+    }
+    public matchresent_msg_id($$dpth: number, $$cr?: ErrorTracker): Nullable<resent_msg_id> {
+        return this.memoise(
+            () => {
+                return this.run<resent_msg_id>($$dpth,
+                    () => {
+                        let $scope$A: Nullable<string>;
+                        let $scope$B: Nullable<string>;
+                        let $scope$C: Nullable<msg_id>;
+                        let $$res: Nullable<resent_msg_id> = null;
+                        if (true
+                            && ($scope$A = this.regexAccept(String.raw`(?:Resent-Message_ID)`, $$dpth + 1, $$cr)) !== null
+                            && ($scope$B = this.regexAccept(String.raw`(?::)`, $$dpth + 1, $$cr)) !== null
+                            && ($scope$C = this.matchmsg_id($$dpth + 1, $$cr)) !== null
+                            && this.matchCRLF($$dpth + 1, $$cr) !== null
+                        ) {
+                            $$res = {kind: ASTKinds.resent_msg_id, A: $scope$A, B: $scope$B, C: $scope$C};
+                        }
+                        return $$res;
+                    });
+            },
+            this.$scope$resent_msg_id$memo,
+        );
+    }
+    public matchresent_sender($$dpth: number, $$cr?: ErrorTracker): Nullable<resent_sender> {
+        return this.memoise(
+            () => {
+                return this.run<resent_sender>($$dpth,
+                    () => {
+                        let $scope$A: Nullable<string>;
+                        let $scope$B: Nullable<string>;
+                        let $scope$C: Nullable<mailbox>;
+                        let $$res: Nullable<resent_sender> = null;
+                        if (true
+                            && ($scope$A = this.regexAccept(String.raw`(?:Resent-Sender)`, $$dpth + 1, $$cr)) !== null
+                            && ($scope$B = this.regexAccept(String.raw`(?::)`, $$dpth + 1, $$cr)) !== null
+                            && ($scope$C = this.matchmailbox($$dpth + 1, $$cr)) !== null
+                            && this.matchCRLF($$dpth + 1, $$cr) !== null
+                        ) {
+                            $$res = {kind: ASTKinds.resent_sender, A: $scope$A, B: $scope$B, C: $scope$C};
+                        }
+                        return $$res;
+                    });
+            },
+            this.$scope$resent_sender$memo,
+        );
+    }
+    public matchresent_to($$dpth: number, $$cr?: ErrorTracker): Nullable<resent_to> {
+        return this.memoise(
+            () => {
+                return this.run<resent_to>($$dpth,
+                    () => {
+                        let $scope$A: Nullable<string>;
+                        let $scope$B: Nullable<string>;
+                        let $scope$C: Nullable<address_list>;
+                        let $$res: Nullable<resent_to> = null;
+                        if (true
+                            && ($scope$A = this.regexAccept(String.raw`(?:Resent-To)`, $$dpth + 1, $$cr)) !== null
+                            && ($scope$B = this.regexAccept(String.raw`(?::)`, $$dpth + 1, $$cr)) !== null
+                            && ($scope$C = this.matchaddress_list($$dpth + 1, $$cr)) !== null
+                            && this.matchCRLF($$dpth + 1, $$cr) !== null
+                        ) {
+                            $$res = {kind: ASTKinds.resent_to, A: $scope$A, B: $scope$B, C: $scope$C};
+                        }
+                        return $$res;
+                    });
+            },
+            this.$scope$resent_to$memo,
+        );
+    }
+    public matchreturn_path($$dpth: number, $$cr?: ErrorTracker): Nullable<return_path> {
+        return this.memoise(
+            () => {
+                return this.run<return_path>($$dpth,
+                    () => {
+                        let $scope$A: Nullable<string>;
+                        let $scope$B: Nullable<string>;
+                        let $scope$C: Nullable<path>;
+                        let $$res: Nullable<return_path> = null;
+                        if (true
+                            && ($scope$A = this.regexAccept(String.raw`(?:Return-Path)`, $$dpth + 1, $$cr)) !== null
+                            && ($scope$B = this.regexAccept(String.raw`(?::)`, $$dpth + 1, $$cr)) !== null
+                            && ($scope$C = this.matchpath($$dpth + 1, $$cr)) !== null
+                            && this.matchCRLF($$dpth + 1, $$cr) !== null
+                        ) {
+                            $$res = {kind: ASTKinds.return_path, A: $scope$A, B: $scope$B, C: $scope$C};
+                        }
+                        return $$res;
+                    });
+            },
+            this.$scope$return_path$memo,
+        );
+    }
+    public matchsecond($$dpth: number, $$cr?: ErrorTracker): Nullable<second> {
+        return this.memoise(
+            () => {
+                return this.choice<second>([
+                    () => this.matchsecond_1($$dpth + 1, $$cr),
+                    () => this.matchsecond_2($$dpth + 1, $$cr),
+                ]);
+            },
+            this.$scope$second$memo,
+        );
+    }
+    public matchsecond_1($$dpth: number, $$cr?: ErrorTracker): Nullable<second_1> {
+        return this.run<second_1>($$dpth,
+            () => {
+                let $scope$A: Nullable<TWO_DIGIT>;
+                let $$res: Nullable<second_1> = null;
+                if (true
+                    && ($scope$A = this.matchTWO_DIGIT($$dpth + 1, $$cr)) !== null
+                ) {
+                    $$res = {kind: ASTKinds.second_1, A: $scope$A};
+                }
+                return $$res;
+            });
+    }
+    public matchsecond_2($$dpth: number, $$cr?: ErrorTracker): Nullable<second_2> {
+        return this.run<second_2>($$dpth,
+            () => {
+                let $scope$B: Nullable<obs_second>;
+                let $$res: Nullable<second_2> = null;
+                if (true
+                    && ($scope$B = this.matchobs_second($$dpth + 1, $$cr)) !== null
+                ) {
+                    $$res = {kind: ASTKinds.second_2, B: $scope$B};
+                }
+                return $$res;
+            });
+    }
+    public matchsender($$dpth: number, $$cr?: ErrorTracker): Nullable<sender> {
+        return this.memoise(
+            () => {
+                return this.run<sender>($$dpth,
+                    () => {
+                        let $scope$A: Nullable<string>;
+                        let $scope$B: Nullable<string>;
+                        let $scope$C: Nullable<mailbox>;
+                        let $$res: Nullable<sender> = null;
+                        if (true
+                            && ($scope$A = this.regexAccept(String.raw`(?:Sender)`, $$dpth + 1, $$cr)) !== null
+                            && ($scope$B = this.regexAccept(String.raw`(?::)`, $$dpth + 1, $$cr)) !== null
+                            && ($scope$C = this.matchmailbox($$dpth + 1, $$cr)) !== null
+                            && this.matchCRLF($$dpth + 1, $$cr) !== null
+                        ) {
+                            $$res = {kind: ASTKinds.sender, A: $scope$A, B: $scope$B, C: $scope$C};
+                        }
+                        return $$res;
+                    });
+            },
+            this.$scope$sender$memo,
+        );
+    }
+    public matchspecials($$dpth: number, $$cr?: ErrorTracker): Nullable<specials> {
+        return this.memoise(
+            () => {
+                return this.choice<specials>([
+                    () => this.matchspecials_1($$dpth + 1, $$cr),
+                    () => this.matchspecials_2($$dpth + 1, $$cr),
+                    () => this.matchspecials_3($$dpth + 1, $$cr),
+                    () => this.matchspecials_4($$dpth + 1, $$cr),
+                    () => this.matchspecials_5($$dpth + 1, $$cr),
+                    () => this.matchspecials_6($$dpth + 1, $$cr),
+                    () => this.matchspecials_7($$dpth + 1, $$cr),
+                    () => this.matchspecials_8($$dpth + 1, $$cr),
+                    () => this.matchspecials_9($$dpth + 1, $$cr),
+                    () => this.matchspecials_10($$dpth + 1, $$cr),
+                ]);
+            },
+            this.$scope$specials$memo,
+        );
+    }
+    public matchspecials_1($$dpth: number, $$cr?: ErrorTracker): Nullable<specials_1> {
+        return this.regexAccept(String.raw`(?:\()`, $$dpth + 1, $$cr);
+    }
+    public matchspecials_2($$dpth: number, $$cr?: ErrorTracker): Nullable<specials_2> {
+        return this.regexAccept(String.raw`(?:\))`, $$dpth + 1, $$cr);
+    }
+    public matchspecials_3($$dpth: number, $$cr?: ErrorTracker): Nullable<specials_3> {
+        return this.regexAccept(String.raw`(?:[<>])`, $$dpth + 1, $$cr);
+    }
+    public matchspecials_4($$dpth: number, $$cr?: ErrorTracker): Nullable<specials_4> {
+        return this.regexAccept(String.raw`(?:\[)`, $$dpth + 1, $$cr);
+    }
+    public matchspecials_5($$dpth: number, $$cr?: ErrorTracker): Nullable<specials_5> {
+        return this.regexAccept(String.raw`(?:\])`, $$dpth + 1, $$cr);
+    }
+    public matchspecials_6($$dpth: number, $$cr?: ErrorTracker): Nullable<specials_6> {
+        return this.regexAccept(String.raw`(?:[:;@])`, $$dpth + 1, $$cr);
+    }
+    public matchspecials_7($$dpth: number, $$cr?: ErrorTracker): Nullable<specials_7> {
+        return this.regexAccept(String.raw`(?:\\)`, $$dpth + 1, $$cr);
+    }
+    public matchspecials_8($$dpth: number, $$cr?: ErrorTracker): Nullable<specials_8> {
+        return this.regexAccept(String.raw`(?:,)`, $$dpth + 1, $$cr);
+    }
+    public matchspecials_9($$dpth: number, $$cr?: ErrorTracker): Nullable<specials_9> {
+        return this.regexAccept(String.raw`(?:\.)`, $$dpth + 1, $$cr);
+    }
+    public matchspecials_10($$dpth: number, $$cr?: ErrorTracker): Nullable<specials_10> {
+        return this.matchDQUOTE($$dpth + 1, $$cr);
+    }
+    public matchsubject($$dpth: number, $$cr?: ErrorTracker): Nullable<subject> {
+        return this.memoise(
+            () => {
+                return this.run<subject>($$dpth,
+                    () => {
+                        let $scope$_name: Nullable<string>;
+                        let $scope$B: Nullable<string>;
+                        let $scope$_value: Nullable<unstructured>;
+                        let $$res: Nullable<subject> = null;
+                        if (true
+                            && ($scope$_name = this.regexAccept(String.raw`(?:Subject)`, $$dpth + 1, $$cr)) !== null
+                            && ($scope$B = this.regexAccept(String.raw`(?::)`, $$dpth + 1, $$cr)) !== null
+                            && ($scope$_value = this.matchunstructured($$dpth + 1, $$cr)) !== null
+                            && this.matchCRLF($$dpth + 1, $$cr) !== null
+                        ) {
+                            $$res = {kind: ASTKinds.subject, _name: $scope$_name, B: $scope$B, _value: $scope$_value};
+                        }
+                        return $$res;
+                    });
+            },
+            this.$scope$subject$memo,
+        );
+    }
+    public matchtext($$dpth: number, $$cr?: ErrorTracker): Nullable<text> {
+        return this.memoise(
+            () => {
+                return this.choice<text>([
+                    () => this.matchtext_1($$dpth + 1, $$cr),
+                    () => this.matchtext_2($$dpth + 1, $$cr),
+                    () => this.matchtext_3($$dpth + 1, $$cr),
+                    () => this.matchtext_4($$dpth + 1, $$cr),
+                ]);
+            },
+            this.$scope$text$memo,
+        );
+    }
+    public matchtext_1($$dpth: number, $$cr?: ErrorTracker): Nullable<text_1> {
+        return this.regexAccept(String.raw`(?:[\x01-\x09])`, $$dpth + 1, $$cr);
+    }
+    public matchtext_2($$dpth: number, $$cr?: ErrorTracker): Nullable<text_2> {
+        return this.regexAccept(String.raw`(?:\x0B)`, $$dpth + 1, $$cr);
+    }
+    public matchtext_3($$dpth: number, $$cr?: ErrorTracker): Nullable<text_3> {
+        return this.regexAccept(String.raw`(?:\x0C)`, $$dpth + 1, $$cr);
+    }
+    public matchtext_4($$dpth: number, $$cr?: ErrorTracker): Nullable<text_4> {
+        return this.regexAccept(String.raw`(?:[\x0E-\x7f])`, $$dpth + 1, $$cr);
+    }
+    public matchtime($$dpth: number, $$cr?: ErrorTracker): Nullable<time> {
+        return this.memoise(
+            () => {
+                return this.run<time>($$dpth,
+                    () => {
+                        let $scope$A: Nullable<time_of_day>;
+                        let $scope$B: Nullable<zone>;
+                        let $$res: Nullable<time> = null;
+                        if (true
+                            && ($scope$A = this.matchtime_of_day($$dpth + 1, $$cr)) !== null
+                            && ($scope$B = this.matchzone($$dpth + 1, $$cr)) !== null
+                        ) {
+                            $$res = {kind: ASTKinds.time, A: $scope$A, B: $scope$B};
+                        }
+                        return $$res;
+                    });
+            },
+            this.$scope$time$memo,
+        );
+    }
+    public matchtime_of_day($$dpth: number, $$cr?: ErrorTracker): Nullable<time_of_day> {
+        return this.memoise(
+            () => {
+                return this.run<time_of_day>($$dpth,
+                    () => {
+                        let $scope$A: Nullable<hour>;
+                        let $scope$B: Nullable<string>;
+                        let $scope$C: Nullable<minute>;
+                        let $scope$D: Nullable<Nullable<time_of_day_$0>>;
+                        let $$res: Nullable<time_of_day> = null;
+                        if (true
+                            && ($scope$A = this.matchhour($$dpth + 1, $$cr)) !== null
+                            && ($scope$B = this.regexAccept(String.raw`(?::)`, $$dpth + 1, $$cr)) !== null
+                            && ($scope$C = this.matchminute($$dpth + 1, $$cr)) !== null
+                            && (($scope$D = this.matchtime_of_day_$0($$dpth + 1, $$cr)) || true)
+                        ) {
+                            $$res = {kind: ASTKinds.time_of_day, A: $scope$A, B: $scope$B, C: $scope$C, D: $scope$D};
+                        }
+                        return $$res;
+                    });
+            },
+            this.$scope$time_of_day$memo,
+        );
+    }
+    public matchtime_of_day_$0($$dpth: number, $$cr?: ErrorTracker): Nullable<time_of_day_$0> {
+        return this.memoise(
+            () => {
+                return this.run<time_of_day_$0>($$dpth,
+                    () => {
+                        let $scope$E: Nullable<string>;
+                        let $scope$F: Nullable<second>;
+                        let $$res: Nullable<time_of_day_$0> = null;
+                        if (true
+                            && ($scope$E = this.regexAccept(String.raw`(?::)`, $$dpth + 1, $$cr)) !== null
+                            && ($scope$F = this.matchsecond($$dpth + 1, $$cr)) !== null
+                        ) {
+                            $$res = {kind: ASTKinds.time_of_day_$0, E: $scope$E, F: $scope$F};
+                        }
+                        return $$res;
+                    });
+            },
+            this.$scope$time_of_day_$0$memo,
+        );
+    }
+    public matchto($$dpth: number, $$cr?: ErrorTracker): Nullable<to> {
+        return this.memoise(
+            () => {
+                return this.run<to>($$dpth,
+                    () => {
+                        let $scope$name: Nullable<string>;
+                        let $scope$B: Nullable<string>;
+                        let $scope$_address_list: Nullable<address_list>;
+                        let $$res: Nullable<to> = null;
+                        if (true
+                            && ($scope$name = this.regexAccept(String.raw`(?:To)`, $$dpth + 1, $$cr)) !== null
+                            && ($scope$B = this.regexAccept(String.raw`(?::)`, $$dpth + 1, $$cr)) !== null
+                            && ($scope$_address_list = this.matchaddress_list($$dpth + 1, $$cr)) !== null
+                            && this.matchCRLF($$dpth + 1, $$cr) !== null
+                        ) {
+                            $$res = {kind: ASTKinds.to, name: $scope$name, B: $scope$B, _address_list: $scope$_address_list};
+                        }
+                        return $$res;
+                    });
+            },
+            this.$scope$to$memo,
+        );
+    }
+    public matchtrace($$dpth: number, $$cr?: ErrorTracker): Nullable<trace> {
+        return this.memoise(
+            () => {
+                return this.run<trace>($$dpth,
+                    () => {
+                        let $scope$A: Nullable<Nullable<return_path>>;
+                        let $scope$B: Nullable<received[]>;
+                        let $$res: Nullable<trace> = null;
+                        if (true
+                            && (($scope$A = this.matchreturn_path($$dpth + 1, $$cr)) || true)
+                            && ($scope$B = this.loop<received>(() => this.matchreceived($$dpth + 1, $$cr), false)) !== null
+                        ) {
+                            $$res = {kind: ASTKinds.trace, A: $scope$A, B: $scope$B};
+                        }
+                        return $$res;
+                    });
+            },
+            this.$scope$trace$memo,
+        );
+    }
+    public matchunstructured($$dpth: number, $$cr?: ErrorTracker): Nullable<unstructured> {
+        return this.memoise(
+            () => {
+                return this.choice<unstructured>([
+                    () => this.matchunstructured_1($$dpth + 1, $$cr),
+                    () => this.matchunstructured_2($$dpth + 1, $$cr),
+                ]);
+            },
+            this.$scope$unstructured$memo,
+        );
+    }
+    public matchunstructured_1($$dpth: number, $$cr?: ErrorTracker): Nullable<unstructured_1> {
+        return this.run<unstructured_1>($$dpth,
+            () => {
+                let $scope$A: Nullable<unstructured_$0>;
+                let $$res: Nullable<unstructured_1> = null;
+                if (true
+                    && ($scope$A = this.matchunstructured_$0($$dpth + 1, $$cr)) !== null
+                ) {
+                    $$res = {kind: ASTKinds.unstructured_1, A: $scope$A};
+                }
+                return $$res;
+            });
+    }
+    public matchunstructured_2($$dpth: number, $$cr?: ErrorTracker): Nullable<unstructured_2> {
+        return this.run<unstructured_2>($$dpth,
+            () => {
+                let $scope$F: Nullable<obs_unstruct>;
+                let $$res: Nullable<unstructured_2> = null;
+                if (true
+                    && ($scope$F = this.matchobs_unstruct($$dpth + 1, $$cr)) !== null
+                ) {
+                    $$res = {kind: ASTKinds.unstructured_2, F: $scope$F};
+                }
+                return $$res;
+            });
+    }
+    public matchunstructured_$0($$dpth: number, $$cr?: ErrorTracker): Nullable<unstructured_$0> {
+        return this.memoise(
+            () => {
+                return this.run<unstructured_$0>($$dpth,
+                    () => {
+                        let $scope$B: Nullable<unstructured_$0_$0[]>;
+                        let $$res: Nullable<unstructured_$0> = null;
+                        if (true
+                            && ($scope$B = this.loop<unstructured_$0_$0>(() => this.matchunstructured_$0_$0($$dpth + 1, $$cr), true)) !== null
+                            && this.loop<WSP>(() => this.matchWSP($$dpth + 1, $$cr), true) !== null
+                        ) {
+                            $$res = {kind: ASTKinds.unstructured_$0, B: $scope$B};
+                        }
+                        return $$res;
+                    });
+            },
+            this.$scope$unstructured_$0$memo,
+        );
+    }
+    public matchunstructured_$0_$0($$dpth: number, $$cr?: ErrorTracker): Nullable<unstructured_$0_$0> {
+        return this.memoise(
+            () => {
+                return this.run<unstructured_$0_$0>($$dpth,
+                    () => {
+                        let $scope$C: Nullable<Nullable<FWS>>;
+                        let $scope$D: Nullable<VCHAR>;
+                        let $$res: Nullable<unstructured_$0_$0> = null;
+                        if (true
+                            && (($scope$C = this.matchFWS($$dpth + 1, $$cr)) || true)
+                            && ($scope$D = this.matchVCHAR($$dpth + 1, $$cr)) !== null
+                        ) {
+                            $$res = {kind: ASTKinds.unstructured_$0_$0, C: $scope$C, D: $scope$D};
+                        }
+                        return $$res;
+                    });
+            },
+            this.$scope$unstructured_$0_$0$memo,
+        );
+    }
+    public matchword($$dpth: number, $$cr?: ErrorTracker): Nullable<word> {
+        return this.memoise(
+            () => {
+                return this.choice<word>([
+                    () => this.matchword_1($$dpth + 1, $$cr),
+                    () => this.matchword_2($$dpth + 1, $$cr),
+                ]);
+            },
+            this.$scope$word$memo,
+        );
+    }
+    public matchword_1($$dpth: number, $$cr?: ErrorTracker): Nullable<word_1> {
+        return this.matchatom($$dpth + 1, $$cr);
+    }
+    public matchword_2($$dpth: number, $$cr?: ErrorTracker): Nullable<word_2> {
+        return this.matchquoted_string($$dpth + 1, $$cr);
+    }
+    public matchyear($$dpth: number, $$cr?: ErrorTracker): Nullable<year> {
+        return this.memoise(
+            () => {
+                return this.choice<year>([
+                    () => this.matchyear_1($$dpth + 1, $$cr),
+                    () => this.matchyear_2($$dpth + 1, $$cr),
+                ]);
+            },
+            this.$scope$year$memo,
+        );
+    }
+    public matchyear_1($$dpth: number, $$cr?: ErrorTracker): Nullable<year_1> {
+        return this.run<year_1>($$dpth,
+            () => {
+                let $scope$A: Nullable<year_$0>;
+                let $$res: Nullable<year_1> = null;
+                if (true
+                    && ($scope$A = this.matchyear_$0($$dpth + 1, $$cr)) !== null
+                ) {
+                    $$res = {kind: ASTKinds.year_1, A: $scope$A};
+                }
+                return $$res;
+            });
+    }
+    public matchyear_2($$dpth: number, $$cr?: ErrorTracker): Nullable<year_2> {
+        return this.run<year_2>($$dpth,
+            () => {
+                let $scope$F: Nullable<obs_year>;
+                let $$res: Nullable<year_2> = null;
+                if (true
+                    && ($scope$F = this.matchobs_year($$dpth + 1, $$cr)) !== null
+                ) {
+                    $$res = {kind: ASTKinds.year_2, F: $scope$F};
+                }
+                return $$res;
+            });
+    }
+    public matchyear_$0($$dpth: number, $$cr?: ErrorTracker): Nullable<year_$0> {
+        return this.memoise(
+            () => {
+                return this.run<year_$0>($$dpth,
+                    () => {
+                        let $scope$B: Nullable<FWS>;
+                        let $scope$C: Nullable<FOUR_DIGIT>;
+                        let $scope$D: Nullable<DIGIT[]>;
+                        let $scope$E: Nullable<FWS>;
+                        let $$res: Nullable<year_$0> = null;
+                        if (true
+                            && ($scope$B = this.matchFWS($$dpth + 1, $$cr)) !== null
+                            && ($scope$C = this.matchFOUR_DIGIT($$dpth + 1, $$cr)) !== null
+                            && ($scope$D = this.loop<DIGIT>(() => this.matchDIGIT($$dpth + 1, $$cr), true)) !== null
+                            && ($scope$E = this.matchFWS($$dpth + 1, $$cr)) !== null
+                        ) {
+                            $$res = {kind: ASTKinds.year_$0, B: $scope$B, C: $scope$C, D: $scope$D, E: $scope$E};
+                        }
+                        return $$res;
+                    });
+            },
+            this.$scope$year_$0$memo,
+        );
+    }
+    public matchzone($$dpth: number, $$cr?: ErrorTracker): Nullable<zone> {
+        return this.memoise(
+            () => {
+                return this.choice<zone>([
+                    () => this.matchzone_1($$dpth + 1, $$cr),
+                    () => this.matchzone_2($$dpth + 1, $$cr),
+                ]);
+            },
+            this.$scope$zone$memo,
+        );
+    }
+    public matchzone_1($$dpth: number, $$cr?: ErrorTracker): Nullable<zone_1> {
+        return this.run<zone_1>($$dpth,
+            () => {
+                let $scope$A: Nullable<zone_$0>;
+                let $$res: Nullable<zone_1> = null;
+                if (true
+                    && ($scope$A = this.matchzone_$0($$dpth + 1, $$cr)) !== null
+                ) {
+                    $$res = {kind: ASTKinds.zone_1, A: $scope$A};
+                }
+                return $$res;
+            });
+    }
+    public matchzone_2($$dpth: number, $$cr?: ErrorTracker): Nullable<zone_2> {
+        return this.run<zone_2>($$dpth,
+            () => {
+                let $scope$G: Nullable<obs_zone>;
+                let $$res: Nullable<zone_2> = null;
+                if (true
+                    && ($scope$G = this.matchobs_zone($$dpth + 1, $$cr)) !== null
+                ) {
+                    $$res = {kind: ASTKinds.zone_2, G: $scope$G};
+                }
+                return $$res;
+            });
+    }
+    public matchzone_$0($$dpth: number, $$cr?: ErrorTracker): Nullable<zone_$0> {
+        return this.memoise(
+            () => {
+                return this.run<zone_$0>($$dpth,
+                    () => {
+                        let $scope$C: Nullable<zone_$0_$0>;
+                        let $scope$F: Nullable<FOUR_DIGIT>;
+                        let $$res: Nullable<zone_$0> = null;
+                        if (true
+                            && this.matchFWS($$dpth + 1, $$cr) !== null
+                            && ($scope$C = this.matchzone_$0_$0($$dpth + 1, $$cr)) !== null
+                            && ($scope$F = this.matchFOUR_DIGIT($$dpth + 1, $$cr)) !== null
+                        ) {
+                            $$res = {kind: ASTKinds.zone_$0, C: $scope$C, F: $scope$F};
+                        }
+                        return $$res;
+                    });
+            },
+            this.$scope$zone_$0$memo,
+        );
+    }
+    public matchzone_$0_$0($$dpth: number, $$cr?: ErrorTracker): Nullable<zone_$0_$0> {
+        return this.memoise(
+            () => {
+                return this.choice<zone_$0_$0>([
+                    () => this.matchzone_$0_$0_1($$dpth + 1, $$cr),
+                    () => this.matchzone_$0_$0_2($$dpth + 1, $$cr),
+                ]);
+            },
+            this.$scope$zone_$0_$0$memo,
+        );
+    }
+    public matchzone_$0_$0_1($$dpth: number, $$cr?: ErrorTracker): Nullable<zone_$0_$0_1> {
+        return this.run<zone_$0_$0_1>($$dpth,
+            () => {
+                let $scope$D: Nullable<string>;
+                let $$res: Nullable<zone_$0_$0_1> = null;
+                if (true
+                    && ($scope$D = this.regexAccept(String.raw`(?:\+)`, $$dpth + 1, $$cr)) !== null
+                ) {
+                    $$res = {kind: ASTKinds.zone_$0_$0_1, D: $scope$D};
+                }
+                return $$res;
+            });
+    }
+    public matchzone_$0_$0_2($$dpth: number, $$cr?: ErrorTracker): Nullable<zone_$0_$0_2> {
+        return this.run<zone_$0_$0_2>($$dpth,
+            () => {
+                let $scope$E: Nullable<string>;
+                let $$res: Nullable<zone_$0_$0_2> = null;
+                if (true
+                    && ($scope$E = this.regexAccept(String.raw`(?:\-)`, $$dpth + 1, $$cr)) !== null
+                ) {
+                    $$res = {kind: ASTKinds.zone_$0_$0_2, E: $scope$E};
+                }
+                return $$res;
+            });
     }
     public test(): boolean {
         const mrk = this.mark();
