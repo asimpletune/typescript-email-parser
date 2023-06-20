@@ -22,7 +22,7 @@ address_list := head=address tail={ C=',' address=address }* | obs_addr_list
 angle_addr := CFWS? B='<' addr_spec=addr_spec D='>' CFWS? | obs_angle_addr
 atext := '[A-Za-z0-9!#$%&\x27\*\+\-\/=?^_`{|}~]'
 atom := A=CFWS? B=atext+ C=CFWS?
-bcc := A='Bcc' B=':' C={ address_list | CFWS }? CRLF
+bcc := A='Bcc' B=':' address_list={ address_list | CFWS }? CRLF
 body := A={ B=_998text C=CRLF }* D=_998text | E=obs_body
 cc := A='Cc' B=':' address_list=address_list CRLF
 ccontent := A=ctext | B=quoted_pair | C=comment

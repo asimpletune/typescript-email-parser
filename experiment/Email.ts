@@ -1,69 +1,40 @@
-import { ASTKinds, addr_spec, address, address_list, angle_addr_1, cc, from, group, group_list, mailbox, mailbox_list, message, name_addr, obs_addr_list_$1, obs_addr_list_$1_$0, obs_angle_addr, obs_cc, obs_fields_$0, obs_from, obs_subject, obs_to, parse, subject, to } from './message.fields'
+import { ASTNodeIntf, ASTKinds as K, addr_spec, address, address_list, address_list_1, angle_addr_1, bcc_$0, cc, fields, fields_$1, from, group, group_list, mailbox, mailbox_list, message, name_addr, obs_addr_list, obs_addr_list_$1, obs_addr_list_$1_$0, obs_angle_addr, obs_cc, obs_fields_$0, obs_from, obs_subject, obs_to, parse, subject, to } from './message.fields'
+import { ASTKinds } from './metagrammar.parser'
 import { concat } from './util'
 export class Email {
   to: NonemptyList<Address> | undefined
   subject: string | undefined
   from: NonemptyList<Mailbox> | undefined
   cc: NonemptyList<Address> | undefined
+  bcc: NonemptyList<Address> | undefined
 
   constructor(ast: message) {
-    this.to = Email.to(ast)
-    this.subject = Email.subject(ast)
-    this.from = Email.from(ast)
-    this.cc = Email.cc(ast)
-  }
-
-  static subject(ast: message): string | undefined {
-    let fields = ast.fields
-    if (fields.kind === ASTKinds.fields) {
-      let subject = fields.L.find((field): field is subject => field.kind === ASTKinds.subject)
-      return subject ? concat(subject._value).trim() : undefined
-    } else {
-      let subject = fields.A.find((field): field is obs_subject => field.kind === ASTKinds.obs_subject)
-      return subject ? concat(subject._value).trim() : undefined
-    }
-  }
-
-  static to(ast: message): NonemptyList<Address> | undefined {
     let fields = ast.fields
     switch (fields.kind) {
-      case ASTKinds.fields: {
-        let toField = fields.L.find((field): field is to => field.kind === ASTKinds.to)
-        return toField ? Util.fromAddressList(toField.address_list) : undefined
+      case K.fields: {
+        fields.L.forEach(f => {
+          switch (f.kind) {
+            case K.to: this.to = Util.fromAddressList(f.address_list); break;
+            case K.from: this.from = Util.fromMailboxList(f.mailbox_list); break;
+            case K.cc: this.cc = Util.fromAddressList(f.address_list); break;
+            case K.bcc: this.bcc = Util.addressListOrUndefined(f.address_list); break;
+            case K.subject: this.subject = concat(f._value).trim(); break;
+            default: break; // TODO
+          }
+        })
+        break;
       }
-      case ASTKinds.obs_fields: {
-        let toField = fields.A.find((el): el is obs_to => el.kind === ASTKinds.obs_to)
-        return toField ? Util.fromAddressList(toField.address_list) : undefined
-      }
-      default: { const exhaustive: never = fields; throw new Error(exhaustive) }
-    }
-  }
-
-  static from(ast: message) {
-    let fields = ast.fields
-    switch (fields.kind) {
-      case ASTKinds.fields: {
-        let fromField = fields.L.find((field): field is from => field.kind === ASTKinds.from)
-        return fromField ? Util.fromMailboxList(fromField.mailbox_list) : undefined
-      }
-      case ASTKinds.obs_fields: {
-        let fromField = fields.A.find((el): el is obs_from => el.kind === ASTKinds.obs_from)
-        return fromField ? Util.fromMailboxList(fromField.mailbox_list) : undefined
-      }
-      default: { const exhaustive: never = fields; throw new Error(exhaustive) }
-    }
-  }
-
-  static cc(ast: message): NonemptyList<Address> | undefined {
-    let fields = ast.fields
-    switch (fields.kind) {
-      case ASTKinds.fields: {
-        let ccField = fields.L.find((field): field is cc => field.kind === ASTKinds.cc)
-        return ccField ? Util.fromAddressList(ccField.address_list) : undefined
-      }
-      case ASTKinds.obs_fields: {
-        let ccField = fields.A.find((el): el is obs_cc => el.kind === ASTKinds.obs_cc)
-        return ccField ? Util.fromAddressList(ccField.address_list) : undefined
+      case K.obs_fields: {
+        fields.A.forEach(f => {
+          switch (f.kind) {
+            case K.obs_to: this.to = Util.fromAddressList(f.address_list); break;
+            case K.obs_from: this.from = Util.fromMailboxList(f.mailbox_list); break;
+            case K.obs_cc: this.cc = Util.fromAddressList(f.address_list); break;
+            case K.obs_subject: this.subject = concat(f._value).trim(); break;
+            default: break; // TODO
+          }
+        })
+        break;
       }
       default: { const exhaustive: never = fields; throw new Error(exhaustive) }
     }
@@ -73,13 +44,26 @@ export class Email {
 type Address = Mailbox | Group
 
 type NonemptyList<T> = [T, ...T[]]
+interface HasKind {
+  kind: string
+}
+
 
 class Util {
+
+  static addressListOrUndefined(mbAddressList: address_list | ASTNodeIntf | null) {
+    switch (mbAddressList?.kind) {
+      case K.address_list_1: return this.fromAddressList(mbAddressList as address_list_1)
+      case K.obs_addr_list: return this.fromAddressList(mbAddressList as obs_addr_list)
+      default: return undefined
+    }
+  }
+
   static fromMailboxList(mailbox_list: mailbox_list): NonemptyList<Mailbox> {
     switch (mailbox_list.kind) {
-      case ASTKinds.mailbox_list_1:
+      case K.mailbox_list_1:
         return [new Mailbox(mailbox_list.head), ...mailbox_list.tail.map(el => new Mailbox(el.mailbox))]
-      case ASTKinds.obs_mbox_list:
+      case K.obs_mbox_list:
         let tail = mailbox_list.tail.map(el => el.mailbox)
           .filter((el): el is mailbox => el !== null)
           .map(mb => new Mailbox(mb))
@@ -89,10 +73,10 @@ class Util {
   }
   static fromAddressList(address_list: address_list): NonemptyList<Address> {
     switch (address_list.kind) {
-      case ASTKinds.address_list_1:
+      case K.address_list_1:
         return [Util.fromAddress(address_list.head),
         ...address_list.tail.map(el => Util.fromAddress(el.address))]
-      case ASTKinds.obs_addr_list:
+      case K.obs_addr_list:
         return [Util.fromAddress(address_list.head),
         ...address_list.tail
           .map(el => el.address)
@@ -103,9 +87,9 @@ class Util {
   }
   static fromAddress(address: address): Address {
     switch (address.kind) {
-      case ASTKinds.addr_spec: return new Mailbox(address)
-      case ASTKinds.name_addr: return new Mailbox(address)
-      case ASTKinds.group: return new Group(address)
+      case K.addr_spec: return new Mailbox(address)
+      case K.name_addr: return new Mailbox(address)
+      case K.group: return new Group(address)
       default: { const exhaustive: never = address; throw new Error(exhaustive) }
     }
   }
@@ -120,19 +104,19 @@ class Group {
         let group_list = group.group_list
         switch (group_list.kind) {
           // mailbox list, with head/tail
-          case ASTKinds.mailbox_list_1:
+          case K.mailbox_list_1:
             return [new Mailbox(group_list.head), ...group_list.tail.map(el => new Mailbox(el.mailbox))]
           // obsolete mailbox list, with head/tail
-          case ASTKinds.obs_mbox_list:
+          case K.obs_mbox_list:
             let head = new Mailbox(group_list.head)
             let tail = group_list.tail.map(el => el.mailbox)
               .filter((el): el is mailbox => el !== null)
               .map(mb => new Mailbox(mb))
             return [head, ...tail]
           // obsolete group list is just CFWS
-          case ASTKinds.obs_group_list: return undefined
-          case ASTKinds.CFWS_1: return undefined
-          case ASTKinds.CFWS_2: return undefined
+          case K.obs_group_list: return undefined
+          case K.CFWS_1: return undefined
+          case K.CFWS_2: return undefined
           default: { const exhaustive: never = group_list; throw new Error(exhaustive) }
         }
       }
@@ -150,8 +134,8 @@ class Mailbox {
 
   constructor(mb: mailbox) {
     switch (mb.kind) {
-      case ASTKinds.addr_spec: return Mailbox.from_address_spec(mb)
-      case ASTKinds.name_addr: return Mailbox.from_name_addr(mb)
+      case K.addr_spec: return Mailbox.from_address_spec(mb)
+      case K.name_addr: return Mailbox.from_name_addr(mb)
       default: { const exhaustive: never = mb; throw Error(exhaustive) }
     }
   }

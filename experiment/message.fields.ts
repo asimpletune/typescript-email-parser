@@ -24,7 +24,7 @@
 * angle_addr := CFWS? B='<' addr_spec=addr_spec D='>' CFWS? | obs_angle_addr
 * atext := '[A-Za-z0-9!#$%&\x27\*\+\-\/=?^_`{|}~]'
 * atom := A=CFWS? B=atext+ C=CFWS?
-* bcc := A='Bcc' B=':' C={ address_list | CFWS }? CRLF
+* bcc := A='Bcc' B=':' address_list={ address_list | CFWS }? CRLF
 * body := A={ B=_998text C=CRLF }* D=_998text | E=obs_body
 * cc := A='Cc' B=':' address_list=address_list CRLF
 * ccontent := A=ctext | B=quoted_pair | C=comment
@@ -603,7 +603,7 @@ export interface bcc {
     kind: ASTKinds.bcc;
     A: string;
     B: string;
-    C: Nullable<bcc_$0>;
+    address_list: Nullable<bcc_$0>;
 }
 export type bcc_$0 = bcc_$0_1 | bcc_$0_2;
 export type bcc_$0_1 = address_list;
@@ -2439,15 +2439,15 @@ export class Parser {
                     () => {
                         let $scope$A: Nullable<string>;
                         let $scope$B: Nullable<string>;
-                        let $scope$C: Nullable<Nullable<bcc_$0>>;
+                        let $scope$address_list: Nullable<Nullable<bcc_$0>>;
                         let $$res: Nullable<bcc> = null;
                         if (true
                             && ($scope$A = this.regexAccept(String.raw`(?:Bcc)`, $$dpth + 1, $$cr)) !== null
                             && ($scope$B = this.regexAccept(String.raw`(?::)`, $$dpth + 1, $$cr)) !== null
-                            && (($scope$C = this.matchbcc_$0($$dpth + 1, $$cr)) || true)
+                            && (($scope$address_list = this.matchbcc_$0($$dpth + 1, $$cr)) || true)
                             && this.matchCRLF($$dpth + 1, $$cr) !== null
                         ) {
-                            $$res = {kind: ASTKinds.bcc, A: $scope$A, B: $scope$B, C: $scope$C};
+                            $$res = {kind: ASTKinds.bcc, A: $scope$A, B: $scope$B, address_list: $scope$address_list};
                         }
                         return $$res;
                     });

@@ -67,7 +67,7 @@ modifyRules.set('sender', { skipFields: new Set('D'.split('')), mapFields: {}, c
 modifyRules.set('reply_to', { skipFields: new Set('D'.split('')), mapFields: {}, computed: {} })
 modifyRules.set('to', { skipFields: new Set('D'.split('')), mapFields: { C: 'address_list' }, computed: {} })
 modifyRules.set('cc', { skipFields: new Set('D'.split('')), mapFields: { C: 'address_list' }, computed: {} })
-modifyRules.set('bcc', { skipFields: new Set('DEF'.split('')), mapFields: {}, computed: {} })
+modifyRules.set('bcc', { skipFields: new Set('DEF'.split('')), mapFields: { C: 'address_list' }, computed: {} })
 modifyRules.set('message_id', { skipFields: new Set('D'.split('')), mapFields: {}, computed: {} })
 modifyRules.set('in_reply_to', { skipFields: new Set('D'.split('')), mapFields: {}, computed: {} })
 modifyRules.set('references', { skipFields: new Set('D'.split('')), mapFields: {}, computed: {} })
