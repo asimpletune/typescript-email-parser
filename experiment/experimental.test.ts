@@ -15,5 +15,8 @@ describe('fields', () => {
   test('from', () => {
     expect(email.from).toEqual([{ "email": "test@example.com", "name": undefined }])
   })
+  test('cc', () => {
+    expect(email.cc).toEqual([{ "email": "carol@example.com", "name": "carol" }])
+  })
   test('subject', () => { expect(email.subject).toBe("This is a test email") })
 })

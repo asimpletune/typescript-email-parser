@@ -26,7 +26,7 @@
 * atom := A=CFWS? B=atext+ C=CFWS?
 * bcc := A='Bcc' B=':' C={ address_list | CFWS }? CRLF
 * body := A={ B=_998text C=CRLF }* D=_998text | E=obs_body
-* cc := A='Cc' B=':' C=address_list CRLF
+* cc := A='Cc' B=':' address_list=address_list CRLF
 * ccontent := A=ctext | B=quoted_pair | C=comment
 * comment := A='\(' B={ FWS? D=ccontent }* FWS? F='\)'
 * comments := A='Comments' B=':' C=unstructured CRLF
@@ -69,7 +69,7 @@
 * obs_angle_addr := CFWS? B='<' C=obs_route addr_spec=addr_spec E='>' CFWS?
 * obs_bcc := A='Bcc' WSP* C=':' D={ E=address_list | { CFWS? ',' }* CFWS? } CRLF
 * obs_body := A={ B={ LF* CR* E={ F={ G='\x00' | H=text } LF* CR* }* } | CRLF }*
-* obs_cc := A='Cc' WSP* C=':' D=address_list CRLF
+* obs_cc := A='Cc' WSP* C=':' address_list=address_list CRLF
 * obs_comments := A='Comments' WSP* C=':' D=unstructured CRLF
 * obs_ctext := obs_NO_WS_CTL
 * obs_day := A=CFWS? B=DIGIT C=DIGIT? CFWS?
@@ -627,7 +627,7 @@ export interface cc {
     kind: ASTKinds.cc;
     A: string;
     B: string;
-    C: address_list;
+    address_list: address_list;
 }
 export type ccontent = ccontent_1 | ccontent_2 | ccontent_3;
 export interface ccontent_1 {
@@ -1019,7 +1019,7 @@ export interface obs_cc {
     kind: ASTKinds.obs_cc;
     A: string;
     C: string;
-    D: address_list;
+    address_list: address_list;
 }
 export interface obs_comments {
     kind: ASTKinds.obs_comments;
@@ -2538,15 +2538,15 @@ export class Parser {
                     () => {
                         let $scope$A: Nullable<string>;
                         let $scope$B: Nullable<string>;
-                        let $scope$C: Nullable<address_list>;
+                        let $scope$address_list: Nullable<address_list>;
                         let $$res: Nullable<cc> = null;
                         if (true
                             && ($scope$A = this.regexAccept(String.raw`(?:Cc)`, $$dpth + 1, $$cr)) !== null
                             && ($scope$B = this.regexAccept(String.raw`(?::)`, $$dpth + 1, $$cr)) !== null
-                            && ($scope$C = this.matchaddress_list($$dpth + 1, $$cr)) !== null
+                            && ($scope$address_list = this.matchaddress_list($$dpth + 1, $$cr)) !== null
                             && this.matchCRLF($$dpth + 1, $$cr) !== null
                         ) {
-                            $$res = {kind: ASTKinds.cc, A: $scope$A, B: $scope$B, C: $scope$C};
+                            $$res = {kind: ASTKinds.cc, A: $scope$A, B: $scope$B, address_list: $scope$address_list};
                         }
                         return $$res;
                     });
@@ -4214,16 +4214,16 @@ export class Parser {
                     () => {
                         let $scope$A: Nullable<string>;
                         let $scope$C: Nullable<string>;
-                        let $scope$D: Nullable<address_list>;
+                        let $scope$address_list: Nullable<address_list>;
                         let $$res: Nullable<obs_cc> = null;
                         if (true
                             && ($scope$A = this.regexAccept(String.raw`(?:Cc)`, $$dpth + 1, $$cr)) !== null
                             && this.loop<WSP>(() => this.matchWSP($$dpth + 1, $$cr), true) !== null
                             && ($scope$C = this.regexAccept(String.raw`(?::)`, $$dpth + 1, $$cr)) !== null
-                            && ($scope$D = this.matchaddress_list($$dpth + 1, $$cr)) !== null
+                            && ($scope$address_list = this.matchaddress_list($$dpth + 1, $$cr)) !== null
                             && this.matchCRLF($$dpth + 1, $$cr) !== null
                         ) {
-                            $$res = {kind: ASTKinds.obs_cc, A: $scope$A, C: $scope$C, D: $scope$D};
+                            $$res = {kind: ASTKinds.obs_cc, A: $scope$A, C: $scope$C, address_list: $scope$address_list};
                         }
                         return $$res;
                     });

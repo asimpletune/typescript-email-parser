@@ -1,14 +1,16 @@
-import { ASTKinds, addr_spec, address, address_list, angle_addr_1, from, group, group_list, mailbox, mailbox_list, message, name_addr, obs_addr_list_$1, obs_addr_list_$1_$0, obs_angle_addr, obs_fields_$0, obs_from, obs_subject, obs_to, parse, subject, to } from './message.fields'
+import { ASTKinds, addr_spec, address, address_list, angle_addr_1, cc, from, group, group_list, mailbox, mailbox_list, message, name_addr, obs_addr_list_$1, obs_addr_list_$1_$0, obs_angle_addr, obs_cc, obs_fields_$0, obs_from, obs_subject, obs_to, parse, subject, to } from './message.fields'
 import { concat } from './util'
 export class Email {
   to: NonemptyList<Address> | undefined
   subject: string | undefined
   from: NonemptyList<Mailbox> | undefined
+  cc: NonemptyList<Address> | undefined
 
   constructor(ast: message) {
     this.to = Email.to(ast)
     this.subject = Email.subject(ast)
     this.from = Email.from(ast)
+    this.cc = Email.cc(ast)
   }
 
   static subject(ast: message): string | undefined {
@@ -47,6 +49,21 @@ export class Email {
       case ASTKinds.obs_fields: {
         let fromField = fields.A.find((el): el is obs_from => el.kind === ASTKinds.obs_from)
         return fromField ? Util.fromMailboxList(fromField.mailbox_list) : undefined
+      }
+      default: { const exhaustive: never = fields; throw new Error(exhaustive) }
+    }
+  }
+
+  static cc(ast: message): NonemptyList<Address> | undefined {
+    let fields = ast.fields
+    switch (fields.kind) {
+      case ASTKinds.fields: {
+        let ccField = fields.L.find((field): field is cc => field.kind === ASTKinds.cc)
+        return ccField ? Util.fromAddressList(ccField.address_list) : undefined
+      }
+      case ASTKinds.obs_fields: {
+        let ccField = fields.A.find((el): el is obs_cc => el.kind === ASTKinds.obs_cc)
+        return ccField ? Util.fromAddressList(ccField.address_list) : undefined
       }
       default: { const exhaustive: never = fields; throw new Error(exhaustive) }
     }

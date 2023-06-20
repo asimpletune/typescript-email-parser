@@ -24,7 +24,7 @@ atext := '[A-Za-z0-9!#$%&\x27\*\+\-\/=?^_`{|}~]'
 atom := A=CFWS? B=atext+ C=CFWS?
 bcc := A='Bcc' B=':' C={ address_list | CFWS }? CRLF
 body := A={ B=_998text C=CRLF }* D=_998text | E=obs_body
-cc := A='Cc' B=':' C=address_list CRLF
+cc := A='Cc' B=':' address_list=address_list CRLF
 ccontent := A=ctext | B=quoted_pair | C=comment
 comment := A='\(' B={ FWS? D=ccontent }* FWS? F='\)'
 comments := A='Comments' B=':' C=unstructured CRLF
@@ -67,7 +67,7 @@ obs_addr_list := { CFWS? ',' }* head=address tail={ ',' address={ address | I=CF
 obs_angle_addr := CFWS? B='<' C=obs_route addr_spec=addr_spec E='>' CFWS?
 obs_bcc := A='Bcc' WSP* C=':' D={ E=address_list | { CFWS? ',' }* CFWS? } CRLF
 obs_body := A={ B={ LF* CR* E={ F={ G='\x00' | H=text } LF* CR* }* } | CRLF }*
-obs_cc := A='Cc' WSP* C=':' D=address_list CRLF
+obs_cc := A='Cc' WSP* C=':' address_list=address_list CRLF
 obs_comments := A='Comments' WSP* C=':' D=unstructured CRLF
 obs_ctext := obs_NO_WS_CTL
 obs_day := A=CFWS? B=DIGIT C=DIGIT? CFWS?
