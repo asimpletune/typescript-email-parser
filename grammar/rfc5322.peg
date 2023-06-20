@@ -20,15 +20,15 @@ WSP             :=    SP | HTAB           // white space
 
 // § 3.2.1 Quoted Characters
 // See: https://datatracker.ietf.org/doc/html/rfc5322#section-3.2.1
-quoted_pair     :=    { '\\' { VCHAR | WSP } } | obs_qp
+quoted_pair     :=    '\\' { VCHAR | WSP }  | obs_qp
 
 // §3.2.2 Folding White Space and Comments
 // See: https://datatracker.ietf.org/doc/html/rfc5322#section-3.2.2
-FWS             :=    { { WSP* CRLF }? WSP+ } |  obs_FWS
+FWS             :=    { WSP* CRLF }? WSP+ |  obs_FWS
 ctext           :=    '[\x21-\x27]' | '[\x2a-\x5b]' | '[\x5d-\x7e]' | obs_ctext
 ccontent        :=    ctext | quoted_pair | comment
 comment         :=    '\(' { FWS? ccontent }* FWS? '\)'
-CFWS            :=    { { FWS? comment }+ FWS? } | FWS
+CFWS            :=    { FWS? comment }+ FWS? | FWS
 
 // § 3.2.3 Atom
 // See: https://datatracker.ietf.org/doc/html/rfc5322#section-3.2.3
@@ -52,25 +52,25 @@ quoted_string   :=    CFWS? DQUOTE { FWS? qcontent }* FWS? DQUOTE CFWS?
 // See: https://datatracker.ietf.org/doc/html/rfc5322#section-3.2.5
 word            :=    atom | quoted_string
 phrase          :=    word+ | obs_phrase
-unstructured    :=    { { FWS? VCHAR }* WSP* } | obs_unstruct
+unstructured    :=    { FWS? VCHAR }* WSP* | obs_unstruct
 
 // § 3.3.  Date and Time Specification
 // See: https://datatracker.ietf.org/doc/html/rfc5322#section-3.3
 date_time       :=    { day_of_week ',' }? date time CFWS?
-day_of_week     :=    { FWS? day_name } | obs_day_of_week
+day_of_week     :=    FWS? day_name | obs_day_of_week
 day_name        :=    'Mon' | 'Tue' | 'Wed' | 'Thu' | 'Fri' | 'Sat' | 'Sun'
 date            :=    day month year
-day             :=    { FWS? DIGIT DIGIT? FWS } | obs_day
+day             :=    FWS? DIGIT DIGIT? FWS | obs_day
 month           :=    'Jan' | 'Feb' | 'Mar' | 'Apr' |
                       'May' | 'Jun' | 'Jul' | 'Aug' |
                       'Sep' | 'Oct' | 'Nov' | 'Dec'
-year            :=    { FWS FOUR_DIGIT DIGIT* FWS } | obs_year
+year            :=    FWS FOUR_DIGIT DIGIT* FWS | obs_year
 time            :=    time_of_day zone
 time_of_day     :=    hour ':' minute { ':' second }?
 hour            :=    TWO_DIGIT | obs_hour
 minute          :=    TWO_DIGIT | obs_minute
 second          :=    TWO_DIGIT | obs_second
-zone            :=    { FWS { '\+' | '\-' } FOUR_DIGIT } | obs_zone
+zone            :=    FWS { '\+' | '\-' } FOUR_DIGIT | obs_zone
 
 // § 3.4 Address Specification
 // See: https://datatracker.ietf.org/doc/html/rfc5322#section-3.4
@@ -80,8 +80,8 @@ name_addr       :=    display_name? angle_addr
 angle_addr      :=    CFWS? '<' addr_spec '>' CFWS? | obs_angle_addr
 group           :=    display_name ':' group_list? ';' CFWS?
 display_name    :=    phrase
-mailbox_list    :=    { mailbox { ',' mailbox }* } | obs_mbox_list
-address_list    :=    { address { ',' address }*  } | obs_addr_list
+mailbox_list    :=    mailbox { ',' mailbox }* | obs_mbox_list
+address_list    :=    address { ',' address }* | obs_addr_list
 group_list      :=    mailbox_list | CFWS | obs_group_list
 
 // § 3.4.1 Addr-Spec Specification
@@ -96,7 +96,7 @@ dtext           :=    '[\x21-\x5a]' | '[\x5e-\x7e]' | obs_dtext
 // § 3.5 Overall Message Syntax
 // See: https://datatracker.ietf.org/doc/html/rfc5322#section-3.5
 message         :=    { fields | obs_fields } { CRLF body }?
-body            :=    {  { _998text CRLF }* _998text } | obs_body
+body            :=    { _998text CRLF }* _998text | obs_body
 text            :=    '[\x01-\x09]' | '\x0B' | '\x0C' | '[\x0E-\x7f]' // Characters excluding CR and LF
 _998text        :=    '[\x01-\x09\x0B\x0C\x0E-\x7F]{998,}'            // Note: _998text to workaround tspeg operator
 
@@ -154,7 +154,7 @@ resent_msg_id   :=    'Resent-Message_ID' ':' msg_id CRLF
 // See: https://datatracker.ietf.org/doc/html/rfc5322#section-3.6.7
 trace           :=    return_path? received+
 return_path     :=    'Return-Path' ':' path CRLF
-path            :=    angle_addr | { CFWS? '<' CFWS '>' CFWS? }
+path            :=    angle_addr | CFWS? '<' CFWS '>' CFWS?
 received        :=    'Received' ':' received_token* ';' date_time CRLF
 received_token  :=    word | angle_addr | addr_spec | domain
 
@@ -236,7 +236,7 @@ obs_reply_to    :=    'Reply-To' WSP* ':' address_list CRLF
 // See: https://datatracker.ietf.org/doc/html/rfc5322#section-4.5.3
 obs_to          :=    'To' WSP* ':' address_list CRLF
 obs_cc          :=    'Cc' WSP* ':' address_list CRLF
-obs_bcc         :=    'Bcc' WSP* ':' { address_list | { { CFWS? ',' }* CFWS? } } CRLF
+obs_bcc         :=    'Bcc' WSP* ':' { address_list | { CFWS? ',' }* CFWS? } CRLF
 
 // § 4.5.4.  Obsolete Identification Fields
 // See: https://datatracker.ietf.org/doc/html/rfc5322#section-4.5.4
@@ -260,7 +260,7 @@ obs_resent_send :=    'Resent-Sender'     WSP* ':' mailbox      CRLF
 obs_resent_date :=    'Resent-Date'       WSP* ':' date_time    CRLF
 obs_resent_to   :=    'Resent-To'         WSP* ':' address_list CRLF
 obs_resent_cc   :=    'Resent-Cc'         WSP* ':' address_list CRLF
-obs_resent_bcc  :=    'Resent-Bcc'        WSP* ':' { address_list | { { CFWS? ',' }* CFWS? } } CRLF
+obs_resent_bcc  :=    'Resent-Bcc'        WSP* ':' { address_list | { CFWS? ',' }* CFWS? } CRLF
 obs_resent_mid  :=    'Resent-Message-ID' WSP* ':' msg_id CRLF
 obs_resent_rply :=    'Resent-Reply-To'   WSP* ':' address_list CRLF
 

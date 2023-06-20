@@ -22,10 +22,10 @@ modifyRules.set('LF', { skipFields: new Set('A'), mapFields: {}, computed: {} })
 modifyRules.set('SP', { skipFields: new Set('A'), mapFields: {}, computed: {} })
 modifyRules.set('VCHAR', { skipFields: new Set('A'), mapFields: {}, computed: {} })
 modifyRules.set('WSP', { skipFields: new Set(['A', 'B']), mapFields: {}, computed: {} })
-modifyRules.set('quoted_pair', { skipFields: new Set(['E']), mapFields: {}, computed: {} })
+modifyRules.set('quoted_pair', { skipFields: new Set([]), mapFields: {}, computed: {} })
 modifyRules.set('FWS', { skipFields: new Set([]), mapFields: {}, computed: {} })
 modifyRules.set('comment', { skipFields: new Set(['C', 'E']), mapFields: {}, computed: {} })
-modifyRules.set('CFWS', { skipFields: new Set(['C', 'E', 'F']), mapFields: {}, computed: {} })
+modifyRules.set('CFWS', { skipFields: new Set([]), mapFields: {}, computed: {} })
 modifyRules.set('atext', { skipFields: new Set(['A']), mapFields: {}, computed: {} })
 modifyRules.set('atom', { skipFields: new Set([]), mapFields: {}, computed: {} })
 modifyRules.set('specials', { skipFields: new Set('ABCDEFGHIJ'.split('')), mapFields: {}, computed: {} })
@@ -34,49 +34,37 @@ modifyRules.set('qcontent', { skipFields: new Set('AB'.split('')), mapFields: {}
 modifyRules.set('quoted_string', { skipFields: new Set('ADFH'.split('')), mapFields: {}, computed: {} })
 modifyRules.set('word', { skipFields: new Set('AB'.split('')), mapFields: {}, computed: {} })
 modifyRules.set('phrase', { skipFields: new Set('AB'.split('')), mapFields: {}, computed: {} })
-modifyRules.set('unstructured', { skipFields: new Set('E'.split('')), mapFields: {}, computed: {} })
+modifyRules.set('unstructured', { skipFields: new Set(''.split('')), mapFields: {}, computed: {} })
 modifyRules.set('date_time', { skipFields: new Set('F'.split('')), mapFields: {}, computed: {} })
-modifyRules.set('day_of_week', { skipFields: new Set('B'.split('')), mapFields: {}, computed: {} })
+modifyRules.set('day_of_week', { skipFields: new Set('A'.split('')), mapFields: {}, computed: {} })
 modifyRules.set('day_name', { skipFields: new Set('ABCDEFG'.split('')), mapFields: {}, computed: {} })
-modifyRules.set('day', { skipFields: new Set('BE'.split('')), mapFields: {}, computed: {} })
+modifyRules.set('day', { skipFields: new Set('AD'.split('')), mapFields: {}, computed: {} })
 modifyRules.set('month', { skipFields: new Set('ABCDEFGHIJKL'.split('')), mapFields: {}, computed: {} })
-modifyRules.set('zone', { skipFields: new Set('B'.split('')), mapFields: {}, computed: {} })
+modifyRules.set('year', { skipFields: new Set('AD'.split('')), mapFields: {}, computed: {} })
+modifyRules.set('zone', { skipFields: new Set('ACD'.split('')), mapFields: {}, computed: {} })
 modifyRules.set('address', { skipFields: new Set('AB'.split('')), mapFields: {}, computed: {} })
 modifyRules.set('mailbox', { skipFields: new Set('AB'.split('')), mapFields: {}, computed: {} })
-modifyRules.set('angle_addr', {
-  skipFields: new Set('AE'.split('')), mapFields: {}, computed: {}
-})
+modifyRules.set('angle_addr', { skipFields: new Set('AE'.split('')), mapFields: {}, computed: {} })
 modifyRules.set('group', { skipFields: new Set('E'.split('')), mapFields: {}, computed: {} })
 modifyRules.set('display_name', { skipFields: new Set('A'.split('')), mapFields: {}, computed: {} })
-modifyRules.set('addr_spec', {
-  skipFields: new Set(), mapFields: {}, computed: {
-    // root: [
-    //   '.local = string { return concat(this.A).trim() }', '.domain = string { return concat(this.C).trim() }',
-    //   '.address = string { return `${this.local}@${this.domain}`}'
-    // ]
-  }
-})
+modifyRules.set('mailbox_list', { skipFields: new Set(''.split('')), mapFields: {}, computed: {} })
+modifyRules.set('address_list', { skipFields: new Set(''.split('')), mapFields: {}, computed: {} })
+modifyRules.set('addr_spec', { skipFields: new Set(), mapFields: {}, computed: {} })
 modifyRules.set('group_list', { skipFields: new Set('ABC'.split('')), mapFields: {}, computed: {} })
 modifyRules.set('local_part', { skipFields: new Set('ABC'.split('')), mapFields: {}, computed: {} })
 modifyRules.set('domain', { skipFields: new Set('ABC'.split('')), mapFields: {}, computed: {} })
 modifyRules.set('domain_literal', { skipFields: new Set('ADFH'.split('')), mapFields: {}, computed: {} })
 modifyRules.set('dtext', { skipFields: new Set('ABC'.split('')), mapFields: {}, computed: {} })
 modifyRules.set('message', { skipFields: new Set('BCE'.split('')), mapFields: { A: "fields" }, computed: {} })
-modifyRules.set('body', { skipFields: new Set('D'.split('')), mapFields: {}, computed: {} })
+modifyRules.set('body', { skipFields: new Set(''.split('')), mapFields: {}, computed: {} })
 modifyRules.set('text', { skipFields: new Set('ABCD'.split('')), mapFields: {}, computed: {} })
 modifyRules.set('_998text', { skipFields: new Set('A'.split('')), mapFields: {}, computed: {} })
-modifyRules.set('fields', {
-  skipFields: new Set('EFGHIJKMNOPQRSTUVWXYZ'.split('')), mapFields: {}, computed: {}
-})
+modifyRules.set('fields', { skipFields: new Set('EFGHIJKMNOPQRSTUVWXYZ'.split('')), mapFields: {}, computed: {} })
 modifyRules.set('orig_date', { skipFields: new Set('D'.split('')), mapFields: {}, computed: {} })
 modifyRules.set('from', { skipFields: new Set('D'.split('')), mapFields: {}, computed: {} })
 modifyRules.set('sender', { skipFields: new Set('D'.split('')), mapFields: {}, computed: {} })
 modifyRules.set('reply_to', { skipFields: new Set('D'.split('')), mapFields: {}, computed: {} })
-modifyRules.set('to', {
-  skipFields: new Set('D'.split('')),
-  mapFields: { 'A': 'name', 'C': '_address_list' },
-  computed: {}
-})
+modifyRules.set('to', { skipFields: new Set('D'.split('')), mapFields: {}, computed: {} })
 modifyRules.set('cc', { skipFields: new Set('D'.split('')), mapFields: {}, computed: {} })
 modifyRules.set('bcc', { skipFields: new Set('DEF'.split('')), mapFields: {}, computed: {} })
 modifyRules.set('message_id', { skipFields: new Set('D'.split('')), mapFields: {}, computed: {} })
@@ -85,12 +73,7 @@ modifyRules.set('references', { skipFields: new Set('D'.split('')), mapFields: {
 modifyRules.set('msg_id', { skipFields: new Set('AF'.split('')), mapFields: {}, computed: {} })
 modifyRules.set('id_left', { skipFields: new Set('AB'.split('')), mapFields: {}, computed: {} })
 modifyRules.set('id_right', { skipFields: new Set('ABC'.split('')), mapFields: {}, computed: {} })
-modifyRules.set('subject', {
-  skipFields: new Set('D'.split('')), mapFields: { 'A': '_name', 'C': '_value' },
-  computed: {
-    //root: ['.value = string { return concat(root._value).trim() }', '.name = string { return root._name }']
-  }
-})
+modifyRules.set('subject', { skipFields: new Set('D'.split('')), mapFields: { 'A': '_name', 'C': '_value' }, computed: {} })
 modifyRules.set('comments', { skipFields: new Set('D'.split('')), mapFields: {}, computed: {} })
 modifyRules.set('keywords', { skipFields: new Set('G'.split('')), mapFields: {}, computed: {} })
 modifyRules.set('resent_date', { skipFields: new Set('D'.split('')), mapFields: {}, computed: {} })
@@ -101,7 +84,7 @@ modifyRules.set('resent_cc', { skipFields: new Set('D'.split('')), mapFields: {}
 modifyRules.set('resent_bcc', { skipFields: new Set('EF'.split('')), mapFields: {}, computed: {} })
 modifyRules.set('resent_msg_id', { skipFields: new Set('D'.split('')), mapFields: {}, computed: {} })
 modifyRules.set('return_path', { skipFields: new Set('D'.split('')), mapFields: {}, computed: {} })
-modifyRules.set('path', { skipFields: new Set('ABCDEFG'.split('')), mapFields: {}, computed: {} })
+modifyRules.set('path', { skipFields: new Set('BCDEFG'.split('')), mapFields: {}, computed: {} })
 modifyRules.set('received', { skipFields: new Set('F'.split('')), mapFields: {}, computed: {} })
 modifyRules.set('received_token', { skipFields: new Set('ABCD'.split('')), mapFields: {}, computed: {} })
 modifyRules.set('optional_field', { skipFields: new Set('D'.split('')), mapFields: {}, computed: {} })
@@ -138,7 +121,7 @@ modifyRules.set('obs_sender', { skipFields: new Set('BE'.split('')), mapFields: 
 modifyRules.set('obs_reply_to', { skipFields: new Set('BE'.split('')), mapFields: {}, computed: {} })
 modifyRules.set('obs_to', { skipFields: new Set('BE'.split('')), mapFields: {}, computed: {} })
 modifyRules.set('obs_cc', { skipFields: new Set('BE'.split('')), mapFields: {}, computed: {} })
-modifyRules.set('obs_bcc', { skipFields: new Set('BJK'.split('')), mapFields: {}, computed: {} })
+modifyRules.set('obs_bcc', { skipFields: new Set('BFGHIJ'.split('')), mapFields: {}, computed: {} })
 modifyRules.set('obs_message_id', { skipFields: new Set('BE'.split('')), mapFields: {}, computed: {} })
 modifyRules.set('obs_in_reply_to', { skipFields: new Set('BEFG'.split('')), mapFields: {}, computed: {} })
 modifyRules.set('obs_references', { skipFields: new Set('BEFG'.split('')), mapFields: {}, computed: {} })
@@ -152,7 +135,7 @@ modifyRules.set('obs_resent_send', { skipFields: new Set('BE'.split('')), mapFie
 modifyRules.set('obs_resent_date', { skipFields: new Set('BE'.split('')), mapFields: {}, computed: {} })
 modifyRules.set('obs_resent_to', { skipFields: new Set('Be'.split('')), mapFields: {}, computed: {} })
 modifyRules.set('obs_resent_cc', { skipFields: new Set('BE'.split('')), mapFields: {}, computed: {} })
-modifyRules.set('obs_resent_bcc', { skipFields: new Set('BJK'.split('')), mapFields: {}, computed: {} })
+modifyRules.set('obs_resent_bcc', { skipFields: new Set('BFGHIJ'.split('')), mapFields: {}, computed: {} })
 modifyRules.set('obs_resent_mid', { skipFields: new Set('BE'.split('')), mapFields: {}, computed: {} })
 modifyRules.set('obs_resent_rply', { skipFields: new Set('BE'.split('')), mapFields: {}, computed: {} })
 modifyRules.set('obs_return', { skipFields: new Set('BE'.split('')), mapFields: {}, computed: {} })
