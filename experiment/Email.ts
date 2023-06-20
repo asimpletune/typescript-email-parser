@@ -1,11 +1,14 @@
-import { ASTKinds, addr_spec, address, address_list, angle_addr_1, group, group_list, mailbox, message, name_addr, obs_addr_list_$1, obs_addr_list_$1_$0, obs_angle_addr, obs_fields_$0, obs_subject, obs_to, parse, subject, to } from './message.fields'
+import { ASTKinds, addr_spec, address, address_list, angle_addr_1, from, group, group_list, mailbox, mailbox_list, message, name_addr, obs_addr_list_$1, obs_addr_list_$1_$0, obs_angle_addr, obs_fields_$0, obs_from, obs_subject, obs_to, parse, subject, to } from './message.fields'
 import { concat } from './util'
 export class Email {
   to: AddressList | undefined
   subject: string | undefined
+  from: NonemptyList<Mailbox> | undefined
+
   constructor(ast: message) {
     this.to = Email.to(ast)
     this.subject = Email.subject(ast)
+    this.from = Email.from(ast)
   }
 
   static subject(ast: message): string | undefined {
@@ -29,6 +32,21 @@ export class Email {
       case ASTKinds.obs_fields: {
         let toField = fields.A.find((el): el is obs_to => el.kind === ASTKinds.obs_to)
         return toField ? new AddressList(toField.address_list) : undefined
+      }
+      default: { const exhaustive: never = fields; throw new Error(exhaustive) }
+    }
+  }
+
+  static from(ast: message) {
+    let fields = ast.fields
+    switch (fields.kind) {
+      case ASTKinds.fields: {
+        let fromField = fields.L.find((field): field is from => field.kind === ASTKinds.from)
+        return fromField ? Util.fromMailboxList(fromField.mailbox_list) : undefined
+      }
+      case ASTKinds.obs_fields: {
+        let fromField = fields.A.find((el): el is obs_from => el.kind === ASTKinds.obs_from)
+        return fromField ? Util.fromMailboxList(fromField.mailbox_list) : undefined
       }
       default: { const exhaustive: never = fields; throw new Error(exhaustive) }
     }
@@ -65,6 +83,23 @@ class AddressList {
       case ASTKinds.name_addr: return new Mailbox(address)
       case ASTKinds.group: throw new Error("not implemented")
       default: { const exhaustive: never = address; throw new Error(exhaustive) }
+    }
+  }
+}
+
+type NonemptyList<T> = [T, ...T[]]
+
+class Util {
+  static fromMailboxList(mailbox_list: mailbox_list): NonemptyList<Mailbox> {
+    switch (mailbox_list.kind) {
+      case ASTKinds.mailbox_list_1:
+        return [new Mailbox(mailbox_list.head), ...mailbox_list.tail.map(el => new Mailbox(el.mailbox))]
+      case ASTKinds.obs_mbox_list:
+        let tail = mailbox_list.tail.map(el => el.mailbox)
+          .filter((el): el is mailbox => el !== null)
+          .map(mb => new Mailbox(mb))
+        return [new Mailbox(mailbox_list.head), ...tail]
+      default: { const exhaustive: never = mailbox_list; throw new Error(exhaustive) }
     }
   }
 }

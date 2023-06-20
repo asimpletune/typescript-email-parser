@@ -13,7 +13,7 @@ describe('fields', () => {
     expect(email.to?.tail).toEqual([{ "email": "alice@example.com", "name": "Alice" }])
   })
   test('from', () => {
-
+    expect(email.from).toEqual([{ "email": "test@example.com", "name": undefined }])
   })
   test('subject', () => { expect(email.subject).toBe("This is a test email") })
 })

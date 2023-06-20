@@ -44,7 +44,7 @@
 * dtext := '[\x21-\x5a]' | '[\x5e-\x7e]' | obs_dtext
 * field_name := ftext+
 * fields := A={ B=trace C=optional_field* | D={ resent_date | resent_from | resent_sender | resent_to | resent_cc | resent_bcc | resent_msg_id }* }* L={ orig_date | from | sender | reply_to | to | cc | bcc | message_id | in_reply_to | references | subject | comments | keywords | optional_field }*
-* from := A='From' B=':' C=mailbox_list CRLF
+* from := A='From' B=':' mailbox_list=mailbox_list CRLF
 * ftext := '[\x21-\x39]' | '[\x3b-\x7e]'
 * group := display_name=display_name B=':' group_list=group_list? D=';' CFWS?
 * group_list := mailbox_list | CFWS | obs_group_list
@@ -78,7 +78,7 @@
 * obs_domain_list := A={ B=CFWS | C=',' }* D='@' E=domain F={ G=',' CFWS? I={ J='@' K=domain }? }*
 * obs_dtext := obs_NO_WS_CTL | B=quoted_pair
 * obs_fields := A={ obs_return | obs_received | obs_orig_date | obs_from | obs_sender | obs_reply_to | obs_to | obs_cc | obs_bcc | obs_message_id | obs_in_reply_to | obs_references | obs_subject | obs_comments | obs_keywords | obs_resent_date | obs_resent_from | obs_resent_send | obs_resent_rply | obs_resent_to | obs_resent_cc | obs_resent_bcc | obs_resent_mid | obs_optional }*
-* obs_from := A='From' WSP* C=':' D=mailbox_list CRLF
+* obs_from := A='From' WSP* C=':' mailbox_list=mailbox_list CRLF
 * obs_group_list := A={ B=CFWS? C=',' }+ CFWS?
 * obs_hour := CFWS? B=TWO_DIGIT CFWS?
 * obs_id_left := local_part
@@ -797,7 +797,7 @@ export interface from {
     kind: ASTKinds.from;
     A: string;
     B: string;
-    C: mailbox_list;
+    mailbox_list: mailbox_list;
 }
 export type ftext = ftext_1 | ftext_2;
 export type ftext_1 = string;
@@ -1113,7 +1113,7 @@ export interface obs_from {
     kind: ASTKinds.obs_from;
     A: string;
     C: string;
-    D: mailbox_list;
+    mailbox_list: mailbox_list;
 }
 export interface obs_group_list {
     kind: ASTKinds.obs_group_list;
@@ -3248,15 +3248,15 @@ export class Parser {
                     () => {
                         let $scope$A: Nullable<string>;
                         let $scope$B: Nullable<string>;
-                        let $scope$C: Nullable<mailbox_list>;
+                        let $scope$mailbox_list: Nullable<mailbox_list>;
                         let $$res: Nullable<from> = null;
                         if (true
                             && ($scope$A = this.regexAccept(String.raw`(?:From)`, $$dpth + 1, $$cr)) !== null
                             && ($scope$B = this.regexAccept(String.raw`(?::)`, $$dpth + 1, $$cr)) !== null
-                            && ($scope$C = this.matchmailbox_list($$dpth + 1, $$cr)) !== null
+                            && ($scope$mailbox_list = this.matchmailbox_list($$dpth + 1, $$cr)) !== null
                             && this.matchCRLF($$dpth + 1, $$cr) !== null
                         ) {
-                            $$res = {kind: ASTKinds.from, A: $scope$A, B: $scope$B, C: $scope$C};
+                            $$res = {kind: ASTKinds.from, A: $scope$A, B: $scope$B, mailbox_list: $scope$mailbox_list};
                         }
                         return $$res;
                     });
@@ -4605,16 +4605,16 @@ export class Parser {
                     () => {
                         let $scope$A: Nullable<string>;
                         let $scope$C: Nullable<string>;
-                        let $scope$D: Nullable<mailbox_list>;
+                        let $scope$mailbox_list: Nullable<mailbox_list>;
                         let $$res: Nullable<obs_from> = null;
                         if (true
                             && ($scope$A = this.regexAccept(String.raw`(?:From)`, $$dpth + 1, $$cr)) !== null
                             && this.loop<WSP>(() => this.matchWSP($$dpth + 1, $$cr), true) !== null
                             && ($scope$C = this.regexAccept(String.raw`(?::)`, $$dpth + 1, $$cr)) !== null
-                            && ($scope$D = this.matchmailbox_list($$dpth + 1, $$cr)) !== null
+                            && ($scope$mailbox_list = this.matchmailbox_list($$dpth + 1, $$cr)) !== null
                             && this.matchCRLF($$dpth + 1, $$cr) !== null
                         ) {
-                            $$res = {kind: ASTKinds.obs_from, A: $scope$A, C: $scope$C, D: $scope$D};
+                            $$res = {kind: ASTKinds.obs_from, A: $scope$A, C: $scope$C, mailbox_list: $scope$mailbox_list};
                         }
                         return $$res;
                     });
