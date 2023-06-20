@@ -8,6 +8,7 @@ export class Email {
   cc: NonemptyList<Address> | undefined
   bcc: NonemptyList<Address> | undefined
   sender: Mailbox
+  reply_to: NonemptyList<Address>
 
   constructor(ast: message) {
     let fields = ast.fields
@@ -18,6 +19,7 @@ export class Email {
             case K.to: this.to = Util.fromAddressList(f.address_list); break;
             case K.from: this.from = Util.fromMailboxList(f.mailbox_list); break;
             case K.sender: this.sender = new Mailbox(f.mailbox); break;
+            case K.reply_to: this.reply_to = Util.fromAddressList(f.address_list); break;
             case K.cc: this.cc = Util.fromAddressList(f.address_list); break;
             case K.bcc: this.bcc = Util.addressListOrUndefined(f.address_list); break;
             case K.subject: this.subject = concat(f._value).trim(); break;
@@ -32,6 +34,7 @@ export class Email {
             case K.obs_to: this.to = Util.fromAddressList(f.address_list); break;
             case K.obs_from: this.from = Util.fromMailboxList(f.mailbox_list); break;
             case K.obs_sender: this.sender = new Mailbox(f.mailbox); break;
+            case K.obs_reply_to: this.reply_to = Util.fromAddressList(f.address_list); break;
             case K.obs_cc: this.cc = Util.fromAddressList(f.address_list); break;
             case K.obs_bcc: this.bcc = Util.addressListOrUndefined(f.address_list); break;
             case K.obs_subject: this.subject = concat(f._value).trim(); break;

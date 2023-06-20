@@ -97,7 +97,7 @@
 * obs_qtext := obs_NO_WS_CTL
 * obs_received := A='Received' WSP* C=':' D=received_token* E=CRLF
 * obs_references := A='References' WSP* C=':' D={ phrase | msg_id }* CRLF
-* obs_reply_to := A='Reply-To' WSP* C=':' D=address_list CRLF
+* obs_reply_to := A='Reply-To' WSP* ':' address_list=address_list CRLF
 * obs_resent_bcc := A='Resent-Bcc' WSP* C=':' D={ E=address_list | { CFWS? ',' }* CFWS? } CRLF
 * obs_resent_cc := A='Resent-Cc' WSP* C=':' D=address_list CRLF
 * obs_resent_date := A='Resent-Date' WSP* C=':' D=date_time CRLF
@@ -127,7 +127,7 @@
 * received := A='Received' B=':' C=received_token* D=';' E=date_time CRLF
 * received_token := word | angle_addr | addr_spec | domain
 * references := A='References' B=':' C=msg_id+ CRLF
-* reply_to := A='Reply_To' B=':' C=address_list CRLF
+* reply_to := A='Reply-To' B=':' address_list=address_list CRLF
 * resent_bcc := A='Resent-Bcc' B=':' C={ D=address_list | CFWS }? CRLF
 * resent_cc := A='Resent-Cc' B=':' C=address_list CRLF
 * resent_date := A='Resent-Date' B=':' C=date_time CRLF
@@ -1248,8 +1248,7 @@ export type obs_references_$0_2 = msg_id;
 export interface obs_reply_to {
     kind: ASTKinds.obs_reply_to;
     A: string;
-    C: string;
-    D: address_list;
+    address_list: address_list;
 }
 export interface obs_resent_bcc {
     kind: ASTKinds.obs_resent_bcc;
@@ -1468,7 +1467,7 @@ export interface reply_to {
     kind: ASTKinds.reply_to;
     A: string;
     B: string;
-    C: address_list;
+    address_list: address_list;
 }
 export interface resent_bcc {
     kind: ASTKinds.resent_bcc;
@@ -5206,17 +5205,16 @@ export class Parser {
                 return this.run<obs_reply_to>($$dpth,
                     () => {
                         let $scope$A: Nullable<string>;
-                        let $scope$C: Nullable<string>;
-                        let $scope$D: Nullable<address_list>;
+                        let $scope$address_list: Nullable<address_list>;
                         let $$res: Nullable<obs_reply_to> = null;
                         if (true
                             && ($scope$A = this.regexAccept(String.raw`(?:Reply-To)`, $$dpth + 1, $$cr)) !== null
                             && this.loop<WSP>(() => this.matchWSP($$dpth + 1, $$cr), true) !== null
-                            && ($scope$C = this.regexAccept(String.raw`(?::)`, $$dpth + 1, $$cr)) !== null
-                            && ($scope$D = this.matchaddress_list($$dpth + 1, $$cr)) !== null
+                            && this.regexAccept(String.raw`(?::)`, $$dpth + 1, $$cr) !== null
+                            && ($scope$address_list = this.matchaddress_list($$dpth + 1, $$cr)) !== null
                             && this.matchCRLF($$dpth + 1, $$cr) !== null
                         ) {
-                            $$res = {kind: ASTKinds.obs_reply_to, A: $scope$A, C: $scope$C, D: $scope$D};
+                            $$res = {kind: ASTKinds.obs_reply_to, A: $scope$A, address_list: $scope$address_list};
                         }
                         return $$res;
                     });
@@ -6147,15 +6145,15 @@ export class Parser {
                     () => {
                         let $scope$A: Nullable<string>;
                         let $scope$B: Nullable<string>;
-                        let $scope$C: Nullable<address_list>;
+                        let $scope$address_list: Nullable<address_list>;
                         let $$res: Nullable<reply_to> = null;
                         if (true
-                            && ($scope$A = this.regexAccept(String.raw`(?:Reply_To)`, $$dpth + 1, $$cr)) !== null
+                            && ($scope$A = this.regexAccept(String.raw`(?:Reply-To)`, $$dpth + 1, $$cr)) !== null
                             && ($scope$B = this.regexAccept(String.raw`(?::)`, $$dpth + 1, $$cr)) !== null
-                            && ($scope$C = this.matchaddress_list($$dpth + 1, $$cr)) !== null
+                            && ($scope$address_list = this.matchaddress_list($$dpth + 1, $$cr)) !== null
                             && this.matchCRLF($$dpth + 1, $$cr) !== null
                         ) {
-                            $$res = {kind: ASTKinds.reply_to, A: $scope$A, B: $scope$B, C: $scope$C};
+                            $$res = {kind: ASTKinds.reply_to, A: $scope$A, B: $scope$B, address_list: $scope$address_list};
                         }
                         return $$res;
                     });

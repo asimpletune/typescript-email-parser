@@ -116,7 +116,7 @@ orig_date       :=   'Date' ':' date_time CRLF
 // See: https://datatracker.ietf.org/doc/html/rfc5322#section-3.6.2
 from            :=    'From' ':' mailbox_list CRLF
 sender          :=    'Sender' ':' mailbox CRLF
-reply_to        :=    'Reply_To' ':' address_list CRLF
+reply_to        :=    'Reply-To' ':' address_list CRLF
 
 // § 3.6.3 Destination Address Fields
 // See: https://datatracker.ietf.org/doc/html/rfc5322#section-3.6.3
