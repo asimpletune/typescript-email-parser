@@ -16,7 +16,7 @@
 * VCHAR := '[\x21-\x7E]'
 * WSP := SP | HTAB
 * quoted_pair := A={ B='\\' C={ D=VCHAR | WSP } } | F=obs_qp
-* FWS := { { WSP* CRLF }? WSP+ } | obs_FWS
+* FWS := A={ B={ C=WSP* D=CRLF }? E=WSP+ } | F=obs_FWS
 * ctext := A='[\x21-\x27]' | B='[\x2a-\x5b]' | C='[\x5d-\x7e]' | D=obs_ctext
 * ccontent := A=ctext | B=quoted_pair | C=comment
 * comment := A='\(' B={ FWS? D=ccontent }* FWS? F='\)'
@@ -31,7 +31,7 @@
 * quoted_string := CFWS? B=DQUOTE C={ FWS? E=qcontent }* FWS? G=DQUOTE CFWS?
 * word := atom | quoted_string
 * phrase := word+ | obs_phrase
-* unstructured := A={ B={ FWS? D=VCHAR }* WSP* } | F=obs_unstruct
+* unstructured := A={ B={ C=FWS? D=VCHAR }* E=WSP* } | F=obs_unstruct
 * date_time := A={ B=day_of_week C=',' }? D=date E=time CFWS?
 * day_of_week := A={ FWS? C=day_name } | D=obs_day_of_week
 * day_name := 'Mon' | 'Tue' | 'Wed' | 'Thu' | 'Fri' | 'Sat' | 'Sun'
@@ -59,7 +59,7 @@
 * domain := dot_atom | domain_literal | obs_domain
 * domain_literal := CFWS? B='\[' C={ FWS? E=dtext }* FWS? G='\]' CFWS?
 * dtext := '[\x21-\x5a]' | '[\x5e-\x7e]' | obs_dtext
-* message := A={ fields | obs_fields } D={ CRLF F=body }?
+* message := fields={ fields | obs_fields } D={ CRLF F=body }?
 * body := A={ B={ C=_998text CRLF }* E=_998text } | F=obs_body
 * text := '[\x01-\x09]' | '\x0B' | '\x0C' | '[\x0E-\x7f]'
 * _998text := '[\x01-\x09\x0B\x0C\x0E-\x7F]{998,}'
@@ -78,7 +78,7 @@
 * id_left := dot_atom_text | obs_id_left
 * id_right := dot_atom_text | no_fold_literal | obs_id_right
 * no_fold_literal := A='\[' B=dtext* C='\]'
-* subject := A='Subject' B=':' C=unstructured CRLF
+* subject := name='Subject' B=':' value=unstructured D=CRLF
 * comments := A='Comments' B=':' C=unstructured CRLF
 * keywords := A='Keywords' B=':' C=phrase D={ E=',' F=phrase }* CRLF
 * resent_date := A='Resent-Date' B=':' C=date_time CRLF
@@ -568,13 +568,23 @@ export interface quoted_pair_$0_$0_1 {
 }
 export type quoted_pair_$0_$0_2 = WSP;
 export type FWS = FWS_1 | FWS_2;
-export type FWS_1 = FWS_$0;
-export type FWS_2 = obs_FWS;
+export interface FWS_1 {
+    kind: ASTKinds.FWS_1;
+    A: FWS_$0;
+}
+export interface FWS_2 {
+    kind: ASTKinds.FWS_2;
+    F: obs_FWS;
+}
 export interface FWS_$0 {
     kind: ASTKinds.FWS_$0;
+    B: Nullable<FWS_$0_$0>;
+    E: WSP[];
 }
 export interface FWS_$0_$0 {
     kind: ASTKinds.FWS_$0_$0;
+    C: WSP[];
+    D: CRLF;
 }
 export type ctext = ctext_1 | ctext_2 | ctext_3 | ctext_4;
 export interface ctext_1 {
@@ -698,9 +708,11 @@ export interface unstructured_2 {
 export interface unstructured_$0 {
     kind: ASTKinds.unstructured_$0;
     B: unstructured_$0_$0[];
+    E: WSP[];
 }
 export interface unstructured_$0_$0 {
     kind: ASTKinds.unstructured_$0_$0;
+    C: Nullable<FWS>;
     D: VCHAR;
 }
 export interface date_time {
@@ -953,7 +965,7 @@ export type dtext_2 = string;
 export type dtext_3 = obs_dtext;
 export interface message {
     kind: ASTKinds.message;
-    A: message_$0;
+    fields: message_$0;
     D: Nullable<message_$1>;
 }
 export type message_$0 = message_$0_1 | message_$0_2;
@@ -1111,9 +1123,10 @@ export interface no_fold_literal {
 }
 export interface subject {
     kind: ASTKinds.subject;
-    A: string;
+    name: string;
     B: string;
-    C: unstructured;
+    value: unstructured;
+    D: CRLF;
 }
 export interface comments {
     kind: ASTKinds.comments;
@@ -2365,22 +2378,44 @@ export class Parser {
         );
     }
     public matchFWS_1($$dpth: number, $$cr?: ErrorTracker): Nullable<FWS_1> {
-        return this.matchFWS_$0($$dpth + 1, $$cr);
+        return this.run<FWS_1>($$dpth,
+            () => {
+                let $scope$A: Nullable<FWS_$0>;
+                let $$res: Nullable<FWS_1> = null;
+                if (true
+                    && ($scope$A = this.matchFWS_$0($$dpth + 1, $$cr)) !== null
+                ) {
+                    $$res = {kind: ASTKinds.FWS_1, A: $scope$A};
+                }
+                return $$res;
+            });
     }
     public matchFWS_2($$dpth: number, $$cr?: ErrorTracker): Nullable<FWS_2> {
-        return this.matchobs_FWS($$dpth + 1, $$cr);
+        return this.run<FWS_2>($$dpth,
+            () => {
+                let $scope$F: Nullable<obs_FWS>;
+                let $$res: Nullable<FWS_2> = null;
+                if (true
+                    && ($scope$F = this.matchobs_FWS($$dpth + 1, $$cr)) !== null
+                ) {
+                    $$res = {kind: ASTKinds.FWS_2, F: $scope$F};
+                }
+                return $$res;
+            });
     }
     public matchFWS_$0($$dpth: number, $$cr?: ErrorTracker): Nullable<FWS_$0> {
         return this.memoise(
             () => {
                 return this.run<FWS_$0>($$dpth,
                     () => {
+                        let $scope$B: Nullable<Nullable<FWS_$0_$0>>;
+                        let $scope$E: Nullable<WSP[]>;
                         let $$res: Nullable<FWS_$0> = null;
                         if (true
-                            && ((this.matchFWS_$0_$0($$dpth + 1, $$cr)) || true)
-                            && this.loop<WSP>(() => this.matchWSP($$dpth + 1, $$cr), false) !== null
+                            && (($scope$B = this.matchFWS_$0_$0($$dpth + 1, $$cr)) || true)
+                            && ($scope$E = this.loop<WSP>(() => this.matchWSP($$dpth + 1, $$cr), false)) !== null
                         ) {
-                            $$res = {kind: ASTKinds.FWS_$0, };
+                            $$res = {kind: ASTKinds.FWS_$0, B: $scope$B, E: $scope$E};
                         }
                         return $$res;
                     });
@@ -2393,12 +2428,14 @@ export class Parser {
             () => {
                 return this.run<FWS_$0_$0>($$dpth,
                     () => {
+                        let $scope$C: Nullable<WSP[]>;
+                        let $scope$D: Nullable<CRLF>;
                         let $$res: Nullable<FWS_$0_$0> = null;
                         if (true
-                            && this.loop<WSP>(() => this.matchWSP($$dpth + 1, $$cr), true) !== null
-                            && this.matchCRLF($$dpth + 1, $$cr) !== null
+                            && ($scope$C = this.loop<WSP>(() => this.matchWSP($$dpth + 1, $$cr), true)) !== null
+                            && ($scope$D = this.matchCRLF($$dpth + 1, $$cr)) !== null
                         ) {
-                            $$res = {kind: ASTKinds.FWS_$0_$0, };
+                            $$res = {kind: ASTKinds.FWS_$0_$0, C: $scope$C, D: $scope$D};
                         }
                         return $$res;
                     });
@@ -2931,12 +2968,13 @@ export class Parser {
                 return this.run<unstructured_$0>($$dpth,
                     () => {
                         let $scope$B: Nullable<unstructured_$0_$0[]>;
+                        let $scope$E: Nullable<WSP[]>;
                         let $$res: Nullable<unstructured_$0> = null;
                         if (true
                             && ($scope$B = this.loop<unstructured_$0_$0>(() => this.matchunstructured_$0_$0($$dpth + 1, $$cr), true)) !== null
-                            && this.loop<WSP>(() => this.matchWSP($$dpth + 1, $$cr), true) !== null
+                            && ($scope$E = this.loop<WSP>(() => this.matchWSP($$dpth + 1, $$cr), true)) !== null
                         ) {
-                            $$res = {kind: ASTKinds.unstructured_$0, B: $scope$B};
+                            $$res = {kind: ASTKinds.unstructured_$0, B: $scope$B, E: $scope$E};
                         }
                         return $$res;
                     });
@@ -2949,13 +2987,14 @@ export class Parser {
             () => {
                 return this.run<unstructured_$0_$0>($$dpth,
                     () => {
+                        let $scope$C: Nullable<Nullable<FWS>>;
                         let $scope$D: Nullable<VCHAR>;
                         let $$res: Nullable<unstructured_$0_$0> = null;
                         if (true
-                            && ((this.matchFWS($$dpth + 1, $$cr)) || true)
+                            && (($scope$C = this.matchFWS($$dpth + 1, $$cr)) || true)
                             && ($scope$D = this.matchVCHAR($$dpth + 1, $$cr)) !== null
                         ) {
-                            $$res = {kind: ASTKinds.unstructured_$0_$0, D: $scope$D};
+                            $$res = {kind: ASTKinds.unstructured_$0_$0, C: $scope$C, D: $scope$D};
                         }
                         return $$res;
                     });
@@ -4007,14 +4046,14 @@ export class Parser {
             () => {
                 return this.run<message>($$dpth,
                     () => {
-                        let $scope$A: Nullable<message_$0>;
+                        let $scope$fields: Nullable<message_$0>;
                         let $scope$D: Nullable<Nullable<message_$1>>;
                         let $$res: Nullable<message> = null;
                         if (true
-                            && ($scope$A = this.matchmessage_$0($$dpth + 1, $$cr)) !== null
+                            && ($scope$fields = this.matchmessage_$0($$dpth + 1, $$cr)) !== null
                             && (($scope$D = this.matchmessage_$1($$dpth + 1, $$cr)) || true)
                         ) {
-                            $$res = {kind: ASTKinds.message, A: $scope$A, D: $scope$D};
+                            $$res = {kind: ASTKinds.message, fields: $scope$fields, D: $scope$D};
                         }
                         return $$res;
                     });
@@ -4668,17 +4707,18 @@ export class Parser {
             () => {
                 return this.run<subject>($$dpth,
                     () => {
-                        let $scope$A: Nullable<string>;
+                        let $scope$name: Nullable<string>;
                         let $scope$B: Nullable<string>;
-                        let $scope$C: Nullable<unstructured>;
+                        let $scope$value: Nullable<unstructured>;
+                        let $scope$D: Nullable<CRLF>;
                         let $$res: Nullable<subject> = null;
                         if (true
-                            && ($scope$A = this.regexAccept(String.raw`(?:Subject)`, $$dpth + 1, $$cr)) !== null
+                            && ($scope$name = this.regexAccept(String.raw`(?:Subject)`, $$dpth + 1, $$cr)) !== null
                             && ($scope$B = this.regexAccept(String.raw`(?::)`, $$dpth + 1, $$cr)) !== null
-                            && ($scope$C = this.matchunstructured($$dpth + 1, $$cr)) !== null
-                            && this.matchCRLF($$dpth + 1, $$cr) !== null
+                            && ($scope$value = this.matchunstructured($$dpth + 1, $$cr)) !== null
+                            && ($scope$D = this.matchCRLF($$dpth + 1, $$cr)) !== null
                         ) {
-                            $$res = {kind: ASTKinds.subject, A: $scope$A, B: $scope$B, C: $scope$C};
+                            $$res = {kind: ASTKinds.subject, name: $scope$name, B: $scope$B, value: $scope$value, D: $scope$D};
                         }
                         return $$res;
                     });

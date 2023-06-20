@@ -23,7 +23,7 @@ modifyRules.set('SP', { skipFields: new Set('A'), mapFields: {}, computed: [] })
 modifyRules.set('VCHAR', { skipFields: new Set('A'), mapFields: {}, computed: [] })
 modifyRules.set('WSP', { skipFields: new Set(['A', 'B']), mapFields: {}, computed: [] })
 modifyRules.set('quoted_pair', { skipFields: new Set(['E']), mapFields: {}, computed: [] })
-modifyRules.set('FWS', { skipFields: new Set(['A', 'B', 'C', 'D', 'E', 'F']), mapFields: {}, computed: [] })
+modifyRules.set('FWS', { skipFields: new Set([]), mapFields: {}, computed: [] })
 modifyRules.set('comment', { skipFields: new Set(['C', 'E']), mapFields: {}, computed: [] })
 modifyRules.set('CFWS', { skipFields: new Set(['C', 'E', 'F']), mapFields: {}, computed: [] })
 modifyRules.set('atext', { skipFields: new Set(['A']), mapFields: {}, computed: [] })
@@ -34,7 +34,7 @@ modifyRules.set('qcontent', { skipFields: new Set('AB'.split('')), mapFields: {}
 modifyRules.set('quoted_string', { skipFields: new Set('ADFH'.split('')), mapFields: {}, computed: [] })
 modifyRules.set('word', { skipFields: new Set('AB'.split('')), mapFields: {}, computed: [] })
 modifyRules.set('phrase', { skipFields: new Set('AB'.split('')), mapFields: {}, computed: [] })
-modifyRules.set('unstructured', { skipFields: new Set('CE'.split('')), mapFields: {}, computed: [] })
+modifyRules.set('unstructured', { skipFields: new Set('E'.split('')), mapFields: {}, computed: [] })
 modifyRules.set('date_time', { skipFields: new Set('F'.split('')), mapFields: {}, computed: [] })
 modifyRules.set('day_of_week', { skipFields: new Set('B'.split('')), mapFields: {}, computed: [] })
 modifyRules.set('day_name', { skipFields: new Set('ABCDEFG'.split('')), mapFields: {}, computed: [] })
@@ -51,7 +51,7 @@ modifyRules.set('local_part', { skipFields: new Set('ABC'.split('')), mapFields:
 modifyRules.set('domain', { skipFields: new Set('ABC'.split('')), mapFields: {}, computed: [] })
 modifyRules.set('domain_literal', { skipFields: new Set('ADFH'.split('')), mapFields: {}, computed: [] })
 modifyRules.set('dtext', { skipFields: new Set('ABC'.split('')), mapFields: {}, computed: [] })
-modifyRules.set('message', { skipFields: new Set('BCE'.split('')), mapFields: {}, computed: [] })
+modifyRules.set('message', { skipFields: new Set('BCE'.split('')), mapFields: { A: "fields" }, computed: [] })
 modifyRules.set('body', { skipFields: new Set('D'.split('')), mapFields: {}, computed: [] })
 modifyRules.set('text', { skipFields: new Set('ABCD'.split('')), mapFields: {}, computed: [] })
 modifyRules.set('_998text', { skipFields: new Set('A'.split('')), mapFields: {}, computed: [] })
@@ -69,7 +69,11 @@ modifyRules.set('references', { skipFields: new Set('D'.split('')), mapFields: {
 modifyRules.set('msg_id', { skipFields: new Set('AF'.split('')), mapFields: {}, computed: [] })
 modifyRules.set('id_left', { skipFields: new Set('AB'.split('')), mapFields: {}, computed: [] })
 modifyRules.set('id_right', { skipFields: new Set('ABC'.split('')), mapFields: {}, computed: [] })
-modifyRules.set('subject', { skipFields: new Set('D'.split('')), mapFields: {}, computed: [] })
+modifyRules.set('subject', {
+  skipFields: new Set(''.split('')),
+  mapFields: { 'A': 'name', 'C': 'value' },
+  computed: []
+})
 modifyRules.set('comments', { skipFields: new Set('D'.split('')), mapFields: {}, computed: [] })
 modifyRules.set('keywords', { skipFields: new Set('G'.split('')), mapFields: {}, computed: [] })
 modifyRules.set('resent_date', { skipFields: new Set('D'.split('')), mapFields: {}, computed: [] })
@@ -164,7 +168,7 @@ function enumerateFieldsOfAtoms(rule: RULE, modify: RuleAugmentation): string {
           let preopSymbol = preop.op
           let operand = (() => {
             let name = nextFieldName.shift()!
-            let field = modify.skipFields.has(name) ? '' : `${name}=`
+            let field = modify.skipFields.has(name) ? '' : `${modify.mapFields[name] || name}=`
             // Named atom
             if (atom.kind === 'ATOM_1') {
               return `${field}${atom.name}`
