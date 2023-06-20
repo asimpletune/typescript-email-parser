@@ -109,7 +109,7 @@
 * obs_return := A='Return-Path' WSP* C=':' D=path CRLF
 * obs_route := obs_domain_list B=':'
 * obs_second := CFWS? B=TWO_DIGIT CFWS?
-* obs_sender := A='Sender' WSP* C=':' D=mailbox CRLF
+* obs_sender := A='Sender' WSP* ':' mailbox=mailbox CRLF
 * obs_subject := _name='Subject' WSP* C=':' _value=unstructured CRLF
 * obs_to := A='To' WSP* C=':' address_list=address_list CRLF
 * obs_unstruct := A={ B={ LF* CR* E={ F=obs_utext LF* CR* }* } | FWS }*
@@ -137,7 +137,7 @@
 * resent_to := A='Resent-To' B=':' C=address_list CRLF
 * return_path := A='Return-Path' B=':' C=path CRLF
 * second := A=TWO_DIGIT | B=obs_second
-* sender := A='Sender' B=':' C=mailbox CRLF
+* sender := A='Sender' B=':' mailbox=mailbox CRLF
 * specials := '\(' | '\)' | '[<>]' | '\[' | '\]' | '[:;@]' | '\\' | ',' | '\.' | DQUOTE
 * subject := _name='Subject' B=':' _value=unstructured CRLF
 * text := '[\x01-\x09]' | '\x0B' | '\x0C' | '[\x0E-\x7f]'
@@ -1328,8 +1328,7 @@ export interface obs_second {
 export interface obs_sender {
     kind: ASTKinds.obs_sender;
     A: string;
-    C: string;
-    D: mailbox;
+    mailbox: mailbox;
 }
 export interface obs_subject {
     kind: ASTKinds.obs_subject;
@@ -1538,7 +1537,7 @@ export interface sender {
     kind: ASTKinds.sender;
     A: string;
     B: string;
-    C: mailbox;
+    mailbox: mailbox;
 }
 export type specials = specials_1 | specials_2 | specials_3 | specials_4 | specials_5 | specials_6 | specials_7 | specials_8 | specials_9 | specials_10;
 export type specials_1 = string;
@@ -5542,17 +5541,16 @@ export class Parser {
                 return this.run<obs_sender>($$dpth,
                     () => {
                         let $scope$A: Nullable<string>;
-                        let $scope$C: Nullable<string>;
-                        let $scope$D: Nullable<mailbox>;
+                        let $scope$mailbox: Nullable<mailbox>;
                         let $$res: Nullable<obs_sender> = null;
                         if (true
                             && ($scope$A = this.regexAccept(String.raw`(?:Sender)`, $$dpth + 1, $$cr)) !== null
                             && this.loop<WSP>(() => this.matchWSP($$dpth + 1, $$cr), true) !== null
-                            && ($scope$C = this.regexAccept(String.raw`(?::)`, $$dpth + 1, $$cr)) !== null
-                            && ($scope$D = this.matchmailbox($$dpth + 1, $$cr)) !== null
+                            && this.regexAccept(String.raw`(?::)`, $$dpth + 1, $$cr) !== null
+                            && ($scope$mailbox = this.matchmailbox($$dpth + 1, $$cr)) !== null
                             && this.matchCRLF($$dpth + 1, $$cr) !== null
                         ) {
-                            $$res = {kind: ASTKinds.obs_sender, A: $scope$A, C: $scope$C, D: $scope$D};
+                            $$res = {kind: ASTKinds.obs_sender, A: $scope$A, mailbox: $scope$mailbox};
                         }
                         return $$res;
                     });
@@ -6420,15 +6418,15 @@ export class Parser {
                     () => {
                         let $scope$A: Nullable<string>;
                         let $scope$B: Nullable<string>;
-                        let $scope$C: Nullable<mailbox>;
+                        let $scope$mailbox: Nullable<mailbox>;
                         let $$res: Nullable<sender> = null;
                         if (true
                             && ($scope$A = this.regexAccept(String.raw`(?:Sender)`, $$dpth + 1, $$cr)) !== null
                             && ($scope$B = this.regexAccept(String.raw`(?::)`, $$dpth + 1, $$cr)) !== null
-                            && ($scope$C = this.matchmailbox($$dpth + 1, $$cr)) !== null
+                            && ($scope$mailbox = this.matchmailbox($$dpth + 1, $$cr)) !== null
                             && this.matchCRLF($$dpth + 1, $$cr) !== null
                         ) {
-                            $$res = {kind: ASTKinds.sender, A: $scope$A, B: $scope$B, C: $scope$C};
+                            $$res = {kind: ASTKinds.sender, A: $scope$A, B: $scope$B, mailbox: $scope$mailbox};
                         }
                         return $$res;
                     });
