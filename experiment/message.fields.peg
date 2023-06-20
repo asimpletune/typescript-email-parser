@@ -65,7 +65,7 @@ obs_FWS := A=WSP+ { CRLF WSP+ }*
 obs_NO_WS_CTL := '[\x01-\x08]' | '\x0B' | C='\x0C' | D='[\x0E-\x1F]' | E='\x7F'
 obs_addr_list := { CFWS? ',' }* head=address tail={ ',' address={ address | I=CFWS }? }*
 obs_angle_addr := CFWS? B='<' C=obs_route addr_spec=addr_spec E='>' CFWS?
-obs_bcc := A='Bcc' WSP* C=':' D={ E=address_list | { CFWS? ',' }* CFWS? } CRLF
+obs_bcc := A='Bcc' WSP* C=':' address_list={ address_list | { CFWS? ',' }* CFWS? } CRLF
 obs_body := A={ B={ LF* CR* E={ F={ G='\x00' | H=text } LF* CR* }* } | CRLF }*
 obs_cc := A='Cc' WSP* C=':' address_list=address_list CRLF
 obs_comments := A='Comments' WSP* C=':' D=unstructured CRLF

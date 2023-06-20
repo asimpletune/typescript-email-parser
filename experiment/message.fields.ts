@@ -67,7 +67,7 @@
 * obs_NO_WS_CTL := '[\x01-\x08]' | '\x0B' | C='\x0C' | D='[\x0E-\x1F]' | E='\x7F'
 * obs_addr_list := { CFWS? ',' }* head=address tail={ ',' address={ address | I=CFWS }? }*
 * obs_angle_addr := CFWS? B='<' C=obs_route addr_spec=addr_spec E='>' CFWS?
-* obs_bcc := A='Bcc' WSP* C=':' D={ E=address_list | { CFWS? ',' }* CFWS? } CRLF
+* obs_bcc := A='Bcc' WSP* C=':' address_list={ address_list | { CFWS? ',' }* CFWS? } CRLF
 * obs_body := A={ B={ LF* CR* E={ F={ G='\x00' | H=text } LF* CR* }* } | CRLF }*
 * obs_cc := A='Cc' WSP* C=':' address_list=address_list CRLF
 * obs_comments := A='Comments' WSP* C=':' D=unstructured CRLF
@@ -975,13 +975,10 @@ export interface obs_bcc {
     kind: ASTKinds.obs_bcc;
     A: string;
     C: string;
-    D: obs_bcc_$0;
+    address_list: obs_bcc_$0;
 }
 export type obs_bcc_$0 = obs_bcc_$0_1 | obs_bcc_$0_2;
-export interface obs_bcc_$0_1 {
-    kind: ASTKinds.obs_bcc_$0_1;
-    E: address_list;
-}
+export type obs_bcc_$0_1 = address_list;
 export interface obs_bcc_$0_2 {
     kind: ASTKinds.obs_bcc_$0_2;
 }
@@ -4013,16 +4010,16 @@ export class Parser {
                     () => {
                         let $scope$A: Nullable<string>;
                         let $scope$C: Nullable<string>;
-                        let $scope$D: Nullable<obs_bcc_$0>;
+                        let $scope$address_list: Nullable<obs_bcc_$0>;
                         let $$res: Nullable<obs_bcc> = null;
                         if (true
                             && ($scope$A = this.regexAccept(String.raw`(?:Bcc)`, $$dpth + 1, $$cr)) !== null
                             && this.loop<WSP>(() => this.matchWSP($$dpth + 1, $$cr), true) !== null
                             && ($scope$C = this.regexAccept(String.raw`(?::)`, $$dpth + 1, $$cr)) !== null
-                            && ($scope$D = this.matchobs_bcc_$0($$dpth + 1, $$cr)) !== null
+                            && ($scope$address_list = this.matchobs_bcc_$0($$dpth + 1, $$cr)) !== null
                             && this.matchCRLF($$dpth + 1, $$cr) !== null
                         ) {
-                            $$res = {kind: ASTKinds.obs_bcc, A: $scope$A, C: $scope$C, D: $scope$D};
+                            $$res = {kind: ASTKinds.obs_bcc, A: $scope$A, C: $scope$C, address_list: $scope$address_list};
                         }
                         return $$res;
                     });
@@ -4042,17 +4039,7 @@ export class Parser {
         );
     }
     public matchobs_bcc_$0_1($$dpth: number, $$cr?: ErrorTracker): Nullable<obs_bcc_$0_1> {
-        return this.run<obs_bcc_$0_1>($$dpth,
-            () => {
-                let $scope$E: Nullable<address_list>;
-                let $$res: Nullable<obs_bcc_$0_1> = null;
-                if (true
-                    && ($scope$E = this.matchaddress_list($$dpth + 1, $$cr)) !== null
-                ) {
-                    $$res = {kind: ASTKinds.obs_bcc_$0_1, E: $scope$E};
-                }
-                return $$res;
-            });
+        return this.matchaddress_list($$dpth + 1, $$cr);
     }
     public matchobs_bcc_$0_2($$dpth: number, $$cr?: ErrorTracker): Nullable<obs_bcc_$0_2> {
         return this.run<obs_bcc_$0_2>($$dpth,

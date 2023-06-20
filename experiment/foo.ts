@@ -122,7 +122,7 @@ modifyRules.set('obs_sender', { skipFields: new Set('BE'.split('')), mapFields: 
 modifyRules.set('obs_reply_to', { skipFields: new Set('BE'.split('')), mapFields: {}, computed: {} })
 modifyRules.set('obs_to', { skipFields: new Set('BE'.split('')), mapFields: { D: 'address_list' }, computed: {} })
 modifyRules.set('obs_cc', { skipFields: new Set('BE'.split('')), mapFields: { D: 'address_list' }, computed: {} })
-modifyRules.set('obs_bcc', { skipFields: new Set('BFGHIJ'.split('')), mapFields: {}, computed: {} })
+modifyRules.set('obs_bcc', { skipFields: new Set('BEFGHIJ'.split('')), mapFields: { D: 'address_list' }, computed: {} })
 modifyRules.set('obs_message_id', { skipFields: new Set('BE'.split('')), mapFields: {}, computed: {} })
 modifyRules.set('obs_in_reply_to', { skipFields: new Set('BEFG'.split('')), mapFields: {}, computed: {} })
 modifyRules.set('obs_references', { skipFields: new Set('BEFG'.split('')), mapFields: {}, computed: {} })

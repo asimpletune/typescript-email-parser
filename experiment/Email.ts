@@ -30,6 +30,7 @@ export class Email {
             case K.obs_to: this.to = Util.fromAddressList(f.address_list); break;
             case K.obs_from: this.from = Util.fromMailboxList(f.mailbox_list); break;
             case K.obs_cc: this.cc = Util.fromAddressList(f.address_list); break;
+            case K.obs_bcc: this.bcc = Util.addressListOrUndefined(f.address_list); break;
             case K.obs_subject: this.subject = concat(f._value).trim(); break;
             default: break; // TODO
           }
@@ -49,7 +50,7 @@ interface HasKind {
 }
 
 
-class Util {
+export class Util {
 
   static addressListOrUndefined(mbAddressList: address_list | ASTNodeIntf | null) {
     switch (mbAddressList?.kind) {
