@@ -1,5 +1,5 @@
 ---
-import { makeLiteral } from './foo'
+import { concat } from './util'
 ---
 start := message
 CR := '\x0D'
@@ -29,7 +29,7 @@ qcontent := qtext | quoted_pair
 quoted_string := CFWS? B=DQUOTE C={ FWS? E=qcontent }* FWS? G=DQUOTE CFWS?
 word := atom | quoted_string
 phrase := word+ | obs_phrase
-unstructured := A={ B={ C=FWS? D=VCHAR }* E=WSP* } | F=obs_unstruct
+unstructured := A={ B={ C=FWS? D=VCHAR }* WSP* } | F=obs_unstruct
 date_time := A={ B=day_of_week C=',' }? D=date E=time CFWS?
 day_of_week := A={ FWS? C=day_name } | D=obs_day_of_week
 day_name := 'Mon' | 'Tue' | 'Wed' | 'Thu' | 'Fri' | 'Sat' | 'Sun'
@@ -76,7 +76,8 @@ msg_id := CFWS? B='<' C=id_left D='@' E=id_right '>' G=CFWS?
 id_left := dot_atom_text | obs_id_left
 id_right := dot_atom_text | no_fold_literal | obs_id_right
 no_fold_literal := A='\[' B=dtext* C='\]'
-subject := name='Subject' B=':' value=unstructured D=CRLF
+subject := name='Subject' B=':' _value=unstructured D=CRLF
+	.value = string { return concat(this._value).trim() }
 comments := A='Comments' B=':' C=unstructured CRLF
 keywords := A='Keywords' B=':' C=phrase D={ E=',' F=phrase }* CRLF
 resent_date := A='Resent-Date' B=':' C=date_time CRLF

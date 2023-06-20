@@ -71,8 +71,8 @@ modifyRules.set('id_left', { skipFields: new Set('AB'.split('')), mapFields: {},
 modifyRules.set('id_right', { skipFields: new Set('ABC'.split('')), mapFields: {}, computed: [] })
 modifyRules.set('subject', {
   skipFields: new Set(''.split('')),
-  mapFields: { 'A': 'name', 'C': 'value' },
-  computed: []
+  mapFields: { 'A': 'name', 'C': '_value' },
+  computed: ['.value = string { return concat(this._value).trim() }']
 })
 modifyRules.set('comments', { skipFields: new Set('D'.split('')), mapFields: {}, computed: [] })
 modifyRules.set('keywords', { skipFields: new Set('G'.split('')), mapFields: {}, computed: [] })
@@ -142,7 +142,7 @@ modifyRules.set('obs_return', { skipFields: new Set('BE'.split('')), mapFields: 
 modifyRules.set('obs_received', { skipFields: new Set('Be'.split('')), mapFields: {}, computed: [] })
 modifyRules.set('obs_optional', { skipFields: new Set('BE'.split('')), mapFields: {}, computed: [] })
 
-let output = `---\nimport { makeLiteral } from './foo'\n---\n` + addFieldsToRules(ast.rules, modifyRules)
+let output = `---\nimport { concat } from './util'\n---\n` + addFieldsToRules(ast.rules, modifyRules)
 writeFileSync('./experiment/message.fields.peg', output)
 
 // output += '\t.literal = string { return makeLiteral(this) }\n'
@@ -193,35 +193,8 @@ function enumerateFieldsOfAtoms(rule: RULE, modify: RuleAugmentation): string {
       }).join(' ')
       return matches
     }).join(' | ')
-    return altList
+    return altList + modify.computed.map(fn => `\n\t${fn}`).join('')
   }
   let results = assignNamesToAtoms(rule)
   return results
-}
-
-export let makeLiteral = (obj: any, valSuffix = '', isVal = false, skip: string[] = ['kind', 'literal']): string => {
-  if (obj instanceof Array) {
-    return obj.map(el => makeLiteral(el, valSuffix, isVal, skip)).join('')
-  } else if (typeof obj === "string") {
-    return isVal ? obj : ''
-  } else if (isObject(obj)) {
-    if ('literal' in obj && isVal) {
-      return obj.literal
-    }
-    return Object.keys(obj)
-      .filter(k => !skip.includes(k))
-      .sort()
-      .map(k => {
-        return makeLiteral(obj[k], valSuffix, k.endsWith(valSuffix), skip)
-      }).join('')
-  } else if (obj === null) {
-    return ''
-  } else {
-    throw new Error(`Unexpected type passed to makeLiteral ${JSON.stringify(obj)}`)
-  }
-}
-
-function isObject(val: any) {
-  if (val === null) { return false; }
-  return ((typeof val === 'function') || (typeof val === 'object'));
 }
