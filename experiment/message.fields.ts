@@ -70,7 +70,7 @@
 * obs_bcc := A='Bcc' WSP* C=':' address_list={ address_list | { CFWS? ',' }* CFWS? } CRLF
 * obs_body := A={ B={ LF* CR* E={ F={ G='\x00' | H=text } LF* CR* }* } | CRLF }*
 * obs_cc := A='Cc' WSP* C=':' address_list=address_list CRLF
-* obs_comments := A='Comments' WSP* C=':' D=unstructured CRLF
+* obs_comments := A='Comments' WSP* ':' D=unstructured CRLF
 * obs_ctext := obs_NO_WS_CTL
 * obs_day := A=CFWS? B=DIGIT C=DIGIT? CFWS?
 * obs_day_of_week := CFWS? B=day_name CFWS?
@@ -1001,7 +1001,6 @@ export interface obs_cc {
 export interface obs_comments {
     kind: ASTKinds.obs_comments;
     A: string;
-    C: string;
     D: unstructured;
 }
 export type obs_ctext = obs_NO_WS_CTL;
@@ -4132,17 +4131,16 @@ export class Parser {
                 return this.run<obs_comments>($$dpth,
                     () => {
                         let $scope$A: Nullable<string>;
-                        let $scope$C: Nullable<string>;
                         let $scope$D: Nullable<unstructured>;
                         let $$res: Nullable<obs_comments> = null;
                         if (true
                             && ($scope$A = this.regexAccept(String.raw`(?:Comments)`, $$dpth + 1, $$cr)) !== null
                             && this.loop<WSP>(() => this.matchWSP($$dpth + 1, $$cr), true) !== null
-                            && ($scope$C = this.regexAccept(String.raw`(?::)`, $$dpth + 1, $$cr)) !== null
+                            && this.regexAccept(String.raw`(?::)`, $$dpth + 1, $$cr) !== null
                             && ($scope$D = this.matchunstructured($$dpth + 1, $$cr)) !== null
                             && this.matchCRLF($$dpth + 1, $$cr) !== null
                         ) {
-                            $$res = {kind: ASTKinds.obs_comments, A: $scope$A, C: $scope$C, D: $scope$D};
+                            $$res = {kind: ASTKinds.obs_comments, A: $scope$A, D: $scope$D};
                         }
                         return $$res;
                     });

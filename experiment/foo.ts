@@ -140,7 +140,7 @@ modifyRules.set('obs_references', { skipFields: new Set('BCEFG'.split('')), mapF
 modifyRules.set('obs_id_left', { skipFields: new Set('A'.split('')), mapFields: {}, computed: {} })
 modifyRules.set('obs_id_right', { skipFields: new Set('A'.split('')), mapFields: {}, computed: {} })
 modifyRules.set('obs_subject', { skipFields: new Set('BE'.split('')), mapFields: { A: "_name", D: "_value" }, computed: {} })
-modifyRules.set('obs_comments', { skipFields: new Set('BE'.split('')), mapFields: {}, computed: {} })
+modifyRules.set('obs_comments', { skipFields: new Set('BCE'.split('')), mapFields: {}, computed: {} })
 modifyRules.set('obs_keywords', { skipFields: new Set('BE'.split('')), mapFields: {}, computed: {} })
 modifyRules.set('obs_resent_from', { skipFields: new Set('BE'.split('')), mapFields: {}, computed: {} })
 modifyRules.set('obs_resent_send', { skipFields: new Set('BE'.split('')), mapFields: {}, computed: {} })

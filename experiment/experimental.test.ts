@@ -41,6 +41,7 @@ describe('fields', () => {
     expect(reply.references).toEqual(["FE97A840-9401-4B26-902E-61EB5D6CD285@example.com"])
   })
   test('subject', () => { expect(email.subject).toBe("This is a test email") })
+  test('comments', () => { expect(email.comments).toBe("This features is not used a whole lot") })
 })
 
 describe('obsolete fields', () => {

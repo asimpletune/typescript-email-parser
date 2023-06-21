@@ -1,18 +1,18 @@
-import { ASTNodeIntf, ASTKinds as K, addr_spec, address, address_list, address_list_1, angle_addr_1, bcc_$0, cc, date_time, day_name, day_of_week, fields, fields_$1, from, group, group_list, hour, mailbox, mailbox_list, message, message_id, minute, msg_id, name_addr, obs_addr_list, obs_addr_list_$1, obs_addr_list_$1_$0, obs_angle_addr, obs_cc, obs_fields_$0, obs_from, obs_message_id, obs_subject, obs_to, parse, second, subject, to, year, zone } from './message.fields'
-import { ASTKinds } from './metagrammar.parser'
+import { ASTNodeIntf, ASTKinds as K, addr_spec, address, address_list, address_list_1, date_time, day_of_week, group, hour, mailbox, mailbox_list, message, minute, name_addr, obs_addr_list, second, year, zone } from './message.fields'
 import { concat } from './util'
 export class Email {
   to: NonemptyList<Address> | undefined
   subject: string | undefined
-  from: NonemptyList<Mailbox> | undefined
+  from: NonemptyList<Mailbox>
   cc: NonemptyList<Address> | undefined
   bcc: NonemptyList<Address> | undefined
   sender: Mailbox
   reply_to: NonemptyList<Address>
   orig_date: DateTime
-  message_id: string
+  message_id: string | undefined
   in_reply_to: NonemptyList<string> | undefined
   references: NonemptyList<string> | undefined
+  comments: string | undefined
 
   constructor(ast: message) {
     let fields = ast.fields
@@ -31,6 +31,7 @@ export class Email {
             case K.in_reply_to: this.in_reply_to = f.msg_id.map(m => concat(m).trim()) as NonemptyList<string>; break;
             case K.references: this.references = f.msg_id.map(m => concat(m).trim()) as NonemptyList<string>; break;
             case K.subject: this.subject = concat(f._value).trim(); break;
+            case K.comments: this.comments = concat(f.C).trim(); break;
             default: break; // TODO
           }
         })
@@ -50,6 +51,7 @@ export class Email {
             case K.obs_in_reply_to: this.in_reply_to = f.D.map(m => concat(m).trim()) as NonemptyList<string>; break;
             case K.obs_references: this.in_reply_to = f.D.map(m => concat(m).trim()) as NonemptyList<string>; break;
             case K.obs_subject: this.subject = concat(f._value).trim(); break;
+            case K.obs_comments: this.comments = concat(f.D).trim(); break;
             default: break; // TODO
           }
         })
