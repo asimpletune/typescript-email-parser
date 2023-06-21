@@ -1,1 +1,0 @@
-obs_phrase_list :=   { phrase | CFWS } { "," [phrase | CFWS] }*

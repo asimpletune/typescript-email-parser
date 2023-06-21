@@ -5871,10 +5871,9 @@ export class Parser {
         const mrk = this.mark();
         const res: T[] = [];
         for (;;) {
+            const preMrk = this.mark();
             const t = func();
-            if (t === null) {
-                break;
-            } else if (t instanceof Array && t.length === 0) {
+            if (t === null || this.pos.overallPos === preMrk.overallPos) {
                 break;
             }
             res.push(t);
