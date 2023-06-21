@@ -1,5 +1,4 @@
-import { ASTNodeIntf, ASTKinds as K, addr_spec, address, address_list, address_list_1, date_time, day_of_week, fields, fields_$0, fields_$1, group, hour, mailbox, mailbox_list, message, minute, name_addr, obs_addr_list, obs_fields, path, received, received_token, second, trace, year, zone } from './message.fields'
-import { concat } from './util'
+import { ASTNodeIntf, ASTKinds as K, addr_spec, address, address_list, address_list_1, date_time, day_of_week, fields_$0, fields_$1, group, hour, mailbox, mailbox_list, message, minute, name_addr, obs_addr_list, obs_fields, path, received, received_token, second, trace, year, zone } from './parser/email.parser'
 export class Email {
 
   prepended: PrependedFieldBlock[]
@@ -88,7 +87,28 @@ type PrependedFieldBlock = { trace: TraceField, optional_fields: OptionalField[]
   | { trace: ObsoleteTraceField, optional_fields: OptionalField[], kind: 'ObsoleteTraceFieldBlock' }
   | { resent: ResentField[], kind: 'ResentFieldBlock' }
 
+export let concat = (obj: any, ignore: Set<string> = new Set()): string => {
+  ignore.add('kind')
+  if (obj === null) return ''
+  else if (typeof obj === 'string') {
+    return obj
+  } else if (obj instanceof Array) {
+    return obj.map(el => concat(el, ignore)).join('')
+  } else if (Util.isObject(obj)) {
+    return Object.keys(obj).filter(k => !ignore.has(k)).sort().map(name => concat(obj[name], ignore)).join('')
+  } else {
+    throw new Error(`Unexpected type passed to 'concat': ${JSON.stringify(obj)}`)
+  }
+}
+
 export class Util {
+
+
+
+  static isObject(val: any) {
+    if (val === null) { return false; }
+    return ((typeof val === 'function') || (typeof val === 'object'));
+  }
 
   static nonempty<T>(head: T, tail: T[] = []): NonemptyList<T> { return [head, ...tail] }
 

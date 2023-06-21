@@ -1,5 +1,8 @@
-import { ATOM, MATCH, RULE, RULEDEF, parse } from './metagrammar.parser'
+import { RULE, RULEDEF, parse } from './parser/metagrammar.parser'
 import { readFileSync, writeFileSync } from 'fs'
+
+let inputFilePath = './grammar/rfc5322.peg'
+let outputFilePath = './grammar/email.rewritten.peg'
 
 interface RuleAugmentation {
   skipFields: Set<string>
@@ -7,8 +10,6 @@ interface RuleAugmentation {
   computed: { [key: string]: string[] }
 }
 
-let inputGrammar = readFileSync('./grammar/rfc5322.peg', 'ascii')
-let ast = parse(inputGrammar).ast!
 let modifyRules = new Map<string, RuleAugmentation>()
 modifyRules.set('start', { skipFields: new Set('A'), mapFields: {}, computed: {} })
 modifyRules.set('CR', { skipFields: new Set('A'), mapFields: {}, computed: {} })
@@ -155,17 +156,16 @@ modifyRules.set('obs_return', { skipFields: new Set('BE'.split('')), mapFields: 
 modifyRules.set('obs_received', { skipFields: new Set('Be'.split('')), mapFields: {}, computed: {} })
 modifyRules.set('obs_optional', { skipFields: new Set('BE'.split('')), mapFields: {}, computed: {} })
 
-let output = `---\nimport { concat } from './util'\n---\nstart := message\n` + addFieldsToRules(ast.rules, modifyRules)
-writeFileSync('./experiment/message.fields.peg', output)
+let inputGrammar = readFileSync(inputFilePath, 'ascii')
+let ast = parse(inputGrammar).ast!
+let output = `---\nimport { concat } from '../email'\n---\nstart := message\n` + addFieldsToRules(ast.rules, modifyRules)
+writeFileSync(outputFilePath, output)
 
-// output += '\t.literal = string { return makeLiteral(this) }\n'
-// output += `\t.value = string { return makeLiteral(this, '_v') }\n`
 function addFieldsToRules(ruleDefs: RULEDEF[], modifications: Map<string, RuleAugmentation>) {
   return ruleDefs.sort((r1, r2) => r1.name < r2.name ? -1 : 1).map(ruleDef => {
     return `${ruleDef.name} := ${enumerateFieldsOfAtoms(ruleDef.rule, modifications.get(ruleDef.name) || { skipFields: new Set(), mapFields: {}, computed: {} })}`
   }).join('\n')
 }
-
 
 function enumerateFieldsOfAtoms(rule: RULE, modify: RuleAugmentation): string {
   let fieldNames = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz'

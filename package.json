@@ -12,11 +12,10 @@
   "version": "0.1.0",
   "main": "index.js",
   "scripts": {
-    "test": "npm run gen && jest",
     "meta": "tspeg --enable-memo ./grammar/metagrammar.peg ./scratch/metagrammar.parser.ts",
-    "autofield-grammar": "ts-node ./experiment/foo.ts",
-    "compile-parser": "tspeg --regex-flags=i --enable-memo ./experiment/message.fields.peg ./experiment/message.fields.ts",
-    "gen": "tspeg --enable-memo --include-grammar-comment=false ./parsers/message.peg ./message.parser.ts"
+    "rewrite": "ts-node ./rewriter.ts",
+    "gen": "tspeg --include-grammar-comment=false --regex-flags=i --enable-memo ./grammar/email.rewritten.peg ./parser/email.parser.ts",
+    "test": "jest"
   },
   "repository": {
     "type": "git",

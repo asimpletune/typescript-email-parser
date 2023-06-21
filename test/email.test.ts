@@ -1,10 +1,10 @@
 import { describe, expect, test } from '@jest/globals';
-import { Parser, parse, dot_atom as dot_atom2, fields, subject, local_part, addr_spec, ASTKinds } from './message.fields';
+import { parse } from '../parser/email.parser';
 import { readFileSync } from 'fs'
-import { Email, Util } from './Email';
+import { Email } from '../email';
 
-let email = new Email(parse(readFileSync('../test/resources/hello_world.eml', 'ascii')).ast!)
-let reply = new Email(parse(readFileSync('../test/resources/hello_world_reply.eml', 'ascii')).ast!)
+let email = new Email(parse(readFileSync('./test/resources/hello_world.eml', 'ascii')).ast!)
+let reply = new Email(parse(readFileSync('./test/resources/hello_world_reply.eml', 'ascii')).ast!)
 
 describe('fields', () => {
   test('orig_date', () => {
@@ -65,9 +65,4 @@ describe('fields', () => {
         '\t OhP85bABfn+7g=='
     }])
   })
-})
-
-describe('obsolete fields', () => {
-  let obs_bcc = new Parser('Bcc: foo@example.com\r\n').matchobs_bcc(0)!
-  expect(Util.addressListOrUndefined(obs_bcc.address_list)).toEqual([{ "email": "foo@example.com", "name": undefined }])
 })

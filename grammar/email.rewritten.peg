@@ -1,5 +1,5 @@
 ---
-import { concat } from './util'
+import { concat } from '../email'
 ---
 start := message
 CFWS := A={ B=FWS? C=comment }+ D=FWS? | E=FWS
