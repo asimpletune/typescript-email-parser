@@ -94,7 +94,7 @@ obs_phrase_list := A={ phrase | CFWS } D={ E=',' F={ phrase | CFWS }? }*
 obs_qp := A='\\' B={ '\x00' | obs_NO_WS_CTL | LF | CR }
 obs_qtext := obs_NO_WS_CTL
 obs_received := A='Received' WSP* C=':' D=received_token* E=CRLF
-obs_references := A='References' WSP* C=':' D={ phrase | msg_id }* CRLF
+obs_references := A='References' WSP* ':' D={ phrase | msg_id }* CRLF
 obs_reply_to := A='Reply-To' WSP* ':' address_list=address_list CRLF
 obs_resent_bcc := A='Resent-Bcc' WSP* C=':' D={ E=address_list | { CFWS? ',' }* CFWS? } CRLF
 obs_resent_cc := A='Resent-Cc' WSP* C=':' D=address_list CRLF
@@ -124,7 +124,7 @@ quoted_pair := A='\\' B={ C=VCHAR | D=WSP } | E=obs_qp
 quoted_string := CFWS? B=DQUOTE C={ FWS? E=qcontent }* FWS? G=DQUOTE CFWS?
 received := A='Received' B=':' C=received_token* D=';' E=date_time CRLF
 received_token := word | angle_addr | addr_spec | domain
-references := A='References' B=':' C=msg_id+ CRLF
+references := A='References' ':' msg_id=msg_id+ CRLF
 reply_to := A='Reply-To' B=':' address_list=address_list CRLF
 resent_bcc := A='Resent-Bcc' B=':' C={ D=address_list | CFWS }? CRLF
 resent_cc := A='Resent-Cc' B=':' C=address_list CRLF

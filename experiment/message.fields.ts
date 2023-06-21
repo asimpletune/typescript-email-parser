@@ -96,7 +96,7 @@
 * obs_qp := A='\\' B={ '\x00' | obs_NO_WS_CTL | LF | CR }
 * obs_qtext := obs_NO_WS_CTL
 * obs_received := A='Received' WSP* C=':' D=received_token* E=CRLF
-* obs_references := A='References' WSP* C=':' D={ phrase | msg_id }* CRLF
+* obs_references := A='References' WSP* ':' D={ phrase | msg_id }* CRLF
 * obs_reply_to := A='Reply-To' WSP* ':' address_list=address_list CRLF
 * obs_resent_bcc := A='Resent-Bcc' WSP* C=':' D={ E=address_list | { CFWS? ',' }* CFWS? } CRLF
 * obs_resent_cc := A='Resent-Cc' WSP* C=':' D=address_list CRLF
@@ -126,7 +126,7 @@
 * quoted_string := CFWS? B=DQUOTE C={ FWS? E=qcontent }* FWS? G=DQUOTE CFWS?
 * received := A='Received' B=':' C=received_token* D=';' E=date_time CRLF
 * received_token := word | angle_addr | addr_spec | domain
-* references := A='References' B=':' C=msg_id+ CRLF
+* references := A='References' ':' msg_id=msg_id+ CRLF
 * reply_to := A='Reply-To' B=':' address_list=address_list CRLF
 * resent_bcc := A='Resent-Bcc' B=':' C={ D=address_list | CFWS }? CRLF
 * resent_cc := A='Resent-Cc' B=':' C=address_list CRLF
@@ -1216,7 +1216,6 @@ export interface obs_received {
 export interface obs_references {
     kind: ASTKinds.obs_references;
     A: string;
-    C: string;
     D: obs_references_$0[];
 }
 export type obs_references_$0 = obs_references_$0_1 | obs_references_$0_2;
@@ -1436,8 +1435,7 @@ export type received_token_4 = domain;
 export interface references {
     kind: ASTKinds.references;
     A: string;
-    B: string;
-    C: msg_id[];
+    msg_id: msg_id[];
 }
 export interface reply_to {
     kind: ASTKinds.reply_to;
@@ -5073,17 +5071,16 @@ export class Parser {
                 return this.run<obs_references>($$dpth,
                     () => {
                         let $scope$A: Nullable<string>;
-                        let $scope$C: Nullable<string>;
                         let $scope$D: Nullable<obs_references_$0[]>;
                         let $$res: Nullable<obs_references> = null;
                         if (true
                             && ($scope$A = this.regexAccept(String.raw`(?:References)`, $$dpth + 1, $$cr)) !== null
                             && this.loop<WSP>(() => this.matchWSP($$dpth + 1, $$cr), true) !== null
-                            && ($scope$C = this.regexAccept(String.raw`(?::)`, $$dpth + 1, $$cr)) !== null
+                            && this.regexAccept(String.raw`(?::)`, $$dpth + 1, $$cr) !== null
                             && ($scope$D = this.loop<obs_references_$0>(() => this.matchobs_references_$0($$dpth + 1, $$cr), true)) !== null
                             && this.matchCRLF($$dpth + 1, $$cr) !== null
                         ) {
-                            $$res = {kind: ASTKinds.obs_references, A: $scope$A, C: $scope$C, D: $scope$D};
+                            $$res = {kind: ASTKinds.obs_references, A: $scope$A, D: $scope$D};
                         }
                         return $$res;
                     });
@@ -6029,16 +6026,15 @@ export class Parser {
                 return this.run<references>($$dpth,
                     () => {
                         let $scope$A: Nullable<string>;
-                        let $scope$B: Nullable<string>;
-                        let $scope$C: Nullable<msg_id[]>;
+                        let $scope$msg_id: Nullable<msg_id[]>;
                         let $$res: Nullable<references> = null;
                         if (true
                             && ($scope$A = this.regexAccept(String.raw`(?:References)`, $$dpth + 1, $$cr)) !== null
-                            && ($scope$B = this.regexAccept(String.raw`(?::)`, $$dpth + 1, $$cr)) !== null
-                            && ($scope$C = this.loop<msg_id>(() => this.matchmsg_id($$dpth + 1, $$cr), false)) !== null
+                            && this.regexAccept(String.raw`(?::)`, $$dpth + 1, $$cr) !== null
+                            && ($scope$msg_id = this.loop<msg_id>(() => this.matchmsg_id($$dpth + 1, $$cr), false)) !== null
                             && this.matchCRLF($$dpth + 1, $$cr) !== null
                         ) {
-                            $$res = {kind: ASTKinds.references, A: $scope$A, B: $scope$B, C: $scope$C};
+                            $$res = {kind: ASTKinds.references, A: $scope$A, msg_id: $scope$msg_id};
                         }
                         return $$res;
                     });

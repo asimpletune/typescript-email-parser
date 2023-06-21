@@ -12,6 +12,7 @@ export class Email {
   orig_date: DateTime
   message_id: string
   in_reply_to: NonemptyList<string> | undefined
+  references: NonemptyList<string> | undefined
 
   constructor(ast: message) {
     let fields = ast.fields
@@ -28,6 +29,7 @@ export class Email {
             case K.bcc: this.bcc = Util.addressListOrUndefined(f.address_list); break;
             case K.message_id: this.message_id = concat(f.msg_id).trim(); break;
             case K.in_reply_to: this.in_reply_to = f.msg_id.map(m => concat(m).trim()) as NonemptyList<string>; break;
+            case K.references: this.references = f.msg_id.map(m => concat(m).trim()) as NonemptyList<string>; break;
             case K.subject: this.subject = concat(f._value).trim(); break;
             default: break; // TODO
           }
@@ -46,6 +48,7 @@ export class Email {
             case K.obs_bcc: this.bcc = Util.addressListOrUndefined(f.address_list); break;
             case K.obs_message_id: this.message_id = concat(f.msg_id).trim(); break;
             case K.obs_in_reply_to: this.in_reply_to = f.D.map(m => concat(m).trim()) as NonemptyList<string>; break;
+            case K.obs_references: this.in_reply_to = f.D.map(m => concat(m).trim()) as NonemptyList<string>; break;
             case K.obs_subject: this.subject = concat(f._value).trim(); break;
             default: break; // TODO
           }

@@ -36,6 +36,10 @@ describe('fields', () => {
     expect(email.in_reply_to).toBeUndefined
     expect(reply.in_reply_to).toEqual(["FE97A840-9401-4B26-902E-61EB5D6CD285@example.com"])
   })
+  test('references', () => {
+    expect(email.references).toBeUndefined
+    expect(reply.references).toEqual(["FE97A840-9401-4B26-902E-61EB5D6CD285@example.com"])
+  })
   test('subject', () => { expect(email.subject).toBe("This is a test email") })
 })
 
