@@ -50,7 +50,7 @@ hour := TWO_DIGIT | obs_hour
 id_left := dot_atom_text | obs_id_left
 id_right := dot_atom_text | no_fold_literal | obs_id_right
 in_reply_to := A='In-Reply-To' ':' msg_id=msg_id+ CRLF
-keywords := A='Keywords' B=':' C=phrase D={ E=',' F=phrase }* CRLF
+keywords := A='Keywords' ':' head=phrase tail={ E=',' keyword=phrase }* CRLF
 local_part := dot_atom | quoted_string | obs_local_part
 mailbox := name_addr | addr_spec
 mailbox_list := head=mailbox tail={ ',' mailbox=mailbox }* | obs_mbox_list
@@ -82,7 +82,7 @@ obs_hour := CFWS? B=TWO_DIGIT CFWS?
 obs_id_left := local_part
 obs_id_right := domain
 obs_in_reply_to := A='In-Reply-To' WSP* ':' D={ phrase | msg_id }* CRLF
-obs_keywords := A='Keywords' WSP* C=':' D=obs_phrase_list CRLF
+obs_keywords := A='Keywords' WSP* ':' keywords=obs_phrase_list CRLF
 obs_local_part := A=word B={ C='\.' D=word }*
 obs_mbox_list := { CFWS? ',' }* head=mailbox tail={ F=',' mailbox={ mailbox | I=CFWS }? }*
 obs_message_id := A='Message-ID' WSP* ':' msg_id=msg_id CRLF
@@ -90,7 +90,7 @@ obs_minute := CFWS? B=TWO_DIGIT CFWS?
 obs_optional := A=field_name WSP* C=':' D=unstructured CRLF
 obs_orig_date := A='Date' WSP* ':' date_time=date_time CRLF
 obs_phrase := A=word B={ word | '.' | CFWS }
-obs_phrase_list := A={ phrase | CFWS } D={ E=',' F={ phrase | CFWS }? }*
+obs_phrase_list := head={ phrase | CFWS } tail={ ',' F={ phrase | CFWS }? }*
 obs_qp := A='\\' B={ '\x00' | obs_NO_WS_CTL | LF | CR }
 obs_qtext := obs_NO_WS_CTL
 obs_received := A='Received' WSP* C=':' D=received_token* E=CRLF

@@ -13,6 +13,7 @@ export class Email {
   in_reply_to: NonemptyList<string> | undefined
   references: NonemptyList<string> | undefined
   comments: string | undefined
+  keywords: string[] | undefined
 
   constructor(ast: message) {
     let fields = ast.fields
@@ -32,6 +33,7 @@ export class Email {
             case K.references: this.references = f.msg_id.map(m => concat(m).trim()) as NonemptyList<string>; break;
             case K.subject: this.subject = concat(f._value).trim(); break;
             case K.comments: this.comments = concat(f.C).trim(); break;
+            case K.keywords: this.keywords = [concat(f.head).trim(), ...f.tail.map(k => concat(k.keyword).trim())]
             default: break; // TODO
           }
         })
@@ -52,6 +54,7 @@ export class Email {
             case K.obs_references: this.in_reply_to = f.D.map(m => concat(m).trim()) as NonemptyList<string>; break;
             case K.obs_subject: this.subject = concat(f._value).trim(); break;
             case K.obs_comments: this.comments = concat(f.D).trim(); break;
+            case K.obs_keywords: this.keywords = [concat(f.keywords.head).trim(), ...f.keywords.tail.map(el => concat(el.F).trim())].filter(keyword => keyword !== '')
             default: break; // TODO
           }
         })

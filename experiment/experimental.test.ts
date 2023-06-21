@@ -42,6 +42,7 @@ describe('fields', () => {
   })
   test('subject', () => { expect(email.subject).toBe("This is a test email") })
   test('comments', () => { expect(email.comments).toBe("This features is not used a whole lot") })
+  test('keywords', () => { expect(email.keywords).toEqual(["tests", "emails", "open source", "example"]) })
 })
 
 describe('obsolete fields', () => {

@@ -52,7 +52,7 @@
 * id_left := dot_atom_text | obs_id_left
 * id_right := dot_atom_text | no_fold_literal | obs_id_right
 * in_reply_to := A='In-Reply-To' ':' msg_id=msg_id+ CRLF
-* keywords := A='Keywords' B=':' C=phrase D={ E=',' F=phrase }* CRLF
+* keywords := A='Keywords' ':' head=phrase tail={ E=',' keyword=phrase }* CRLF
 * local_part := dot_atom | quoted_string | obs_local_part
 * mailbox := name_addr | addr_spec
 * mailbox_list := head=mailbox tail={ ',' mailbox=mailbox }* | obs_mbox_list
@@ -84,7 +84,7 @@
 * obs_id_left := local_part
 * obs_id_right := domain
 * obs_in_reply_to := A='In-Reply-To' WSP* ':' D={ phrase | msg_id }* CRLF
-* obs_keywords := A='Keywords' WSP* C=':' D=obs_phrase_list CRLF
+* obs_keywords := A='Keywords' WSP* ':' keywords=obs_phrase_list CRLF
 * obs_local_part := A=word B={ C='\.' D=word }*
 * obs_mbox_list := { CFWS? ',' }* head=mailbox tail={ F=',' mailbox={ mailbox | I=CFWS }? }*
 * obs_message_id := A='Message-ID' WSP* ':' msg_id=msg_id CRLF
@@ -92,7 +92,7 @@
 * obs_optional := A=field_name WSP* C=':' D=unstructured CRLF
 * obs_orig_date := A='Date' WSP* ':' date_time=date_time CRLF
 * obs_phrase := A=word B={ word | '.' | CFWS }
-* obs_phrase_list := A={ phrase | CFWS } D={ E=',' F={ phrase | CFWS }? }*
+* obs_phrase_list := head={ phrase | CFWS } tail={ ',' F={ phrase | CFWS }? }*
 * obs_qp := A='\\' B={ '\x00' | obs_NO_WS_CTL | LF | CR }
 * obs_qtext := obs_NO_WS_CTL
 * obs_received := A='Received' WSP* C=':' D=received_token* E=CRLF
@@ -827,14 +827,13 @@ export interface in_reply_to {
 export interface keywords {
     kind: ASTKinds.keywords;
     A: string;
-    B: string;
-    C: phrase;
-    D: keywords_$0[];
+    head: phrase;
+    tail: keywords_$0[];
 }
 export interface keywords_$0 {
     kind: ASTKinds.keywords_$0;
     E: string;
-    F: phrase;
+    keyword: phrase;
 }
 export type local_part = local_part_1 | local_part_2 | local_part_3;
 export type local_part_1 = dot_atom;
@@ -1117,8 +1116,7 @@ export type obs_in_reply_to_$0_2 = msg_id;
 export interface obs_keywords {
     kind: ASTKinds.obs_keywords;
     A: string;
-    C: string;
-    D: obs_phrase_list;
+    keywords: obs_phrase_list;
 }
 export interface obs_local_part {
     kind: ASTKinds.obs_local_part;
@@ -1180,15 +1178,14 @@ export type obs_phrase_$0_2 = string;
 export type obs_phrase_$0_3 = CFWS;
 export interface obs_phrase_list {
     kind: ASTKinds.obs_phrase_list;
-    A: obs_phrase_list_$0;
-    D: obs_phrase_list_$1[];
+    head: obs_phrase_list_$0;
+    tail: obs_phrase_list_$1[];
 }
 export type obs_phrase_list_$0 = obs_phrase_list_$0_1 | obs_phrase_list_$0_2;
 export type obs_phrase_list_$0_1 = phrase;
 export type obs_phrase_list_$0_2 = CFWS;
 export interface obs_phrase_list_$1 {
     kind: ASTKinds.obs_phrase_list_$1;
-    E: string;
     F: Nullable<obs_phrase_list_$1_$0>;
 }
 export type obs_phrase_list_$1_$0 = obs_phrase_list_$1_$0_1 | obs_phrase_list_$1_$0_2;
@@ -3358,18 +3355,17 @@ export class Parser {
                 return this.run<keywords>($$dpth,
                     () => {
                         let $scope$A: Nullable<string>;
-                        let $scope$B: Nullable<string>;
-                        let $scope$C: Nullable<phrase>;
-                        let $scope$D: Nullable<keywords_$0[]>;
+                        let $scope$head: Nullable<phrase>;
+                        let $scope$tail: Nullable<keywords_$0[]>;
                         let $$res: Nullable<keywords> = null;
                         if (true
                             && ($scope$A = this.regexAccept(String.raw`(?:Keywords)`, $$dpth + 1, $$cr)) !== null
-                            && ($scope$B = this.regexAccept(String.raw`(?::)`, $$dpth + 1, $$cr)) !== null
-                            && ($scope$C = this.matchphrase($$dpth + 1, $$cr)) !== null
-                            && ($scope$D = this.loop<keywords_$0>(() => this.matchkeywords_$0($$dpth + 1, $$cr), true)) !== null
+                            && this.regexAccept(String.raw`(?::)`, $$dpth + 1, $$cr) !== null
+                            && ($scope$head = this.matchphrase($$dpth + 1, $$cr)) !== null
+                            && ($scope$tail = this.loop<keywords_$0>(() => this.matchkeywords_$0($$dpth + 1, $$cr), true)) !== null
                             && this.matchCRLF($$dpth + 1, $$cr) !== null
                         ) {
-                            $$res = {kind: ASTKinds.keywords, A: $scope$A, B: $scope$B, C: $scope$C, D: $scope$D};
+                            $$res = {kind: ASTKinds.keywords, A: $scope$A, head: $scope$head, tail: $scope$tail};
                         }
                         return $$res;
                     });
@@ -3383,13 +3379,13 @@ export class Parser {
                 return this.run<keywords_$0>($$dpth,
                     () => {
                         let $scope$E: Nullable<string>;
-                        let $scope$F: Nullable<phrase>;
+                        let $scope$keyword: Nullable<phrase>;
                         let $$res: Nullable<keywords_$0> = null;
                         if (true
                             && ($scope$E = this.regexAccept(String.raw`(?:,)`, $$dpth + 1, $$cr)) !== null
-                            && ($scope$F = this.matchphrase($$dpth + 1, $$cr)) !== null
+                            && ($scope$keyword = this.matchphrase($$dpth + 1, $$cr)) !== null
                         ) {
-                            $$res = {kind: ASTKinds.keywords_$0, E: $scope$E, F: $scope$F};
+                            $$res = {kind: ASTKinds.keywords_$0, E: $scope$E, keyword: $scope$keyword};
                         }
                         return $$res;
                     });
@@ -4636,17 +4632,16 @@ export class Parser {
                 return this.run<obs_keywords>($$dpth,
                     () => {
                         let $scope$A: Nullable<string>;
-                        let $scope$C: Nullable<string>;
-                        let $scope$D: Nullable<obs_phrase_list>;
+                        let $scope$keywords: Nullable<obs_phrase_list>;
                         let $$res: Nullable<obs_keywords> = null;
                         if (true
                             && ($scope$A = this.regexAccept(String.raw`(?:Keywords)`, $$dpth + 1, $$cr)) !== null
                             && this.loop<WSP>(() => this.matchWSP($$dpth + 1, $$cr), true) !== null
-                            && ($scope$C = this.regexAccept(String.raw`(?::)`, $$dpth + 1, $$cr)) !== null
-                            && ($scope$D = this.matchobs_phrase_list($$dpth + 1, $$cr)) !== null
+                            && this.regexAccept(String.raw`(?::)`, $$dpth + 1, $$cr) !== null
+                            && ($scope$keywords = this.matchobs_phrase_list($$dpth + 1, $$cr)) !== null
                             && this.matchCRLF($$dpth + 1, $$cr) !== null
                         ) {
-                            $$res = {kind: ASTKinds.obs_keywords, A: $scope$A, C: $scope$C, D: $scope$D};
+                            $$res = {kind: ASTKinds.obs_keywords, A: $scope$A, keywords: $scope$keywords};
                         }
                         return $$res;
                     });
@@ -4916,14 +4911,14 @@ export class Parser {
             () => {
                 return this.run<obs_phrase_list>($$dpth,
                     () => {
-                        let $scope$A: Nullable<obs_phrase_list_$0>;
-                        let $scope$D: Nullable<obs_phrase_list_$1[]>;
+                        let $scope$head: Nullable<obs_phrase_list_$0>;
+                        let $scope$tail: Nullable<obs_phrase_list_$1[]>;
                         let $$res: Nullable<obs_phrase_list> = null;
                         if (true
-                            && ($scope$A = this.matchobs_phrase_list_$0($$dpth + 1, $$cr)) !== null
-                            && ($scope$D = this.loop<obs_phrase_list_$1>(() => this.matchobs_phrase_list_$1($$dpth + 1, $$cr), true)) !== null
+                            && ($scope$head = this.matchobs_phrase_list_$0($$dpth + 1, $$cr)) !== null
+                            && ($scope$tail = this.loop<obs_phrase_list_$1>(() => this.matchobs_phrase_list_$1($$dpth + 1, $$cr), true)) !== null
                         ) {
-                            $$res = {kind: ASTKinds.obs_phrase_list, A: $scope$A, D: $scope$D};
+                            $$res = {kind: ASTKinds.obs_phrase_list, head: $scope$head, tail: $scope$tail};
                         }
                         return $$res;
                     });
@@ -4953,14 +4948,13 @@ export class Parser {
             () => {
                 return this.run<obs_phrase_list_$1>($$dpth,
                     () => {
-                        let $scope$E: Nullable<string>;
                         let $scope$F: Nullable<Nullable<obs_phrase_list_$1_$0>>;
                         let $$res: Nullable<obs_phrase_list_$1> = null;
                         if (true
-                            && ($scope$E = this.regexAccept(String.raw`(?:,)`, $$dpth + 1, $$cr)) !== null
+                            && this.regexAccept(String.raw`(?:,)`, $$dpth + 1, $$cr) !== null
                             && (($scope$F = this.matchobs_phrase_list_$1_$0($$dpth + 1, $$cr)) || true)
                         ) {
-                            $$res = {kind: ASTKinds.obs_phrase_list_$1, E: $scope$E, F: $scope$F};
+                            $$res = {kind: ASTKinds.obs_phrase_list_$1, F: $scope$F};
                         }
                         return $$res;
                     });
