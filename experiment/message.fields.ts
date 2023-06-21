@@ -43,7 +43,7 @@
 * dot_atom_text := A=atext+ B={ C='\.' D=atext+ }*
 * dtext := '[\x21-\x5a]' | '[\x5e-\x7e]' | obs_dtext
 * field_name := ftext+
-* fields := A={ B=trace C=optional_field* | D={ resent_date | resent_from | resent_sender | resent_to | resent_cc | resent_bcc | resent_msg_id }* }* L={ orig_date | from | sender | reply_to | to | cc | bcc | message_id | in_reply_to | references | subject | comments | keywords | optional_field }*
+* fields := prepended={ trace=trace optional_fields=optional_field* | resent_field_block={ resent_date | resent_from | resent_sender | resent_to | resent_cc | resent_bcc | resent_msg_id }* }* nonprepended={ orig_date | from | sender | reply_to | to | cc | bcc | message_id | in_reply_to | references | subject | comments | keywords | optional_field }*
 * from := A='From' B=':' mailbox_list=mailbox_list CRLF
 * ftext := '[\x21-\x39]' | '[\x3b-\x7e]'
 * group := display_name=display_name B=':' group_list=group_list? D=';' CFWS?
@@ -98,7 +98,7 @@
 * obs_received := A='Received' WSP* C=':' D=received_token* E=CRLF
 * obs_references := A='References' WSP* ':' D={ phrase | msg_id }* CRLF
 * obs_reply_to := A='Reply-To' WSP* ':' address_list=address_list CRLF
-* obs_resent_bcc := A='Resent-Bcc' WSP* C=':' D={ E=address_list | { CFWS? ',' }* CFWS? } CRLF
+* obs_resent_bcc := A='Resent-Bcc' WSP* C=':' address_list={ address_list | { CFWS? ',' }* CFWS? } CRLF
 * obs_resent_cc := A='Resent-Cc' WSP* C=':' D=address_list CRLF
 * obs_resent_date := A='Resent-Date' WSP* C=':' D=date_time CRLF
 * obs_resent_from := A='Resent-From' WSP* C=':' D=mailbox_list CRLF
@@ -118,24 +118,24 @@
 * obs_zone := 'UT' | 'GMT' | 'EST' | 'EDT' | 'CST' | 'CDT' | 'MST' | 'MDT' | 'PST' | 'PDT' | '[\x41-\x49]' | '[\x4b-\x5a]' | '[\x61-\x69]' | '[\x6b-\x7a]'
 * optional_field := name=field_name ':' body=unstructured CRLF
 * orig_date := A='Date' ':' date_time=date_time CRLF
-* path := A=angle_addr | CFWS? '<' CFWS '>' CFWS?
+* path := angle_addr | CFWS? '<' CFWS '>' CFWS?
 * phrase := word+ | obs_phrase
 * qcontent := qtext | quoted_pair
 * qtext := '\x21' | '[\x23-\x5b]' | '[\x5d-\x7e]' | obs_qtext
 * quoted_pair := A='\\' B={ C=VCHAR | D=WSP } | E=obs_qp
 * quoted_string := CFWS? B=DQUOTE C={ FWS? E=qcontent }* FWS? G=DQUOTE CFWS?
-* received := A='Received' B=':' C=received_token* D=';' E=date_time CRLF
+* received := A='Received' ':' received_token=received_token* ';' date_time=date_time CRLF
 * received_token := word | angle_addr | addr_spec | domain
 * references := A='References' ':' msg_id=msg_id+ CRLF
 * reply_to := A='Reply-To' B=':' address_list=address_list CRLF
-* resent_bcc := A='Resent-Bcc' B=':' C={ D=address_list | CFWS }? CRLF
+* resent_bcc := A='Resent-Bcc' B=':' C={ address_list | CFWS }? CRLF
 * resent_cc := A='Resent-Cc' B=':' C=address_list CRLF
 * resent_date := A='Resent-Date' B=':' C=date_time CRLF
 * resent_from := A='Resent-From' B=':' C=mailbox_list CRLF
-* resent_msg_id := A='Resent-Message-ID' B=':' C=msg_id CRLF
+* resent_msg_id := A='Resent-Message-ID' B=':' C=msg_id D=CRLF
 * resent_sender := A='Resent-Sender' B=':' C=mailbox CRLF
 * resent_to := A='Resent-To' B=':' C=address_list CRLF
-* return_path := A='Return-Path' B=':' C=path CRLF
+* return_path := A='Return-Path' ':' path=path CRLF
 * second := TWO_DIGIT | obs_second
 * sender := A='Sender' B=':' mailbox=mailbox CRLF
 * specials := '\(' | '\)' | '[<>]' | '\[' | '\]' | '[:;@]' | '\\' | ',' | '\.' | DQUOTE
@@ -144,7 +144,7 @@
 * time := time_of_day=time_of_day zone=zone
 * time_of_day := hour=hour B=':' minute=minute D={ E=':' second=second }?
 * to := A='To' B=':' address_list=address_list CRLF
-* trace := A=return_path? B=received+
+* trace := return_path=return_path? received=received+
 * unstructured := A={ B=FWS? C=VCHAR }* D=WSP* | E=obs_unstruct
 * word := atom | quoted_string
 * year := FWS B=FOUR_DIGIT C=DIGIT* FWS | obs_year
@@ -753,18 +753,18 @@ export type dtext_3 = obs_dtext;
 export type field_name = ftext[];
 export interface fields {
     kind: ASTKinds.fields;
-    A: fields_$0[];
-    L: fields_$1[];
+    prepended: fields_$0[];
+    nonprepended: fields_$1[];
 }
 export type fields_$0 = fields_$0_1 | fields_$0_2;
 export interface fields_$0_1 {
     kind: ASTKinds.fields_$0_1;
-    B: trace;
-    C: optional_field[];
+    trace: trace;
+    optional_fields: optional_field[];
 }
 export interface fields_$0_2 {
     kind: ASTKinds.fields_$0_2;
-    D: fields_$0_$0[];
+    resent_field_block: fields_$0_$0[];
 }
 export type fields_$0_$0 = fields_$0_$0_1 | fields_$0_$0_2 | fields_$0_$0_3 | fields_$0_$0_4 | fields_$0_$0_5 | fields_$0_$0_6 | fields_$0_$0_7;
 export type fields_$0_$0_1 = resent_date;
@@ -1226,13 +1226,10 @@ export interface obs_resent_bcc {
     kind: ASTKinds.obs_resent_bcc;
     A: string;
     C: string;
-    D: obs_resent_bcc_$0;
+    address_list: obs_resent_bcc_$0;
 }
 export type obs_resent_bcc_$0 = obs_resent_bcc_$0_1 | obs_resent_bcc_$0_2;
-export interface obs_resent_bcc_$0_1 {
-    kind: ASTKinds.obs_resent_bcc_$0_1;
-    E: address_list;
-}
+export type obs_resent_bcc_$0_1 = address_list;
 export interface obs_resent_bcc_$0_2 {
     kind: ASTKinds.obs_resent_bcc_$0_2;
 }
@@ -1367,10 +1364,7 @@ export interface orig_date {
     date_time: date_time;
 }
 export type path = path_1 | path_2;
-export interface path_1 {
-    kind: ASTKinds.path_1;
-    A: angle_addr;
-}
+export type path_1 = angle_addr;
 export interface path_2 {
     kind: ASTKinds.path_2;
 }
@@ -1417,10 +1411,8 @@ export interface quoted_string_$0 {
 export interface received {
     kind: ASTKinds.received;
     A: string;
-    B: string;
-    C: received_token[];
-    D: string;
-    E: date_time;
+    received_token: received_token[];
+    date_time: date_time;
 }
 export type received_token = received_token_1 | received_token_2 | received_token_3 | received_token_4;
 export type received_token_1 = word;
@@ -1445,10 +1437,7 @@ export interface resent_bcc {
     C: Nullable<resent_bcc_$0>;
 }
 export type resent_bcc_$0 = resent_bcc_$0_1 | resent_bcc_$0_2;
-export interface resent_bcc_$0_1 {
-    kind: ASTKinds.resent_bcc_$0_1;
-    D: address_list;
-}
+export type resent_bcc_$0_1 = address_list;
 export type resent_bcc_$0_2 = CFWS;
 export interface resent_cc {
     kind: ASTKinds.resent_cc;
@@ -1473,6 +1462,7 @@ export interface resent_msg_id {
     A: string;
     B: string;
     C: msg_id;
+    D: CRLF;
 }
 export interface resent_sender {
     kind: ASTKinds.resent_sender;
@@ -1489,8 +1479,7 @@ export interface resent_to {
 export interface return_path {
     kind: ASTKinds.return_path;
     A: string;
-    B: string;
-    C: path;
+    path: path;
 }
 export type second = second_1 | second_2;
 export type second_1 = TWO_DIGIT;
@@ -1548,8 +1537,8 @@ export interface to {
 }
 export interface trace {
     kind: ASTKinds.trace;
-    A: Nullable<return_path>;
-    B: received[];
+    return_path: Nullable<return_path>;
+    received: received[];
 }
 export type unstructured = unstructured_1 | unstructured_2;
 export interface unstructured_1 {
@@ -3029,14 +3018,14 @@ export class Parser {
             () => {
                 return this.run<fields>($$dpth,
                     () => {
-                        let $scope$A: Nullable<fields_$0[]>;
-                        let $scope$L: Nullable<fields_$1[]>;
+                        let $scope$prepended: Nullable<fields_$0[]>;
+                        let $scope$nonprepended: Nullable<fields_$1[]>;
                         let $$res: Nullable<fields> = null;
                         if (true
-                            && ($scope$A = this.loop<fields_$0>(() => this.matchfields_$0($$dpth + 1, $$cr), true)) !== null
-                            && ($scope$L = this.loop<fields_$1>(() => this.matchfields_$1($$dpth + 1, $$cr), true)) !== null
+                            && ($scope$prepended = this.loop<fields_$0>(() => this.matchfields_$0($$dpth + 1, $$cr), true)) !== null
+                            && ($scope$nonprepended = this.loop<fields_$1>(() => this.matchfields_$1($$dpth + 1, $$cr), true)) !== null
                         ) {
-                            $$res = {kind: ASTKinds.fields, A: $scope$A, L: $scope$L};
+                            $$res = {kind: ASTKinds.fields, prepended: $scope$prepended, nonprepended: $scope$nonprepended};
                         }
                         return $$res;
                     });
@@ -3058,14 +3047,14 @@ export class Parser {
     public matchfields_$0_1($$dpth: number, $$cr?: ErrorTracker): Nullable<fields_$0_1> {
         return this.run<fields_$0_1>($$dpth,
             () => {
-                let $scope$B: Nullable<trace>;
-                let $scope$C: Nullable<optional_field[]>;
+                let $scope$trace: Nullable<trace>;
+                let $scope$optional_fields: Nullable<optional_field[]>;
                 let $$res: Nullable<fields_$0_1> = null;
                 if (true
-                    && ($scope$B = this.matchtrace($$dpth + 1, $$cr)) !== null
-                    && ($scope$C = this.loop<optional_field>(() => this.matchoptional_field($$dpth + 1, $$cr), true)) !== null
+                    && ($scope$trace = this.matchtrace($$dpth + 1, $$cr)) !== null
+                    && ($scope$optional_fields = this.loop<optional_field>(() => this.matchoptional_field($$dpth + 1, $$cr), true)) !== null
                 ) {
-                    $$res = {kind: ASTKinds.fields_$0_1, B: $scope$B, C: $scope$C};
+                    $$res = {kind: ASTKinds.fields_$0_1, trace: $scope$trace, optional_fields: $scope$optional_fields};
                 }
                 return $$res;
             });
@@ -3073,12 +3062,12 @@ export class Parser {
     public matchfields_$0_2($$dpth: number, $$cr?: ErrorTracker): Nullable<fields_$0_2> {
         return this.run<fields_$0_2>($$dpth,
             () => {
-                let $scope$D: Nullable<fields_$0_$0[]>;
+                let $scope$resent_field_block: Nullable<fields_$0_$0[]>;
                 let $$res: Nullable<fields_$0_2> = null;
                 if (true
-                    && ($scope$D = this.loop<fields_$0_$0>(() => this.matchfields_$0_$0($$dpth + 1, $$cr), true)) !== null
+                    && ($scope$resent_field_block = this.loop<fields_$0_$0>(() => this.matchfields_$0_$0($$dpth + 1, $$cr), true)) !== null
                 ) {
-                    $$res = {kind: ASTKinds.fields_$0_2, D: $scope$D};
+                    $$res = {kind: ASTKinds.fields_$0_2, resent_field_block: $scope$resent_field_block};
                 }
                 return $$res;
             });
@@ -5126,16 +5115,16 @@ export class Parser {
                     () => {
                         let $scope$A: Nullable<string>;
                         let $scope$C: Nullable<string>;
-                        let $scope$D: Nullable<obs_resent_bcc_$0>;
+                        let $scope$address_list: Nullable<obs_resent_bcc_$0>;
                         let $$res: Nullable<obs_resent_bcc> = null;
                         if (true
                             && ($scope$A = this.regexAccept(String.raw`(?:Resent-Bcc)`, $$dpth + 1, $$cr)) !== null
                             && this.loop<WSP>(() => this.matchWSP($$dpth + 1, $$cr), true) !== null
                             && ($scope$C = this.regexAccept(String.raw`(?::)`, $$dpth + 1, $$cr)) !== null
-                            && ($scope$D = this.matchobs_resent_bcc_$0($$dpth + 1, $$cr)) !== null
+                            && ($scope$address_list = this.matchobs_resent_bcc_$0($$dpth + 1, $$cr)) !== null
                             && this.matchCRLF($$dpth + 1, $$cr) !== null
                         ) {
-                            $$res = {kind: ASTKinds.obs_resent_bcc, A: $scope$A, C: $scope$C, D: $scope$D};
+                            $$res = {kind: ASTKinds.obs_resent_bcc, A: $scope$A, C: $scope$C, address_list: $scope$address_list};
                         }
                         return $$res;
                     });
@@ -5155,17 +5144,7 @@ export class Parser {
         );
     }
     public matchobs_resent_bcc_$0_1($$dpth: number, $$cr?: ErrorTracker): Nullable<obs_resent_bcc_$0_1> {
-        return this.run<obs_resent_bcc_$0_1>($$dpth,
-            () => {
-                let $scope$E: Nullable<address_list>;
-                let $$res: Nullable<obs_resent_bcc_$0_1> = null;
-                if (true
-                    && ($scope$E = this.matchaddress_list($$dpth + 1, $$cr)) !== null
-                ) {
-                    $$res = {kind: ASTKinds.obs_resent_bcc_$0_1, E: $scope$E};
-                }
-                return $$res;
-            });
+        return this.matchaddress_list($$dpth + 1, $$cr);
     }
     public matchobs_resent_bcc_$0_2($$dpth: number, $$cr?: ErrorTracker): Nullable<obs_resent_bcc_$0_2> {
         return this.run<obs_resent_bcc_$0_2>($$dpth,
@@ -5751,17 +5730,7 @@ export class Parser {
         );
     }
     public matchpath_1($$dpth: number, $$cr?: ErrorTracker): Nullable<path_1> {
-        return this.run<path_1>($$dpth,
-            () => {
-                let $scope$A: Nullable<angle_addr>;
-                let $$res: Nullable<path_1> = null;
-                if (true
-                    && ($scope$A = this.matchangle_addr($$dpth + 1, $$cr)) !== null
-                ) {
-                    $$res = {kind: ASTKinds.path_1, A: $scope$A};
-                }
-                return $$res;
-            });
+        return this.matchangle_addr($$dpth + 1, $$cr);
     }
     public matchpath_2($$dpth: number, $$cr?: ErrorTracker): Nullable<path_2> {
         return this.run<path_2>($$dpth,
@@ -5964,20 +5933,18 @@ export class Parser {
                 return this.run<received>($$dpth,
                     () => {
                         let $scope$A: Nullable<string>;
-                        let $scope$B: Nullable<string>;
-                        let $scope$C: Nullable<received_token[]>;
-                        let $scope$D: Nullable<string>;
-                        let $scope$E: Nullable<date_time>;
+                        let $scope$received_token: Nullable<received_token[]>;
+                        let $scope$date_time: Nullable<date_time>;
                         let $$res: Nullable<received> = null;
                         if (true
                             && ($scope$A = this.regexAccept(String.raw`(?:Received)`, $$dpth + 1, $$cr)) !== null
-                            && ($scope$B = this.regexAccept(String.raw`(?::)`, $$dpth + 1, $$cr)) !== null
-                            && ($scope$C = this.loop<received_token>(() => this.matchreceived_token($$dpth + 1, $$cr), true)) !== null
-                            && ($scope$D = this.regexAccept(String.raw`(?:;)`, $$dpth + 1, $$cr)) !== null
-                            && ($scope$E = this.matchdate_time($$dpth + 1, $$cr)) !== null
+                            && this.regexAccept(String.raw`(?::)`, $$dpth + 1, $$cr) !== null
+                            && ($scope$received_token = this.loop<received_token>(() => this.matchreceived_token($$dpth + 1, $$cr), true)) !== null
+                            && this.regexAccept(String.raw`(?:;)`, $$dpth + 1, $$cr) !== null
+                            && ($scope$date_time = this.matchdate_time($$dpth + 1, $$cr)) !== null
                             && this.matchCRLF($$dpth + 1, $$cr) !== null
                         ) {
-                            $$res = {kind: ASTKinds.received, A: $scope$A, B: $scope$B, C: $scope$C, D: $scope$D, E: $scope$E};
+                            $$res = {kind: ASTKinds.received, A: $scope$A, received_token: $scope$received_token, date_time: $scope$date_time};
                         }
                         return $$res;
                     });
@@ -6090,17 +6057,7 @@ export class Parser {
         );
     }
     public matchresent_bcc_$0_1($$dpth: number, $$cr?: ErrorTracker): Nullable<resent_bcc_$0_1> {
-        return this.run<resent_bcc_$0_1>($$dpth,
-            () => {
-                let $scope$D: Nullable<address_list>;
-                let $$res: Nullable<resent_bcc_$0_1> = null;
-                if (true
-                    && ($scope$D = this.matchaddress_list($$dpth + 1, $$cr)) !== null
-                ) {
-                    $$res = {kind: ASTKinds.resent_bcc_$0_1, D: $scope$D};
-                }
-                return $$res;
-            });
+        return this.matchaddress_list($$dpth + 1, $$cr);
     }
     public matchresent_bcc_$0_2($$dpth: number, $$cr?: ErrorTracker): Nullable<resent_bcc_$0_2> {
         return this.matchCFWS($$dpth + 1, $$cr);
@@ -6182,14 +6139,15 @@ export class Parser {
                         let $scope$A: Nullable<string>;
                         let $scope$B: Nullable<string>;
                         let $scope$C: Nullable<msg_id>;
+                        let $scope$D: Nullable<CRLF>;
                         let $$res: Nullable<resent_msg_id> = null;
                         if (true
                             && ($scope$A = this.regexAccept(String.raw`(?:Resent-Message-ID)`, $$dpth + 1, $$cr)) !== null
                             && ($scope$B = this.regexAccept(String.raw`(?::)`, $$dpth + 1, $$cr)) !== null
                             && ($scope$C = this.matchmsg_id($$dpth + 1, $$cr)) !== null
-                            && this.matchCRLF($$dpth + 1, $$cr) !== null
+                            && ($scope$D = this.matchCRLF($$dpth + 1, $$cr)) !== null
                         ) {
-                            $$res = {kind: ASTKinds.resent_msg_id, A: $scope$A, B: $scope$B, C: $scope$C};
+                            $$res = {kind: ASTKinds.resent_msg_id, A: $scope$A, B: $scope$B, C: $scope$C, D: $scope$D};
                         }
                         return $$res;
                     });
@@ -6249,16 +6207,15 @@ export class Parser {
                 return this.run<return_path>($$dpth,
                     () => {
                         let $scope$A: Nullable<string>;
-                        let $scope$B: Nullable<string>;
-                        let $scope$C: Nullable<path>;
+                        let $scope$path: Nullable<path>;
                         let $$res: Nullable<return_path> = null;
                         if (true
                             && ($scope$A = this.regexAccept(String.raw`(?:Return-Path)`, $$dpth + 1, $$cr)) !== null
-                            && ($scope$B = this.regexAccept(String.raw`(?::)`, $$dpth + 1, $$cr)) !== null
-                            && ($scope$C = this.matchpath($$dpth + 1, $$cr)) !== null
+                            && this.regexAccept(String.raw`(?::)`, $$dpth + 1, $$cr) !== null
+                            && ($scope$path = this.matchpath($$dpth + 1, $$cr)) !== null
                             && this.matchCRLF($$dpth + 1, $$cr) !== null
                         ) {
-                            $$res = {kind: ASTKinds.return_path, A: $scope$A, B: $scope$B, C: $scope$C};
+                            $$res = {kind: ASTKinds.return_path, A: $scope$A, path: $scope$path};
                         }
                         return $$res;
                     });
@@ -6495,14 +6452,14 @@ export class Parser {
             () => {
                 return this.run<trace>($$dpth,
                     () => {
-                        let $scope$A: Nullable<Nullable<return_path>>;
-                        let $scope$B: Nullable<received[]>;
+                        let $scope$return_path: Nullable<Nullable<return_path>>;
+                        let $scope$received: Nullable<received[]>;
                         let $$res: Nullable<trace> = null;
                         if (true
-                            && (($scope$A = this.matchreturn_path($$dpth + 1, $$cr)) || true)
-                            && ($scope$B = this.loop<received>(() => this.matchreceived($$dpth + 1, $$cr), false)) !== null
+                            && (($scope$return_path = this.matchreturn_path($$dpth + 1, $$cr)) || true)
+                            && ($scope$received = this.loop<received>(() => this.matchreceived($$dpth + 1, $$cr), false)) !== null
                         ) {
-                            $$res = {kind: ASTKinds.trace, A: $scope$A, B: $scope$B};
+                            $$res = {kind: ASTKinds.trace, return_path: $scope$return_path, received: $scope$received};
                         }
                         return $$res;
                     });

@@ -41,7 +41,7 @@ dot_atom := A=CFWS? B=dot_atom_text C=CFWS?
 dot_atom_text := A=atext+ B={ C='\.' D=atext+ }*
 dtext := '[\x21-\x5a]' | '[\x5e-\x7e]' | obs_dtext
 field_name := ftext+
-fields := A={ B=trace C=optional_field* | D={ resent_date | resent_from | resent_sender | resent_to | resent_cc | resent_bcc | resent_msg_id }* }* L={ orig_date | from | sender | reply_to | to | cc | bcc | message_id | in_reply_to | references | subject | comments | keywords | optional_field }*
+fields := prepended={ trace=trace optional_fields=optional_field* | resent_field_block={ resent_date | resent_from | resent_sender | resent_to | resent_cc | resent_bcc | resent_msg_id }* }* nonprepended={ orig_date | from | sender | reply_to | to | cc | bcc | message_id | in_reply_to | references | subject | comments | keywords | optional_field }*
 from := A='From' B=':' mailbox_list=mailbox_list CRLF
 ftext := '[\x21-\x39]' | '[\x3b-\x7e]'
 group := display_name=display_name B=':' group_list=group_list? D=';' CFWS?
@@ -96,7 +96,7 @@ obs_qtext := obs_NO_WS_CTL
 obs_received := A='Received' WSP* C=':' D=received_token* E=CRLF
 obs_references := A='References' WSP* ':' D={ phrase | msg_id }* CRLF
 obs_reply_to := A='Reply-To' WSP* ':' address_list=address_list CRLF
-obs_resent_bcc := A='Resent-Bcc' WSP* C=':' D={ E=address_list | { CFWS? ',' }* CFWS? } CRLF
+obs_resent_bcc := A='Resent-Bcc' WSP* C=':' address_list={ address_list | { CFWS? ',' }* CFWS? } CRLF
 obs_resent_cc := A='Resent-Cc' WSP* C=':' D=address_list CRLF
 obs_resent_date := A='Resent-Date' WSP* C=':' D=date_time CRLF
 obs_resent_from := A='Resent-From' WSP* C=':' D=mailbox_list CRLF
@@ -116,24 +116,24 @@ obs_year := A=CFWS? B=TWO_DIGIT C=DIGIT* CFWS?
 obs_zone := 'UT' | 'GMT' | 'EST' | 'EDT' | 'CST' | 'CDT' | 'MST' | 'MDT' | 'PST' | 'PDT' | '[\x41-\x49]' | '[\x4b-\x5a]' | '[\x61-\x69]' | '[\x6b-\x7a]'
 optional_field := name=field_name ':' body=unstructured CRLF
 orig_date := A='Date' ':' date_time=date_time CRLF
-path := A=angle_addr | CFWS? '<' CFWS '>' CFWS?
+path := angle_addr | CFWS? '<' CFWS '>' CFWS?
 phrase := word+ | obs_phrase
 qcontent := qtext | quoted_pair
 qtext := '\x21' | '[\x23-\x5b]' | '[\x5d-\x7e]' | obs_qtext
 quoted_pair := A='\\' B={ C=VCHAR | D=WSP } | E=obs_qp
 quoted_string := CFWS? B=DQUOTE C={ FWS? E=qcontent }* FWS? G=DQUOTE CFWS?
-received := A='Received' B=':' C=received_token* D=';' E=date_time CRLF
+received := A='Received' ':' received_token=received_token* ';' date_time=date_time CRLF
 received_token := word | angle_addr | addr_spec | domain
 references := A='References' ':' msg_id=msg_id+ CRLF
 reply_to := A='Reply-To' B=':' address_list=address_list CRLF
-resent_bcc := A='Resent-Bcc' B=':' C={ D=address_list | CFWS }? CRLF
+resent_bcc := A='Resent-Bcc' B=':' C={ address_list | CFWS }? CRLF
 resent_cc := A='Resent-Cc' B=':' C=address_list CRLF
 resent_date := A='Resent-Date' B=':' C=date_time CRLF
 resent_from := A='Resent-From' B=':' C=mailbox_list CRLF
-resent_msg_id := A='Resent-Message-ID' B=':' C=msg_id CRLF
+resent_msg_id := A='Resent-Message-ID' B=':' C=msg_id D=CRLF
 resent_sender := A='Resent-Sender' B=':' C=mailbox CRLF
 resent_to := A='Resent-To' B=':' C=address_list CRLF
-return_path := A='Return-Path' B=':' C=path CRLF
+return_path := A='Return-Path' ':' path=path CRLF
 second := TWO_DIGIT | obs_second
 sender := A='Sender' B=':' mailbox=mailbox CRLF
 specials := '\(' | '\)' | '[<>]' | '\[' | '\]' | '[:;@]' | '\\' | ',' | '\.' | DQUOTE
@@ -142,7 +142,7 @@ text := '[\x01-\x09]' | '\x0B' | '\x0C' | '[\x0E-\x7f]'
 time := time_of_day=time_of_day zone=zone
 time_of_day := hour=hour B=':' minute=minute D={ E=':' second=second }?
 to := A='To' B=':' address_list=address_list CRLF
-trace := A=return_path? B=received+
+trace := return_path=return_path? received=received+
 unstructured := A={ B=FWS? C=VCHAR }* D=WSP* | E=obs_unstruct
 word := atom | quoted_string
 year := FWS B=FOUR_DIGIT C=DIGIT* FWS | obs_year

@@ -1,6 +1,9 @@
-import { ASTNodeIntf, ASTKinds as K, addr_spec, address, address_list, address_list_1, date_time, day_of_week, fields, group, hour, mailbox, mailbox_list, message, minute, name_addr, obs_addr_list, obs_fields, second, year, zone } from './message.fields'
+import { ASTNodeIntf, ASTKinds as K, addr_spec, address, address_list, address_list_1, date_time, day_of_week, fields, fields_$0, fields_$1, group, hour, mailbox, mailbox_list, message, minute, name_addr, obs_addr_list, obs_fields, path, received, received_token, second, trace, year, zone } from './message.fields'
 import { concat } from './util'
 export class Email {
+
+  prepended: PrependedFieldBlock[]
+
   to: NonemptyList<Address> | undefined
   subject: string | undefined
   from: NonemptyList<Mailbox>
@@ -14,23 +17,16 @@ export class Email {
   references: NonemptyList<string> | undefined
   comments: string[] | undefined
   keywords: string[][] | undefined
-  optional_fields: { name: string, body: string }[]
-  //  TODO:
-  // resent: {
-  //   date: DateTime | undefined
-  //   from: NonemptyList<Mailbox>
-  //   sender: Mailbox | undefined
-  //   to: NonemptyList<Address> | undefined
-  //   cc: NonemptyList<Address> | undefined
-  //   bcc: NonemptyList<Address> | undefined
-  //   msg_id: string | undefined
-  // }
+  optional_fields: OptionalField[]
 
   constructor(ast: message) {
     let fields = ast.fields
     switch (fields.kind) {
-      case K.fields: return { ...Util.nontraceFields(fields) }
-      case K.obs_fields: return { ...Util.obsoleteFields(fields) }
+      case K.fields: return {
+        prepended: Util.prependedFields(fields.prepended),
+        ...Util.nonprependedFields(fields.nonprepended)
+      }
+      case K.obs_fields: return { prepended: Util.obsoletePrepended(fields), ...Util.obsoleteFields(fields) }
       default: { const exhaustive: never = fields; throw new Error(exhaustive) }
     }
   }
@@ -43,7 +39,7 @@ interface HasKind {
   kind: string
 }
 
-interface NontraceFields {
+interface NonprependedFields {
   to: NonemptyList<Address> | undefined
   subject: string | undefined
   from: NonemptyList<Mailbox>
@@ -60,10 +56,132 @@ interface NontraceFields {
   optional_fields: { name: string, body: string }[]
 }
 
+type resent_field_kind = 'resent_date' | 'resent_from' | 'resent_sender' | 'resent_to' | 'resent_cc' | 'resent_bcc' | 'resent_msg_id' | 'resent_reply_to'
+interface ResentFieldKind { kind: resent_field_kind }
+interface ResentDate extends ResentFieldKind { resent_date: DateTime, kind: 'resent_date' }
+interface ResentFrom extends ResentFieldKind { resent_from: NonemptyList<Mailbox>, kind: 'resent_from' }
+interface ResentSender extends ResentFieldKind { resent_sender: Mailbox, kind: 'resent_sender' }
+interface ResentTo extends ResentFieldKind { resent_to: NonemptyList<Address>, kind: 'resent_to' }
+interface ResentCc extends ResentFieldKind { resent_cc: NonemptyList<Address>, kind: 'resent_cc' }
+interface ResentBcc extends ResentFieldKind { resent_bcc: NonemptyList<Address> | undefined, kind: 'resent_bcc' }
+interface ResentMsgId extends ResentFieldKind { resent_msg_id: string, kind: 'resent_msg_id' }
+interface ResentReplyTo extends ResentFieldKind { resent_reply_to: NonemptyList<Address>, kind: 'resent_reply_to' }
+type ResentField = ResentDate | ResentFrom | ResentSender | ResentTo | ResentCc | ResentBcc | ResentMsgId | ResentReplyTo
+
+interface TraceField {
+  return_path: Mailbox | undefined
+  received: NonemptyList<ReceivedToken>
+}
+
+interface ObsoleteTraceField {
+  return_path: Mailbox | undefined
+  received: (string | Mailbox)[]
+}
+
+interface ReceivedToken {
+  date_time: DateTime
+  received_token: (string | Mailbox)[]
+}
+
+type OptionalField = { name: string, body: string }
+type PrependedFieldBlock = { trace: TraceField, optional_fields: OptionalField[], kind: 'TraceFieldBlock' }
+  | { trace: ObsoleteTraceField, optional_fields: OptionalField[], kind: 'ObsoleteTraceFieldBlock' }
+  | { resent: ResentField[], kind: 'ResentFieldBlock' }
+
 export class Util {
 
-  static obsoleteFields(fields: obs_fields): NontraceFields {
-    let result = {} as NontraceFields
+  static nonempty<T>(head: T, tail: T[] = []): NonemptyList<T> { return [head, ...tail] }
+
+  // Note: call this before calling `obsoleteFields`
+  static obsoletePrepended(fields: obs_fields): PrependedFieldBlock[] {
+    let prepended = [] as PrependedFieldBlock[]
+    let returnPaths: path[] = []
+    let received: received_token[][] = []
+    let prependedOpts: OptionalField[] = []
+    fields.A.forEach(f => {
+      switch (f.kind) {
+        case K.obs_optional: {
+          prependedOpts.push({ name: concat(f.A), body: concat(f.D).trim() })
+          break
+        }
+        case K.obs_return: returnPaths.push(f.D); break
+        case K.obs_received: received.push(f.D); break
+        case K.obs_resent_date: {
+          prepended.push({
+            kind: 'ResentFieldBlock',
+            resent: [{ resent_date: new DateTime(f.D), kind: "resent_date" }]
+          })
+          break
+        }
+        case K.obs_resent_from: {
+          prepended.push({
+            kind: 'ResentFieldBlock',
+            resent: [{ resent_from: Util.fromMailboxList(f.D), kind: "resent_from" }]
+          })
+          break
+        }
+        case K.obs_resent_send: {
+          prepended.push({
+            kind: 'ResentFieldBlock',
+            resent: [{ resent_sender: new Mailbox(f.D), kind: "resent_sender" }]
+          })
+          break
+        }
+        case K.obs_resent_rply: {
+          prepended.push({
+            kind: 'ResentFieldBlock',
+            resent: [{ resent_reply_to: Util.fromAddressList(f.D), kind: 'resent_reply_to' }]
+          })
+          break
+        }
+        case K.obs_resent_to: {
+          prepended.push({
+            kind: 'ResentFieldBlock',
+            resent: [{ resent_to: Util.fromAddressList(f.D), kind: 'resent_to' }]
+          })
+          break
+        }
+        case K.obs_resent_cc: {
+          prepended.push({
+            kind: 'ResentFieldBlock',
+            resent: [{ resent_cc: Util.fromAddressList(f.D), kind: 'resent_cc' }]
+          })
+          break
+        }
+        case K.obs_resent_bcc: {
+          prepended.push({
+            kind: 'ResentFieldBlock',
+            resent: [{ resent_bcc: Util.addressListOrUndefined(f), kind: 'resent_bcc' }]
+          })
+          break
+        }
+        case K.obs_resent_mid: {
+          prepended.push({
+            kind: 'ResentFieldBlock',
+            resent: [{ resent_msg_id: concat(f.C).trim(), kind: 'resent_msg_id' }]
+          })
+          break
+        }
+        default: break
+      }
+    })
+    received.forEach(r => {
+      let returnPath = returnPaths.shift()
+      prepended.push({
+        trace: {
+          return_path: returnPath ? ((path) => Mailbox.from_return_path(path))(returnPath) : undefined,
+          received: Util.fromReceivedToken(r)
+        },
+        kind: 'ObsoleteTraceFieldBlock',
+        optional_fields: prependedOpts,
+      })
+    })
+    return prepended
+  }
+
+  // Note: call `obsoletePrepended` before calling this
+  static obsoleteFields(fields: obs_fields): NonprependedFields {
+    let result = {} as NonprependedFields
     fields.A.forEach(f => {
       switch (f.kind) {
         case K.obs_orig_date: result.orig_date = new DateTime(f.date_time); break;
@@ -83,15 +201,21 @@ export class Util {
           ...f.keywords.tail.map(el => concat(el.F).trim())].filter(keyword => keyword !== '')]
           break
         }
-        default: break; // TODO, finish all the exhaustive fields, and then make the default do exhaustive check
+        case K.obs_optional: {
+          result.optional_fields = [...result.optional_fields || []
+            , { name: concat(f.A), body: concat(f.D).trim() }]
+          break
+        }
+        default: break
+        // default: break; // TODO, finish all the exhaustive fields, and then make the default do exhaustive check
       }
     })
     return result
   }
 
-  static nontraceFields(fields: fields): NontraceFields {
-    let result = {} as NontraceFields
-    fields.L.forEach(f => {
+  static nonprependedFields(nontrace: fields_$1[]): NonprependedFields {
+    let result = {} as NonprependedFields
+    nontrace.forEach(f => {
       switch (f.kind) {
         case K.orig_date: result.orig_date = new DateTime(f.date_time); break;
         case K.from: result.from = Util.fromMailboxList(f.mailbox_list); break;
@@ -116,6 +240,72 @@ export class Util {
     })
     return result
   }
+
+  static prependedFields(prepended: fields_$0[]): PrependedFieldBlock[] {
+    let result: PrependedFieldBlock[] = prepended.map(block => {
+      switch (block.kind) {
+        // i.e. trace field + optional
+        case K.fields_$0_1: return {
+          kind: 'TraceFieldBlock',
+          trace: Util.fromTrace(block.trace),
+          optional_fields: block.optional_fields
+            .map(optField => { return { name: concat(optField.name), body: concat(optField.body).trim() } })
+        }
+        // i.e. resent field block
+        case K.fields_$0_2:
+          let resentFields: ResentField[] = block.resent_field_block.map(resentField => {
+            switch (resentField.kind) {
+              case K.resent_date: return { resent_date: new DateTime(resentField.C), kind: "resent_date" }
+              case K.resent_from: return { resent_from: Util.fromMailboxList(resentField.C), kind: "resent_from" }
+              case K.resent_sender: return { resent_sender: new Mailbox(resentField.C), kind: "resent_sender" }
+              case K.resent_to: return { resent_to: Util.fromAddressList(resentField.C), kind: "resent_to" }
+              case K.resent_cc: return { resent_cc: Util.fromAddressList(resentField.C), kind: "resent_cc" }
+              case K.resent_bcc: return { resent_bcc: Util.addressListOrUndefined(resentField.C), kind: "resent_bcc" }
+              case K.resent_msg_id: return { resent_msg_id: concat(resentField.C).trim(), kind: "resent_msg_id" }
+              default: { const exhaustive: never = resentField; throw new Error(exhaustive) }
+            }
+          })
+          return { kind: 'ResentFieldBlock', resent: resentFields }
+        default: { const exhaustive: never = block; throw new Error(exhaustive) }
+      }
+    })
+    return result
+  }
+
+  static fromTrace(traceField: trace): TraceField {
+    return {
+      return_path: traceField.return_path ? ((path) => {
+        return Mailbox.from_return_path(path)
+      })(traceField.return_path.path) : undefined,
+
+      received: ((received) => {
+        let head = Util.fromReceived(received.shift()!)
+        let tail = received.map(el => Util.fromReceived(el))
+        return this.nonempty(head, tail)
+      })(traceField.received)
+    }
+  }
+
+  static fromReceived(received: received) {
+    return {
+      date_time: new DateTime(received.date_time),
+      received_token: Util.fromReceivedToken(received.received_token)
+    }
+  }
+
+  static fromReceivedToken(received_tokens: received_token[]): (string | Mailbox)[] {
+    return received_tokens.map(received_token => {
+      switch (received_token.kind) {
+        case K.addr_spec: return new Mailbox(received_token)
+        case K.angle_addr_1: return new Mailbox(received_token.addr_spec)
+        case K.obs_angle_addr: return new Mailbox(received_token.addr_spec)
+        case K.obs_angle_addr: return new Mailbox(received_token.addr_spec)
+        default: return concat(received_token)
+      }
+    })
+  }
+
+  // TODO: just take this out, it's awful
   static addressListOrUndefined(mbAddressList: address_list | ASTNodeIntf | null) {
     switch (mbAddressList?.kind) {
       case K.address_list_1: return this.fromAddressList(mbAddressList as address_list_1)
@@ -136,6 +326,7 @@ export class Util {
       default: { const exhaustive: never = mailbox_list; throw new Error(exhaustive) }
     }
   }
+
   static fromAddressList(address_list: address_list): NonemptyList<Address> {
     switch (address_list.kind) {
       case K.address_list_1:
@@ -150,6 +341,7 @@ export class Util {
       default: throw new Error("There should only be 2 types of address_list")
     }
   }
+
   static fromAddress(address: address): Address {
     switch (address.kind) {
       case K.addr_spec: return new Mailbox(address)
@@ -212,6 +404,15 @@ class Mailbox {
     let name = mb.name ? concat(mb.name).trim() : undefined
     // name_addr can be either angle_addr_1 or obs_angle_addr, but both have addr_spec
     return Mailbox.from_address_spec(mb.angle_addr.addr_spec, name)
+  }
+
+  static from_return_path(path: path): Mailbox | undefined {
+    switch (path.kind) {
+      case K.angle_addr_1: return new Mailbox(path.addr_spec)
+      case K.obs_angle_addr: return new Mailbox(path.addr_spec)
+      case K.path_2: return undefined
+      default: { const exhaustive: never = path; throw new Error(exhaustive) }
+    }
   }
 }
 
