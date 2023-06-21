@@ -3,9 +3,8 @@ import { Parser, parse, dot_atom as dot_atom2, fields, subject, local_part, addr
 import { readFileSync } from 'fs'
 import { Email, Util } from './Email';
 
-let input = readFileSync('../test/resources/hello_world.eml', 'ascii')
-let ast = parse(input).ast!
-let email = new Email(ast)
+let email = new Email(parse(readFileSync('../test/resources/hello_world.eml', 'ascii')).ast!)
+let reply = new Email(parse(readFileSync('../test/resources/hello_world_reply.eml', 'ascii')).ast!)
 
 describe('fields', () => {
   test('orig_date', () => {
@@ -32,6 +31,10 @@ describe('fields', () => {
   })
   test('message_id', () => {
     expect(email.message_id).toEqual("FE97A840-9401-4B26-902E-61EB5D6CD285@example.com")
+  })
+  test('in_reply_to', () => {
+    expect(email.in_reply_to).toBeUndefined
+    expect(reply.in_reply_to).toEqual(["FE97A840-9401-4B26-902E-61EB5D6CD285@example.com"])
   })
   test('subject', () => { expect(email.subject).toBe("This is a test email") })
 })

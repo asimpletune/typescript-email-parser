@@ -51,7 +51,7 @@
 * hour := TWO_DIGIT | obs_hour
 * id_left := dot_atom_text | obs_id_left
 * id_right := dot_atom_text | no_fold_literal | obs_id_right
-* in_reply_to := A='In-Reply-To' B=':' C=msg_id+ CRLF
+* in_reply_to := A='In-Reply-To' ':' msg_id=msg_id+ CRLF
 * keywords := A='Keywords' B=':' C=phrase D={ E=',' F=phrase }* CRLF
 * local_part := dot_atom | quoted_string | obs_local_part
 * mailbox := name_addr | addr_spec
@@ -83,7 +83,7 @@
 * obs_hour := CFWS? B=TWO_DIGIT CFWS?
 * obs_id_left := local_part
 * obs_id_right := domain
-* obs_in_reply_to := A='In-Reply-To' WSP* C=':' D={ phrase | msg_id }* CRLF
+* obs_in_reply_to := A='In-Reply-To' WSP* ':' D={ phrase | msg_id }* CRLF
 * obs_keywords := A='Keywords' WSP* C=':' D=obs_phrase_list CRLF
 * obs_local_part := A=word B={ C='\.' D=word }*
 * obs_mbox_list := { CFWS? ',' }* head=mailbox tail={ F=',' mailbox={ mailbox | I=CFWS }? }*
@@ -822,8 +822,7 @@ export type id_right_3 = obs_id_right;
 export interface in_reply_to {
     kind: ASTKinds.in_reply_to;
     A: string;
-    B: string;
-    C: msg_id[];
+    msg_id: msg_id[];
 }
 export interface keywords {
     kind: ASTKinds.keywords;
@@ -1111,7 +1110,6 @@ export type obs_id_right = domain;
 export interface obs_in_reply_to {
     kind: ASTKinds.obs_in_reply_to;
     A: string;
-    C: string;
     D: obs_in_reply_to_$0[];
 }
 export type obs_in_reply_to_$0 = obs_in_reply_to_$0_1 | obs_in_reply_to_$0_2;
@@ -3341,16 +3339,15 @@ export class Parser {
                 return this.run<in_reply_to>($$dpth,
                     () => {
                         let $scope$A: Nullable<string>;
-                        let $scope$B: Nullable<string>;
-                        let $scope$C: Nullable<msg_id[]>;
+                        let $scope$msg_id: Nullable<msg_id[]>;
                         let $$res: Nullable<in_reply_to> = null;
                         if (true
                             && ($scope$A = this.regexAccept(String.raw`(?:In-Reply-To)`, $$dpth + 1, $$cr)) !== null
-                            && ($scope$B = this.regexAccept(String.raw`(?::)`, $$dpth + 1, $$cr)) !== null
-                            && ($scope$C = this.loop<msg_id>(() => this.matchmsg_id($$dpth + 1, $$cr), false)) !== null
+                            && this.regexAccept(String.raw`(?::)`, $$dpth + 1, $$cr) !== null
+                            && ($scope$msg_id = this.loop<msg_id>(() => this.matchmsg_id($$dpth + 1, $$cr), false)) !== null
                             && this.matchCRLF($$dpth + 1, $$cr) !== null
                         ) {
-                            $$res = {kind: ASTKinds.in_reply_to, A: $scope$A, B: $scope$B, C: $scope$C};
+                            $$res = {kind: ASTKinds.in_reply_to, A: $scope$A, msg_id: $scope$msg_id};
                         }
                         return $$res;
                     });
@@ -4603,17 +4600,16 @@ export class Parser {
                 return this.run<obs_in_reply_to>($$dpth,
                     () => {
                         let $scope$A: Nullable<string>;
-                        let $scope$C: Nullable<string>;
                         let $scope$D: Nullable<obs_in_reply_to_$0[]>;
                         let $$res: Nullable<obs_in_reply_to> = null;
                         if (true
                             && ($scope$A = this.regexAccept(String.raw`(?:In-Reply-To)`, $$dpth + 1, $$cr)) !== null
                             && this.loop<WSP>(() => this.matchWSP($$dpth + 1, $$cr), true) !== null
-                            && ($scope$C = this.regexAccept(String.raw`(?::)`, $$dpth + 1, $$cr)) !== null
+                            && this.regexAccept(String.raw`(?::)`, $$dpth + 1, $$cr) !== null
                             && ($scope$D = this.loop<obs_in_reply_to_$0>(() => this.matchobs_in_reply_to_$0($$dpth + 1, $$cr), true)) !== null
                             && this.matchCRLF($$dpth + 1, $$cr) !== null
                         ) {
-                            $$res = {kind: ASTKinds.obs_in_reply_to, A: $scope$A, C: $scope$C, D: $scope$D};
+                            $$res = {kind: ASTKinds.obs_in_reply_to, A: $scope$A, D: $scope$D};
                         }
                         return $$res;
                     });

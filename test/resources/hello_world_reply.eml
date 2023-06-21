@@ -1,0 +1,49 @@
+Content-Type: multipart/alternative;
+	boundary="Apple-Mail=_E7354726-6F47-49CC-B531-877494C2B488"
+Mime-Version: 1.0 (Mac OS X Mail 16.0 \(3731.500.231\))
+Subject: Re: This is a test email
+X-Universally-Unique-Identifier: 933A3A26-A86B-4D3C-B393-2C260D5BC557
+From: bob@example.com
+Bcc: Eve <eve@example.com>
+In-Reply-To: <FE97A840-9401-4B26-902E-61EB5D6CD285@example.com>
+Date: Wed, 21 Jun 2023 13:15:14 +0200
+Cc: Alice <alice@example.com>,
+ carol <carol@example.com>
+Message-Id: <E08350D6-2ABF-4F3D-95A9-9941F5A701A6@example.com>
+References: <FE97A840-9401-4B26-902E-61EB5D6CD285@example.com>
+To: olivia <olivia@example.com>
+
+
+--Apple-Mail=_E7354726-6F47-49CC-B531-877494C2B488
+Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+	charset=us-ascii
+
+I got your message.
+
+-Bob
+
+> On Jun 20, 2023, at 8:28 PM, hello@spenc.es wrote:
+>
+> Hello, world
+>
+> -Tester
+>
+
+
+--Apple-Mail=_E7354726-6F47-49CC-B531-877494C2B488
+Content-Transfer-Encoding: 7bit
+Content-Type: text/html;
+	charset=us-ascii
+
+<html><head><meta http-equiv="content-type" content="text/html; charset=us-ascii"></head><body style="overflow-wrap: break-word; -webkit-nbsp-mode: space; line-break: after-white-space;">I got your message.&nbsp;<div><br><div>
+<div>-Spence</div>
+
+</div>
+<div><br><blockquote type="cite"><div>On Jun 20, 2023, at 8:28 PM, hello@spenc.es wrote:</div><br class="Apple-interchange-newline"><div><meta http-equiv="content-type" content="text/html; charset=us-ascii"><div style="overflow-wrap: break-word; -webkit-nbsp-mode: space; line-break: after-white-space;"><div dir="auto" style="overflow-wrap: break-word; -webkit-nbsp-mode: space; line-break: after-white-space;">Hello, world<br><br><div>
+<div>-Spence</div>
+
+</div>
+
+<br></div></div></div></blockquote></div><br></div></body></html>
+--Apple-Mail=_E7354726-6F47-49CC-B531-877494C2B488--
