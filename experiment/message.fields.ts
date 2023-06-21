@@ -31,9 +31,9 @@
 * comment := A='\(' B={ FWS? D=ccontent }* FWS? F='\)'
 * comments := A='Comments' B=':' C=unstructured CRLF
 * ctext := A='[\x21-\x27]' | B='[\x2a-\x5b]' | C='[\x5d-\x7e]' | D=obs_ctext
-* date := A=day B=month C=year
-* date_time := A={ B=day_of_week C=',' }? D=date E=time CFWS?
-* day := FWS? B=DIGIT C=DIGIT? FWS | E=obs_day
+* date := day=day month=month year=year
+* date_time := A={ B=day_of_week ',' }? D=date E=time CFWS?
+* day := FWS? B=DIGIT C=DIGIT? FWS | obs_day
 * day_name := 'Mon' | 'Tue' | 'Wed' | 'Thu' | 'Fri' | 'Sat' | 'Sun'
 * day_of_week := FWS? B=day_name | C=obs_day_of_week
 * display_name := phrase
@@ -48,7 +48,7 @@
 * ftext := '[\x21-\x39]' | '[\x3b-\x7e]'
 * group := display_name=display_name B=':' group_list=group_list? D=';' CFWS?
 * group_list := mailbox_list | CFWS | obs_group_list
-* hour := A=TWO_DIGIT | B=obs_hour
+* hour := TWO_DIGIT | obs_hour
 * id_left := dot_atom_text | obs_id_left
 * id_right := dot_atom_text | no_fold_literal | obs_id_right
 * in_reply_to := A='In-Reply-To' B=':' C=msg_id+ CRLF
@@ -58,7 +58,7 @@
 * mailbox_list := head=mailbox tail={ ',' mailbox=mailbox }* | obs_mbox_list
 * message := fields={ fields | obs_fields } D={ CRLF F=body }?
 * message_id := A='Message-ID' B=':' C=msg_id CRLF
-* minute := A=TWO_DIGIT | B=obs_minute
+* minute := TWO_DIGIT | obs_minute
 * month := 'Jan' | 'Feb' | 'Mar' | 'Apr' | 'May' | 'Jun' | 'Jul' | 'Aug' | 'Sep' | 'Oct' | 'Nov' | 'Dec'
 * msg_id := CFWS? B='<' C=id_left D='@' E=id_right '>' G=CFWS?
 * name_addr := name=display_name? angle_addr=angle_addr
@@ -90,7 +90,7 @@
 * obs_message_id := A='Message-ID' WSP* C=':' D=msg_id CRLF
 * obs_minute := CFWS? B=TWO_DIGIT CFWS?
 * obs_optional := A=field_name WSP* C=':' D=unstructured CRLF
-* obs_orig_date := A='Date' WSP* C=':' D=date_time CRLF
+* obs_orig_date := A='Date' WSP* ':' date_time=date_time CRLF
 * obs_phrase := A=word B={ word | '.' | CFWS }
 * obs_phrase_list := A={ phrase | CFWS } D={ E=',' F={ phrase | CFWS }? }*
 * obs_qp := A='\\' B={ '\x00' | obs_NO_WS_CTL | LF | CR }
@@ -117,7 +117,7 @@
 * obs_year := A=CFWS? B=TWO_DIGIT C=DIGIT* CFWS?
 * obs_zone := 'UT' | 'GMT' | 'EST' | 'EDT' | 'CST' | 'CDT' | 'MST' | 'MDT' | 'PST' | 'PDT' | '[\x41-\x49]' | '[\x4b-\x5a]' | '[\x61-\x69]' | '[\x6b-\x7a]'
 * optional_field := A=field_name B=':' C=unstructured CRLF
-* orig_date := A='Date' B=':' C=date_time CRLF
+* orig_date := A='Date' ':' date_time=date_time CRLF
 * path := A=angle_addr | CFWS? '<' CFWS '>' CFWS?
 * phrase := word+ | obs_phrase
 * qcontent := qtext | quoted_pair
@@ -136,18 +136,18 @@
 * resent_sender := A='Resent-Sender' B=':' C=mailbox CRLF
 * resent_to := A='Resent-To' B=':' C=address_list CRLF
 * return_path := A='Return-Path' B=':' C=path CRLF
-* second := A=TWO_DIGIT | B=obs_second
+* second := TWO_DIGIT | obs_second
 * sender := A='Sender' B=':' mailbox=mailbox CRLF
 * specials := '\(' | '\)' | '[<>]' | '\[' | '\]' | '[:;@]' | '\\' | ',' | '\.' | DQUOTE
 * subject := _name='Subject' B=':' _value=unstructured CRLF
 * text := '[\x01-\x09]' | '\x0B' | '\x0C' | '[\x0E-\x7f]'
-* time := A=time_of_day B=zone
-* time_of_day := A=hour B=':' C=minute D={ E=':' F=second }?
+* time := time_of_day=time_of_day zone=zone
+* time_of_day := hour=hour B=':' minute=minute D={ E=':' second=second }?
 * to := A='To' B=':' address_list=address_list CRLF
 * trace := A=return_path? B=received+
 * unstructured := A={ B=FWS? C=VCHAR }* D=WSP* | E=obs_unstruct
 * word := atom | quoted_string
-* year := FWS B=FOUR_DIGIT C=DIGIT* FWS | E=obs_year
+* year := FWS B=FOUR_DIGIT C=DIGIT* FWS | obs_year
 * zone := FWS B={ '\+' | '\-' } E=FOUR_DIGIT | F=obs_zone
 */
 
@@ -677,9 +677,9 @@ export interface ctext_4 {
 }
 export interface date {
     kind: ASTKinds.date;
-    A: day;
-    B: month;
-    C: year;
+    day: day;
+    month: month;
+    year: year;
 }
 export interface date_time {
     kind: ASTKinds.date_time;
@@ -690,7 +690,6 @@ export interface date_time {
 export interface date_time_$0 {
     kind: ASTKinds.date_time_$0;
     B: day_of_week;
-    C: string;
 }
 export type day = day_1 | day_2;
 export interface day_1 {
@@ -698,10 +697,7 @@ export interface day_1 {
     B: DIGIT;
     C: Nullable<DIGIT>;
 }
-export interface day_2 {
-    kind: ASTKinds.day_2;
-    E: obs_day;
-}
+export type day_2 = obs_day;
 export type day_name = day_name_1 | day_name_2 | day_name_3 | day_name_4 | day_name_5 | day_name_6 | day_name_7;
 export type day_name_1 = string;
 export type day_name_2 = string;
@@ -814,14 +810,8 @@ export type group_list_1 = mailbox_list;
 export type group_list_2 = CFWS;
 export type group_list_3 = obs_group_list;
 export type hour = hour_1 | hour_2;
-export interface hour_1 {
-    kind: ASTKinds.hour_1;
-    A: TWO_DIGIT;
-}
-export interface hour_2 {
-    kind: ASTKinds.hour_2;
-    B: obs_hour;
-}
+export type hour_1 = TWO_DIGIT;
+export type hour_2 = obs_hour;
 export type id_left = id_left_1 | id_left_2;
 export type id_left_1 = dot_atom_text;
 export type id_left_2 = obs_id_left;
@@ -884,14 +874,8 @@ export interface message_id {
     C: msg_id;
 }
 export type minute = minute_1 | minute_2;
-export interface minute_1 {
-    kind: ASTKinds.minute_1;
-    A: TWO_DIGIT;
-}
-export interface minute_2 {
-    kind: ASTKinds.minute_2;
-    B: obs_minute;
-}
+export type minute_1 = TWO_DIGIT;
+export type minute_2 = obs_minute;
 export type month = month_1 | month_2 | month_3 | month_4 | month_5 | month_6 | month_7 | month_8 | month_9 | month_10 | month_11 | month_12;
 export type month_1 = string;
 export type month_2 = string;
@@ -1190,8 +1174,7 @@ export interface obs_optional {
 export interface obs_orig_date {
     kind: ASTKinds.obs_orig_date;
     A: string;
-    C: string;
-    D: date_time;
+    date_time: date_time;
 }
 export interface obs_phrase {
     kind: ASTKinds.obs_phrase;
@@ -1393,8 +1376,7 @@ export interface optional_field {
 export interface orig_date {
     kind: ASTKinds.orig_date;
     A: string;
-    B: string;
-    C: date_time;
+    date_time: date_time;
 }
 export type path = path_1 | path_2;
 export interface path_1 {
@@ -1524,14 +1506,8 @@ export interface return_path {
     C: path;
 }
 export type second = second_1 | second_2;
-export interface second_1 {
-    kind: ASTKinds.second_1;
-    A: TWO_DIGIT;
-}
-export interface second_2 {
-    kind: ASTKinds.second_2;
-    B: obs_second;
-}
+export type second_1 = TWO_DIGIT;
+export type second_2 = obs_second;
 export interface sender {
     kind: ASTKinds.sender;
     A: string;
@@ -1562,20 +1538,20 @@ export type text_3 = string;
 export type text_4 = string;
 export interface time {
     kind: ASTKinds.time;
-    A: time_of_day;
-    B: zone;
+    time_of_day: time_of_day;
+    zone: zone;
 }
 export interface time_of_day {
     kind: ASTKinds.time_of_day;
-    A: hour;
+    hour: hour;
     B: string;
-    C: minute;
+    minute: minute;
     D: Nullable<time_of_day_$0>;
 }
 export interface time_of_day_$0 {
     kind: ASTKinds.time_of_day_$0;
     E: string;
-    F: second;
+    second: second;
 }
 export interface to {
     kind: ASTKinds.to;
@@ -1612,10 +1588,7 @@ export interface year_1 {
     B: FOUR_DIGIT;
     C: DIGIT[];
 }
-export interface year_2 {
-    kind: ASTKinds.year_2;
-    E: obs_year;
-}
+export type year_2 = obs_year;
 export type zone = zone_1 | zone_2;
 export interface zone_1 {
     kind: ASTKinds.zone_1;
@@ -2735,16 +2708,16 @@ export class Parser {
             () => {
                 return this.run<date>($$dpth,
                     () => {
-                        let $scope$A: Nullable<day>;
-                        let $scope$B: Nullable<month>;
-                        let $scope$C: Nullable<year>;
+                        let $scope$day: Nullable<day>;
+                        let $scope$month: Nullable<month>;
+                        let $scope$year: Nullable<year>;
                         let $$res: Nullable<date> = null;
                         if (true
-                            && ($scope$A = this.matchday($$dpth + 1, $$cr)) !== null
-                            && ($scope$B = this.matchmonth($$dpth + 1, $$cr)) !== null
-                            && ($scope$C = this.matchyear($$dpth + 1, $$cr)) !== null
+                            && ($scope$day = this.matchday($$dpth + 1, $$cr)) !== null
+                            && ($scope$month = this.matchmonth($$dpth + 1, $$cr)) !== null
+                            && ($scope$year = this.matchyear($$dpth + 1, $$cr)) !== null
                         ) {
-                            $$res = {kind: ASTKinds.date, A: $scope$A, B: $scope$B, C: $scope$C};
+                            $$res = {kind: ASTKinds.date, day: $scope$day, month: $scope$month, year: $scope$year};
                         }
                         return $$res;
                     });
@@ -2781,13 +2754,12 @@ export class Parser {
                 return this.run<date_time_$0>($$dpth,
                     () => {
                         let $scope$B: Nullable<day_of_week>;
-                        let $scope$C: Nullable<string>;
                         let $$res: Nullable<date_time_$0> = null;
                         if (true
                             && ($scope$B = this.matchday_of_week($$dpth + 1, $$cr)) !== null
-                            && ($scope$C = this.regexAccept(String.raw`(?:,)`, $$dpth + 1, $$cr)) !== null
+                            && this.regexAccept(String.raw`(?:,)`, $$dpth + 1, $$cr) !== null
                         ) {
-                            $$res = {kind: ASTKinds.date_time_$0, B: $scope$B, C: $scope$C};
+                            $$res = {kind: ASTKinds.date_time_$0, B: $scope$B};
                         }
                         return $$res;
                     });
@@ -2824,17 +2796,7 @@ export class Parser {
             });
     }
     public matchday_2($$dpth: number, $$cr?: ErrorTracker): Nullable<day_2> {
-        return this.run<day_2>($$dpth,
-            () => {
-                let $scope$E: Nullable<obs_day>;
-                let $$res: Nullable<day_2> = null;
-                if (true
-                    && ($scope$E = this.matchobs_day($$dpth + 1, $$cr)) !== null
-                ) {
-                    $$res = {kind: ASTKinds.day_2, E: $scope$E};
-                }
-                return $$res;
-            });
+        return this.matchobs_day($$dpth + 1, $$cr);
     }
     public matchday_name($$dpth: number, $$cr?: ErrorTracker): Nullable<day_name> {
         return this.memoise(
@@ -3334,30 +3296,10 @@ export class Parser {
         );
     }
     public matchhour_1($$dpth: number, $$cr?: ErrorTracker): Nullable<hour_1> {
-        return this.run<hour_1>($$dpth,
-            () => {
-                let $scope$A: Nullable<TWO_DIGIT>;
-                let $$res: Nullable<hour_1> = null;
-                if (true
-                    && ($scope$A = this.matchTWO_DIGIT($$dpth + 1, $$cr)) !== null
-                ) {
-                    $$res = {kind: ASTKinds.hour_1, A: $scope$A};
-                }
-                return $$res;
-            });
+        return this.matchTWO_DIGIT($$dpth + 1, $$cr);
     }
     public matchhour_2($$dpth: number, $$cr?: ErrorTracker): Nullable<hour_2> {
-        return this.run<hour_2>($$dpth,
-            () => {
-                let $scope$B: Nullable<obs_hour>;
-                let $$res: Nullable<hour_2> = null;
-                if (true
-                    && ($scope$B = this.matchobs_hour($$dpth + 1, $$cr)) !== null
-                ) {
-                    $$res = {kind: ASTKinds.hour_2, B: $scope$B};
-                }
-                return $$res;
-            });
+        return this.matchobs_hour($$dpth + 1, $$cr);
     }
     public matchid_left($$dpth: number, $$cr?: ErrorTracker): Nullable<id_left> {
         return this.memoise(
@@ -3642,30 +3584,10 @@ export class Parser {
         );
     }
     public matchminute_1($$dpth: number, $$cr?: ErrorTracker): Nullable<minute_1> {
-        return this.run<minute_1>($$dpth,
-            () => {
-                let $scope$A: Nullable<TWO_DIGIT>;
-                let $$res: Nullable<minute_1> = null;
-                if (true
-                    && ($scope$A = this.matchTWO_DIGIT($$dpth + 1, $$cr)) !== null
-                ) {
-                    $$res = {kind: ASTKinds.minute_1, A: $scope$A};
-                }
-                return $$res;
-            });
+        return this.matchTWO_DIGIT($$dpth + 1, $$cr);
     }
     public matchminute_2($$dpth: number, $$cr?: ErrorTracker): Nullable<minute_2> {
-        return this.run<minute_2>($$dpth,
-            () => {
-                let $scope$B: Nullable<obs_minute>;
-                let $$res: Nullable<minute_2> = null;
-                if (true
-                    && ($scope$B = this.matchobs_minute($$dpth + 1, $$cr)) !== null
-                ) {
-                    $$res = {kind: ASTKinds.minute_2, B: $scope$B};
-                }
-                return $$res;
-            });
+        return this.matchobs_minute($$dpth + 1, $$cr);
     }
     public matchmonth($$dpth: number, $$cr?: ErrorTracker): Nullable<month> {
         return this.memoise(
@@ -4947,17 +4869,16 @@ export class Parser {
                 return this.run<obs_orig_date>($$dpth,
                     () => {
                         let $scope$A: Nullable<string>;
-                        let $scope$C: Nullable<string>;
-                        let $scope$D: Nullable<date_time>;
+                        let $scope$date_time: Nullable<date_time>;
                         let $$res: Nullable<obs_orig_date> = null;
                         if (true
                             && ($scope$A = this.regexAccept(String.raw`(?:Date)`, $$dpth + 1, $$cr)) !== null
                             && this.loop<WSP>(() => this.matchWSP($$dpth + 1, $$cr), true) !== null
-                            && ($scope$C = this.regexAccept(String.raw`(?::)`, $$dpth + 1, $$cr)) !== null
-                            && ($scope$D = this.matchdate_time($$dpth + 1, $$cr)) !== null
+                            && this.regexAccept(String.raw`(?::)`, $$dpth + 1, $$cr) !== null
+                            && ($scope$date_time = this.matchdate_time($$dpth + 1, $$cr)) !== null
                             && this.matchCRLF($$dpth + 1, $$cr) !== null
                         ) {
-                            $$res = {kind: ASTKinds.obs_orig_date, A: $scope$A, C: $scope$C, D: $scope$D};
+                            $$res = {kind: ASTKinds.obs_orig_date, A: $scope$A, date_time: $scope$date_time};
                         }
                         return $$res;
                     });
@@ -5827,16 +5748,15 @@ export class Parser {
                 return this.run<orig_date>($$dpth,
                     () => {
                         let $scope$A: Nullable<string>;
-                        let $scope$B: Nullable<string>;
-                        let $scope$C: Nullable<date_time>;
+                        let $scope$date_time: Nullable<date_time>;
                         let $$res: Nullable<orig_date> = null;
                         if (true
                             && ($scope$A = this.regexAccept(String.raw`(?:Date)`, $$dpth + 1, $$cr)) !== null
-                            && ($scope$B = this.regexAccept(String.raw`(?::)`, $$dpth + 1, $$cr)) !== null
-                            && ($scope$C = this.matchdate_time($$dpth + 1, $$cr)) !== null
+                            && this.regexAccept(String.raw`(?::)`, $$dpth + 1, $$cr) !== null
+                            && ($scope$date_time = this.matchdate_time($$dpth + 1, $$cr)) !== null
                             && this.matchCRLF($$dpth + 1, $$cr) !== null
                         ) {
-                            $$res = {kind: ASTKinds.orig_date, A: $scope$A, B: $scope$B, C: $scope$C};
+                            $$res = {kind: ASTKinds.orig_date, A: $scope$A, date_time: $scope$date_time};
                         }
                         return $$res;
                     });
@@ -6384,30 +6304,10 @@ export class Parser {
         );
     }
     public matchsecond_1($$dpth: number, $$cr?: ErrorTracker): Nullable<second_1> {
-        return this.run<second_1>($$dpth,
-            () => {
-                let $scope$A: Nullable<TWO_DIGIT>;
-                let $$res: Nullable<second_1> = null;
-                if (true
-                    && ($scope$A = this.matchTWO_DIGIT($$dpth + 1, $$cr)) !== null
-                ) {
-                    $$res = {kind: ASTKinds.second_1, A: $scope$A};
-                }
-                return $$res;
-            });
+        return this.matchTWO_DIGIT($$dpth + 1, $$cr);
     }
     public matchsecond_2($$dpth: number, $$cr?: ErrorTracker): Nullable<second_2> {
-        return this.run<second_2>($$dpth,
-            () => {
-                let $scope$B: Nullable<obs_second>;
-                let $$res: Nullable<second_2> = null;
-                if (true
-                    && ($scope$B = this.matchobs_second($$dpth + 1, $$cr)) !== null
-                ) {
-                    $$res = {kind: ASTKinds.second_2, B: $scope$B};
-                }
-                return $$res;
-            });
+        return this.matchobs_second($$dpth + 1, $$cr);
     }
     public matchsender($$dpth: number, $$cr?: ErrorTracker): Nullable<sender> {
         return this.memoise(
@@ -6534,14 +6434,14 @@ export class Parser {
             () => {
                 return this.run<time>($$dpth,
                     () => {
-                        let $scope$A: Nullable<time_of_day>;
-                        let $scope$B: Nullable<zone>;
+                        let $scope$time_of_day: Nullable<time_of_day>;
+                        let $scope$zone: Nullable<zone>;
                         let $$res: Nullable<time> = null;
                         if (true
-                            && ($scope$A = this.matchtime_of_day($$dpth + 1, $$cr)) !== null
-                            && ($scope$B = this.matchzone($$dpth + 1, $$cr)) !== null
+                            && ($scope$time_of_day = this.matchtime_of_day($$dpth + 1, $$cr)) !== null
+                            && ($scope$zone = this.matchzone($$dpth + 1, $$cr)) !== null
                         ) {
-                            $$res = {kind: ASTKinds.time, A: $scope$A, B: $scope$B};
+                            $$res = {kind: ASTKinds.time, time_of_day: $scope$time_of_day, zone: $scope$zone};
                         }
                         return $$res;
                     });
@@ -6554,18 +6454,18 @@ export class Parser {
             () => {
                 return this.run<time_of_day>($$dpth,
                     () => {
-                        let $scope$A: Nullable<hour>;
+                        let $scope$hour: Nullable<hour>;
                         let $scope$B: Nullable<string>;
-                        let $scope$C: Nullable<minute>;
+                        let $scope$minute: Nullable<minute>;
                         let $scope$D: Nullable<Nullable<time_of_day_$0>>;
                         let $$res: Nullable<time_of_day> = null;
                         if (true
-                            && ($scope$A = this.matchhour($$dpth + 1, $$cr)) !== null
+                            && ($scope$hour = this.matchhour($$dpth + 1, $$cr)) !== null
                             && ($scope$B = this.regexAccept(String.raw`(?::)`, $$dpth + 1, $$cr)) !== null
-                            && ($scope$C = this.matchminute($$dpth + 1, $$cr)) !== null
+                            && ($scope$minute = this.matchminute($$dpth + 1, $$cr)) !== null
                             && (($scope$D = this.matchtime_of_day_$0($$dpth + 1, $$cr)) || true)
                         ) {
-                            $$res = {kind: ASTKinds.time_of_day, A: $scope$A, B: $scope$B, C: $scope$C, D: $scope$D};
+                            $$res = {kind: ASTKinds.time_of_day, hour: $scope$hour, B: $scope$B, minute: $scope$minute, D: $scope$D};
                         }
                         return $$res;
                     });
@@ -6579,13 +6479,13 @@ export class Parser {
                 return this.run<time_of_day_$0>($$dpth,
                     () => {
                         let $scope$E: Nullable<string>;
-                        let $scope$F: Nullable<second>;
+                        let $scope$second: Nullable<second>;
                         let $$res: Nullable<time_of_day_$0> = null;
                         if (true
                             && ($scope$E = this.regexAccept(String.raw`(?::)`, $$dpth + 1, $$cr)) !== null
-                            && ($scope$F = this.matchsecond($$dpth + 1, $$cr)) !== null
+                            && ($scope$second = this.matchsecond($$dpth + 1, $$cr)) !== null
                         ) {
-                            $$res = {kind: ASTKinds.time_of_day_$0, E: $scope$E, F: $scope$F};
+                            $$res = {kind: ASTKinds.time_of_day_$0, E: $scope$E, second: $scope$second};
                         }
                         return $$res;
                     });
@@ -6741,17 +6641,7 @@ export class Parser {
             });
     }
     public matchyear_2($$dpth: number, $$cr?: ErrorTracker): Nullable<year_2> {
-        return this.run<year_2>($$dpth,
-            () => {
-                let $scope$E: Nullable<obs_year>;
-                let $$res: Nullable<year_2> = null;
-                if (true
-                    && ($scope$E = this.matchobs_year($$dpth + 1, $$cr)) !== null
-                ) {
-                    $$res = {kind: ASTKinds.year_2, E: $scope$E};
-                }
-                return $$res;
-            });
+        return this.matchobs_year($$dpth + 1, $$cr);
     }
     public matchzone($$dpth: number, $$cr?: ErrorTracker): Nullable<zone> {
         return this.memoise(

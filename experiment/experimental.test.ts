@@ -8,6 +8,9 @@ let ast = parse(input).ast!
 let email = new Email(ast)
 
 describe('fields', () => {
+  test('orig_date', () => {
+    expect(email.orig_date).toEqual({ "day": "20", "dayOfWeek": "Tue", "hour": "20", "minute": "28", "month": "Jun", "second": "11", "year": "2023", "zone": "+0200" })
+  })
   test('to', () => {
     expect(email.to?.[0]).toEqual({ "email": "bob@example.com", "name": undefined })
     expect(email.to?.slice(1)).toEqual([{ "email": "alice@example.com", "name": "Alice" }])

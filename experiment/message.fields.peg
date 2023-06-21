@@ -29,9 +29,9 @@ ccontent := A=ctext | B=quoted_pair | C=comment
 comment := A='\(' B={ FWS? D=ccontent }* FWS? F='\)'
 comments := A='Comments' B=':' C=unstructured CRLF
 ctext := A='[\x21-\x27]' | B='[\x2a-\x5b]' | C='[\x5d-\x7e]' | D=obs_ctext
-date := A=day B=month C=year
-date_time := A={ B=day_of_week C=',' }? D=date E=time CFWS?
-day := FWS? B=DIGIT C=DIGIT? FWS | E=obs_day
+date := day=day month=month year=year
+date_time := A={ B=day_of_week ',' }? D=date E=time CFWS?
+day := FWS? B=DIGIT C=DIGIT? FWS | obs_day
 day_name := 'Mon' | 'Tue' | 'Wed' | 'Thu' | 'Fri' | 'Sat' | 'Sun'
 day_of_week := FWS? B=day_name | C=obs_day_of_week
 display_name := phrase
@@ -46,7 +46,7 @@ from := A='From' B=':' mailbox_list=mailbox_list CRLF
 ftext := '[\x21-\x39]' | '[\x3b-\x7e]'
 group := display_name=display_name B=':' group_list=group_list? D=';' CFWS?
 group_list := mailbox_list | CFWS | obs_group_list
-hour := A=TWO_DIGIT | B=obs_hour
+hour := TWO_DIGIT | obs_hour
 id_left := dot_atom_text | obs_id_left
 id_right := dot_atom_text | no_fold_literal | obs_id_right
 in_reply_to := A='In-Reply-To' B=':' C=msg_id+ CRLF
@@ -56,7 +56,7 @@ mailbox := name_addr | addr_spec
 mailbox_list := head=mailbox tail={ ',' mailbox=mailbox }* | obs_mbox_list
 message := fields={ fields | obs_fields } D={ CRLF F=body }?
 message_id := A='Message-ID' B=':' C=msg_id CRLF
-minute := A=TWO_DIGIT | B=obs_minute
+minute := TWO_DIGIT | obs_minute
 month := 'Jan' | 'Feb' | 'Mar' | 'Apr' | 'May' | 'Jun' | 'Jul' | 'Aug' | 'Sep' | 'Oct' | 'Nov' | 'Dec'
 msg_id := CFWS? B='<' C=id_left D='@' E=id_right '>' G=CFWS?
 name_addr := name=display_name? angle_addr=angle_addr
@@ -88,7 +88,7 @@ obs_mbox_list := { CFWS? ',' }* head=mailbox tail={ F=',' mailbox={ mailbox | I=
 obs_message_id := A='Message-ID' WSP* C=':' D=msg_id CRLF
 obs_minute := CFWS? B=TWO_DIGIT CFWS?
 obs_optional := A=field_name WSP* C=':' D=unstructured CRLF
-obs_orig_date := A='Date' WSP* C=':' D=date_time CRLF
+obs_orig_date := A='Date' WSP* ':' date_time=date_time CRLF
 obs_phrase := A=word B={ word | '.' | CFWS }
 obs_phrase_list := A={ phrase | CFWS } D={ E=',' F={ phrase | CFWS }? }*
 obs_qp := A='\\' B={ '\x00' | obs_NO_WS_CTL | LF | CR }
@@ -115,7 +115,7 @@ obs_utext := '\x00' | obs_NO_WS_CTL | VCHAR
 obs_year := A=CFWS? B=TWO_DIGIT C=DIGIT* CFWS?
 obs_zone := 'UT' | 'GMT' | 'EST' | 'EDT' | 'CST' | 'CDT' | 'MST' | 'MDT' | 'PST' | 'PDT' | '[\x41-\x49]' | '[\x4b-\x5a]' | '[\x61-\x69]' | '[\x6b-\x7a]'
 optional_field := A=field_name B=':' C=unstructured CRLF
-orig_date := A='Date' B=':' C=date_time CRLF
+orig_date := A='Date' ':' date_time=date_time CRLF
 path := A=angle_addr | CFWS? '<' CFWS '>' CFWS?
 phrase := word+ | obs_phrase
 qcontent := qtext | quoted_pair
@@ -134,16 +134,16 @@ resent_msg_id := A='Resent-Message_ID' B=':' C=msg_id CRLF
 resent_sender := A='Resent-Sender' B=':' C=mailbox CRLF
 resent_to := A='Resent-To' B=':' C=address_list CRLF
 return_path := A='Return-Path' B=':' C=path CRLF
-second := A=TWO_DIGIT | B=obs_second
+second := TWO_DIGIT | obs_second
 sender := A='Sender' B=':' mailbox=mailbox CRLF
 specials := '\(' | '\)' | '[<>]' | '\[' | '\]' | '[:;@]' | '\\' | ',' | '\.' | DQUOTE
 subject := _name='Subject' B=':' _value=unstructured CRLF
 text := '[\x01-\x09]' | '\x0B' | '\x0C' | '[\x0E-\x7f]'
-time := A=time_of_day B=zone
-time_of_day := A=hour B=':' C=minute D={ E=':' F=second }?
+time := time_of_day=time_of_day zone=zone
+time_of_day := hour=hour B=':' minute=minute D={ E=':' second=second }?
 to := A='To' B=':' address_list=address_list CRLF
 trace := A=return_path? B=received+
 unstructured := A={ B=FWS? C=VCHAR }* D=WSP* | E=obs_unstruct
 word := atom | quoted_string
-year := FWS B=FOUR_DIGIT C=DIGIT* FWS | E=obs_year
+year := FWS B=FOUR_DIGIT C=DIGIT* FWS | obs_year
 zone := FWS B={ '\+' | '\-' } E=FOUR_DIGIT | F=obs_zone

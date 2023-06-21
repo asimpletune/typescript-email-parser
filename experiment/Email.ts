@@ -1,4 +1,4 @@
-import { ASTNodeIntf, ASTKinds as K, addr_spec, address, address_list, address_list_1, angle_addr_1, bcc_$0, cc, fields, fields_$1, from, group, group_list, mailbox, mailbox_list, message, name_addr, obs_addr_list, obs_addr_list_$1, obs_addr_list_$1_$0, obs_angle_addr, obs_cc, obs_fields_$0, obs_from, obs_subject, obs_to, parse, subject, to } from './message.fields'
+import { ASTNodeIntf, ASTKinds as K, addr_spec, address, address_list, address_list_1, angle_addr_1, bcc_$0, cc, date_time, day_name, day_of_week, fields, fields_$1, from, group, group_list, hour, mailbox, mailbox_list, message, minute, name_addr, obs_addr_list, obs_addr_list_$1, obs_addr_list_$1_$0, obs_angle_addr, obs_cc, obs_fields_$0, obs_from, obs_subject, obs_to, parse, second, subject, to, year, zone } from './message.fields'
 import { ASTKinds } from './metagrammar.parser'
 import { concat } from './util'
 export class Email {
@@ -9,6 +9,7 @@ export class Email {
   bcc: NonemptyList<Address> | undefined
   sender: Mailbox
   reply_to: NonemptyList<Address>
+  orig_date: DateTime
 
   constructor(ast: message) {
     let fields = ast.fields
@@ -16,6 +17,7 @@ export class Email {
       case K.fields: {
         fields.L.forEach(f => {
           switch (f.kind) {
+            case K.orig_date: this.orig_date = new DateTime(f.date_time); break;
             case K.to: this.to = Util.fromAddressList(f.address_list); break;
             case K.from: this.from = Util.fromMailboxList(f.mailbox_list); break;
             case K.sender: this.sender = new Mailbox(f.mailbox); break;
@@ -31,6 +33,7 @@ export class Email {
       case K.obs_fields: {
         fields.A.forEach(f => {
           switch (f.kind) {
+            case K.obs_orig_date: this.orig_date = new DateTime(f.date_time); break;
             case K.obs_to: this.to = Util.fromAddressList(f.address_list); break;
             case K.obs_from: this.from = Util.fromMailboxList(f.mailbox_list); break;
             case K.obs_sender: this.sender = new Mailbox(f.mailbox); break;
@@ -57,7 +60,6 @@ interface HasKind {
 
 
 export class Util {
-
   static addressListOrUndefined(mbAddressList: address_list | ASTNodeIntf | null) {
     switch (mbAddressList?.kind) {
       case K.address_list_1: return this.fromAddressList(mbAddressList as address_list_1)
@@ -154,5 +156,75 @@ class Mailbox {
     let name = mb.name ? concat(mb.name).trim() : undefined
     // name_addr can be either angle_addr_1 or obs_angle_addr, but both have addr_spec
     return Mailbox.from_address_spec(mb.angle_addr.addr_spec, name)
+  }
+}
+
+type DayOfWeek = 'Mon' | 'Tue' | 'Wed' | 'Thu' | 'Fri' | 'Sat' | 'Sun'
+type DayOfMonth = '1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9' | '10' | '11' | '12' | '13' | '14' | '15' | '16' | '17' | '18' | '19' | '20' | '21' | '22' | '23' | '24' | '25' | '26' | '27' | '28' | '29' | '30' | '31'
+type Month = 'Jan' | 'Feb' | 'Mar' | 'Apr' | 'May' | 'Jun' | 'Jul' | 'Aug' | 'Sep' | 'Oct' | 'Nov' | 'Dec'
+
+class DateTime {
+  year: string
+  month: Month
+  day: DayOfMonth
+  dayOfWeek?: DayOfWeek
+  hour: string
+  minute: string
+  second: string | undefined
+  zone: string
+
+  constructor(dt: date_time) {
+    this.dayOfWeek = dt.A?.B ? DateTime.dayOfWeek(dt.A?.B) as DayOfWeek : undefined
+    this.day = dt.D.day.B + (dt.D.day.C || '') as DayOfMonth
+    this.month = dt.D.month as Month
+    this.year = DateTime.year(dt.D.year)
+    this.hour = DateTime.hour(dt.E.time_of_day.hour)
+    this.minute = DateTime.minute(dt.E.time_of_day.minute)
+    this.second = DateTime.second(dt.E.time_of_day.D?.second)
+    this.zone = DateTime.zone(dt.E.zone)
+  }
+  static dayOfWeek(d: day_of_week) {
+    switch (d.kind) {
+      case K.day_of_week_1: return d.B
+      case K.day_of_week_2: return d.C.B
+      default: { const exhaustive: never = d; throw new Error(exhaustive) }
+    }
+  }
+
+  static year(y: year) {
+    switch (y.kind) {
+      case K.year_1: return y.B + y.C
+      case K.obs_year: return y.B + y.C
+      default: { const exhaustive: never = y; throw new Error(exhaustive) }
+    }
+  }
+  static hour(h: hour): string {
+    return typeof h === 'string' ? h : h.B
+  }
+  static minute(m: minute): string {
+    return typeof m === 'string' ? m : m.B
+  }
+  static second(s: second | undefined): string | undefined {
+    return s ? (typeof s === 'string' ? s : s.B) : undefined
+  }
+  static zone(z: zone) {
+    switch (z.kind) {
+      case K.zone_1: return z.B + z.E
+      case K.zone_2: {
+        switch (z.F) {
+          case 'UT': return '+0000'
+          case 'GMT': return '+0000'
+          case 'EDT': return '+0400'
+          case 'EST': return '+0500'
+          case 'CDT': return '+0500'
+          case 'CST': return '+0600'
+          case 'MDT': return '+0600'
+          case 'MST': return '+0700'
+          case 'PDT': return '+0700'
+          case 'PST': return '+0800'
+          default: return '-0000'
+        }
+      }
+    }
   }
 }
