@@ -1,4 +1,4 @@
-import { ASTNodeIntf, ASTKinds as K, addr_spec, address, address_list, address_list_1, date_time, day_of_week, group, hour, mailbox, mailbox_list, message, minute, name_addr, obs_addr_list, second, year, zone } from './message.fields'
+import { ASTNodeIntf, ASTKinds as K, addr_spec, address, address_list, address_list_1, date_time, day_of_week, fields, group, hour, mailbox, mailbox_list, message, minute, name_addr, obs_addr_list, obs_fields, second, year, zone } from './message.fields'
 import { concat } from './util'
 export class Email {
   to: NonemptyList<Address> | undefined
@@ -7,7 +7,7 @@ export class Email {
   cc: NonemptyList<Address> | undefined
   bcc: NonemptyList<Address> | undefined
   sender: Mailbox | undefined
-  reply_to: NonemptyList<Address>
+  reply_to: NonemptyList<Address> | undefined
   orig_date: DateTime
   message_id: string | undefined
   in_reply_to: NonemptyList<string> | undefined
@@ -29,57 +29,8 @@ export class Email {
   constructor(ast: message) {
     let fields = ast.fields
     switch (fields.kind) {
-      case K.fields: {
-        fields.L.forEach(f => {
-          switch (f.kind) {
-            case K.orig_date: this.orig_date = new DateTime(f.date_time); break;
-            case K.from: this.from = Util.fromMailboxList(f.mailbox_list); break;
-            case K.sender: this.sender = new Mailbox(f.mailbox); break;
-            case K.reply_to: this.reply_to = Util.fromAddressList(f.address_list); break;
-            case K.to: this.to = Util.fromAddressList(f.address_list); break;
-            case K.cc: this.cc = Util.fromAddressList(f.address_list); break;
-            case K.bcc: this.bcc = Util.addressListOrUndefined(f.address_list); break;
-            case K.message_id: this.message_id = concat(f.msg_id).trim(); break;
-            case K.in_reply_to: this.in_reply_to = f.msg_id.map(m => concat(m).trim()) as NonemptyList<string>; break;
-            case K.references: this.references = f.msg_id.map(m => concat(m).trim()) as NonemptyList<string>; break;
-            case K.subject: this.subject = concat(f.body).trim(); break;
-            case K.comments: this.comments = [...this.comments || [], concat(f.C).trim()]; break;
-            case K.keywords: this.keywords = [...this.keywords || [], [concat(f.head).trim(), ...f.tail.map(k => concat(k.keyword).trim())]]; break;
-            case K.optional_field: {
-              this.optional_fields = [...this.optional_fields || []
-                , { name: concat(f.name), body: concat(f.body).trim() }]
-              break
-            }
-            default: { const exhaustive: never = f; throw new Error(exhaustive) }
-          }
-        })
-        break
-      }
-      case K.obs_fields: {
-        fields.A.forEach(f => {
-          switch (f.kind) {
-            case K.obs_orig_date: this.orig_date = new DateTime(f.date_time); break;
-            case K.obs_from: this.from = Util.fromMailboxList(f.mailbox_list); break;
-            case K.obs_sender: this.sender = new Mailbox(f.mailbox); break;
-            case K.obs_reply_to: this.reply_to = Util.fromAddressList(f.address_list); break;
-            case K.obs_to: this.to = Util.fromAddressList(f.address_list); break;
-            case K.obs_cc: this.cc = Util.fromAddressList(f.address_list); break;
-            case K.obs_bcc: this.bcc = Util.addressListOrUndefined(f.address_list); break;
-            case K.obs_message_id: this.message_id = concat(f.msg_id).trim(); break;
-            case K.obs_in_reply_to: this.in_reply_to = f.D.map(m => concat(m).trim()) as NonemptyList<string>; break;
-            case K.obs_references: this.in_reply_to = f.D.map(m => concat(m).trim()) as NonemptyList<string>; break;
-            case K.obs_subject: this.subject = concat(f.body).trim(); break;
-            case K.obs_comments: this.comments = [...this.comments || [], concat(f.D).trim()]; break;
-            case K.obs_keywords: {
-              this.keywords = [...this.keywords || [], [concat(f.keywords.head).trim(),
-              ...f.keywords.tail.map(el => concat(el.F).trim())].filter(keyword => keyword !== '')]
-              break
-            }
-            default: break; // TODO
-          }
-        })
-        break;
-      }
+      case K.fields: return { ...Util.nontraceFields(fields) }
+      case K.obs_fields: return { ...Util.obsoleteFields(fields) }
       default: { const exhaustive: never = fields; throw new Error(exhaustive) }
     }
   }
@@ -92,8 +43,79 @@ interface HasKind {
   kind: string
 }
 
+interface NontraceFields {
+  to: NonemptyList<Address> | undefined
+  subject: string | undefined
+  from: NonemptyList<Mailbox>
+  cc: NonemptyList<Address> | undefined
+  bcc: NonemptyList<Address> | undefined
+  sender: Mailbox | undefined
+  reply_to: NonemptyList<Address> | undefined
+  orig_date: DateTime
+  message_id: string | undefined
+  in_reply_to: NonemptyList<string> | undefined
+  references: NonemptyList<string> | undefined
+  comments: string[] | undefined
+  keywords: string[][] | undefined
+  optional_fields: { name: string, body: string }[]
+}
 
 export class Util {
+
+  static obsoleteFields(fields: obs_fields): NontraceFields {
+    let result = {} as NontraceFields
+    fields.A.forEach(f => {
+      switch (f.kind) {
+        case K.obs_orig_date: result.orig_date = new DateTime(f.date_time); break;
+        case K.obs_from: result.from = Util.fromMailboxList(f.mailbox_list); break;
+        case K.obs_sender: result.sender = new Mailbox(f.mailbox); break;
+        case K.obs_reply_to: result.reply_to = Util.fromAddressList(f.address_list); break;
+        case K.obs_to: result.to = Util.fromAddressList(f.address_list); break;
+        case K.obs_cc: result.cc = Util.fromAddressList(f.address_list); break;
+        case K.obs_bcc: result.bcc = Util.addressListOrUndefined(f.address_list); break;
+        case K.obs_message_id: result.message_id = concat(f.msg_id).trim(); break;
+        case K.obs_in_reply_to: result.in_reply_to = f.D.map(m => concat(m).trim()) as NonemptyList<string>; break;
+        case K.obs_references: result.in_reply_to = f.D.map(m => concat(m).trim()) as NonemptyList<string>; break;
+        case K.obs_subject: result.subject = concat(f.body).trim(); break;
+        case K.obs_comments: result.comments = [...result.comments || [], concat(f.D).trim()]; break;
+        case K.obs_keywords: {
+          result.keywords = [...result.keywords || [], [concat(f.keywords.head).trim(),
+          ...f.keywords.tail.map(el => concat(el.F).trim())].filter(keyword => keyword !== '')]
+          break
+        }
+        default: break; // TODO, finish all the exhaustive fields, and then make the default do exhaustive check
+      }
+    })
+    return result
+  }
+
+  static nontraceFields(fields: fields): NontraceFields {
+    let result = {} as NontraceFields
+    fields.L.forEach(f => {
+      switch (f.kind) {
+        case K.orig_date: result.orig_date = new DateTime(f.date_time); break;
+        case K.from: result.from = Util.fromMailboxList(f.mailbox_list); break;
+        case K.sender: result.sender = new Mailbox(f.mailbox); break;
+        case K.reply_to: result.reply_to = Util.fromAddressList(f.address_list); break;
+        case K.to: result.to = Util.fromAddressList(f.address_list); break;
+        case K.cc: result.cc = Util.fromAddressList(f.address_list); break;
+        case K.bcc: result.bcc = Util.addressListOrUndefined(f.address_list); break;
+        case K.message_id: result.message_id = concat(f.msg_id).trim(); break;
+        case K.in_reply_to: result.in_reply_to = f.msg_id.map(m => concat(m).trim()) as NonemptyList<string>; break;
+        case K.references: result.references = f.msg_id.map(m => concat(m).trim()) as NonemptyList<string>; break;
+        case K.subject: result.subject = concat(f.body).trim(); break;
+        case K.comments: result.comments = [...result.comments || [], concat(f.C).trim()]; break;
+        case K.keywords: result.keywords = [...result.keywords || [], [concat(f.head).trim(), ...f.tail.map(k => concat(k.keyword).trim())]]; break;
+        case K.optional_field: {
+          result.optional_fields = [...result.optional_fields || []
+            , { name: concat(f.name), body: concat(f.body).trim() }]
+          break
+        }
+        default: { const exhaustive: never = f; throw new Error(exhaustive) }
+      }
+    })
+    return result
+  }
   static addressListOrUndefined(mbAddressList: address_list | ASTNodeIntf | null) {
     switch (mbAddressList?.kind) {
       case K.address_list_1: return this.fromAddressList(mbAddressList as address_list_1)
