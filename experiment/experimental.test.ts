@@ -41,8 +41,30 @@ describe('fields', () => {
     expect(reply.references).toEqual(["FE97A840-9401-4B26-902E-61EB5D6CD285@example.com"])
   })
   test('subject', () => { expect(email.subject).toBe("This is a test email") })
-  test('comments', () => { expect(email.comments).toBe("This features is not used a whole lot") })
-  test('keywords', () => { expect(email.keywords).toEqual(["tests", "emails", "open source", "example"]) })
+  test('comments', () => {
+    expect(email.comments)
+      .toEqual(["This feature is not used a whole lot", "But it's still good to test it"])
+  })
+  test('keywords', () => { expect(email.keywords).toEqual([["tests", "emails"], ["open source", "example"]]) })
+  test('optional_fields', () => {
+    expect(email.optional_fields).toEqual([{
+      name: "Content-Type", body: `multipart/alternative;\r\n\tboundary="Apple-Mail=_34F098F6-D5B7-4B8B-8443-7EC0348A5A0E"`
+    },
+    { name: "Mime-Version", body: "1.0 (Mac OS X Mail 16.0 \\(3731.500.231\\))" },
+    { name: "X-Universally-Unique-Identifier", body: "933A3A26-A86B-4D3C-B393-2C260D5BC557" },
+    {
+      name: "DKIM-Signature", body: 'v=1; a=rsa-sha256; c=relaxed/relaxed; d=icloud.com;\r\n' +
+        '\ts=1a1hai; t=1687344318;\r\n' +
+        '\tbh=5wGqZpy6dZ0+lmq9+LJ9zZRkTbQ9XKci2Y5LbCPvIhQ=;\r\n' +
+        '\th=Date:from:to:Subject:MIME-Version:Content-Type:Message-Id;\r\n' +
+        '\tb=zBp8hCrzROGEH70XFjVzSyls/HERnOfjYcBlAD3w3/bzJ5m+ZksUuu/zEq4C1Shxq\r\n' +
+        '\t nCC1ccruN/t6Kb5vPK+Wc+mnlPtBN2TFyI4ij1z7TMSDSwPWFTLb05AUtIp3q8c2z3\r\n' +
+        '\t mRIR0OsuEZTT3eJrHzc54Vw0yH9sw2BxXxLMbc4fHihWRmfhIOvUBJ8svY9q7+v8+i\r\n' +
+        '\t QZnX2meUC/Xs5rlfQxTy9X+lXlBfS7JLD3lSWF4fQz1kgrJ7SRgFb5FwFpkHg+SZfE\r\n' +
+        '\t R1ecxrUpj8un+Z21qDGYn01N91qQbW/GjLpTHrsyG8uoDQPByg5nr3kfzqRnqOkYae\r\n' +
+        '\t OhP85bABfn+7g=='
+    }])
+  })
 })
 
 describe('obsolete fields', () => {

@@ -108,13 +108,13 @@ obs_return := A='Return-Path' WSP* C=':' D=path CRLF
 obs_route := obs_domain_list B=':'
 obs_second := CFWS? B=TWO_DIGIT CFWS?
 obs_sender := A='Sender' WSP* ':' mailbox=mailbox CRLF
-obs_subject := _name='Subject' WSP* C=':' _value=unstructured CRLF
+obs_subject := name='Subject' WSP* C=':' body=unstructured CRLF
 obs_to := A='To' WSP* C=':' address_list=address_list CRLF
 obs_unstruct := A={ B={ LF* CR* E={ F=obs_utext LF* CR* }* } | FWS }*
 obs_utext := '\x00' | obs_NO_WS_CTL | VCHAR
 obs_year := A=CFWS? B=TWO_DIGIT C=DIGIT* CFWS?
 obs_zone := 'UT' | 'GMT' | 'EST' | 'EDT' | 'CST' | 'CDT' | 'MST' | 'MDT' | 'PST' | 'PDT' | '[\x41-\x49]' | '[\x4b-\x5a]' | '[\x61-\x69]' | '[\x6b-\x7a]'
-optional_field := A=field_name B=':' C=unstructured CRLF
+optional_field := name=field_name ':' body=unstructured CRLF
 orig_date := A='Date' ':' date_time=date_time CRLF
 path := A=angle_addr | CFWS? '<' CFWS '>' CFWS?
 phrase := word+ | obs_phrase
@@ -130,14 +130,14 @@ resent_bcc := A='Resent-Bcc' B=':' C={ D=address_list | CFWS }? CRLF
 resent_cc := A='Resent-Cc' B=':' C=address_list CRLF
 resent_date := A='Resent-Date' B=':' C=date_time CRLF
 resent_from := A='Resent-From' B=':' C=mailbox_list CRLF
-resent_msg_id := A='Resent-Message_ID' B=':' C=msg_id CRLF
+resent_msg_id := A='Resent-Message-ID' B=':' C=msg_id CRLF
 resent_sender := A='Resent-Sender' B=':' C=mailbox CRLF
 resent_to := A='Resent-To' B=':' C=address_list CRLF
 return_path := A='Return-Path' B=':' C=path CRLF
 second := TWO_DIGIT | obs_second
 sender := A='Sender' B=':' mailbox=mailbox CRLF
 specials := '\(' | '\)' | '[<>]' | '\[' | '\]' | '[:;@]' | '\\' | ',' | '\.' | DQUOTE
-subject := _name='Subject' B=':' _value=unstructured CRLF
+subject := name='Subject' B=':' body=unstructured CRLF
 text := '[\x01-\x09]' | '\x0B' | '\x0C' | '[\x0E-\x7f]'
 time := time_of_day=time_of_day zone=zone
 time_of_day := hour=hour B=':' minute=minute D={ E=':' second=second }?

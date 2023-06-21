@@ -110,13 +110,13 @@
 * obs_route := obs_domain_list B=':'
 * obs_second := CFWS? B=TWO_DIGIT CFWS?
 * obs_sender := A='Sender' WSP* ':' mailbox=mailbox CRLF
-* obs_subject := _name='Subject' WSP* C=':' _value=unstructured CRLF
+* obs_subject := name='Subject' WSP* C=':' body=unstructured CRLF
 * obs_to := A='To' WSP* C=':' address_list=address_list CRLF
 * obs_unstruct := A={ B={ LF* CR* E={ F=obs_utext LF* CR* }* } | FWS }*
 * obs_utext := '\x00' | obs_NO_WS_CTL | VCHAR
 * obs_year := A=CFWS? B=TWO_DIGIT C=DIGIT* CFWS?
 * obs_zone := 'UT' | 'GMT' | 'EST' | 'EDT' | 'CST' | 'CDT' | 'MST' | 'MDT' | 'PST' | 'PDT' | '[\x41-\x49]' | '[\x4b-\x5a]' | '[\x61-\x69]' | '[\x6b-\x7a]'
-* optional_field := A=field_name B=':' C=unstructured CRLF
+* optional_field := name=field_name ':' body=unstructured CRLF
 * orig_date := A='Date' ':' date_time=date_time CRLF
 * path := A=angle_addr | CFWS? '<' CFWS '>' CFWS?
 * phrase := word+ | obs_phrase
@@ -132,14 +132,14 @@
 * resent_cc := A='Resent-Cc' B=':' C=address_list CRLF
 * resent_date := A='Resent-Date' B=':' C=date_time CRLF
 * resent_from := A='Resent-From' B=':' C=mailbox_list CRLF
-* resent_msg_id := A='Resent-Message_ID' B=':' C=msg_id CRLF
+* resent_msg_id := A='Resent-Message-ID' B=':' C=msg_id CRLF
 * resent_sender := A='Resent-Sender' B=':' C=mailbox CRLF
 * resent_to := A='Resent-To' B=':' C=address_list CRLF
 * return_path := A='Return-Path' B=':' C=path CRLF
 * second := TWO_DIGIT | obs_second
 * sender := A='Sender' B=':' mailbox=mailbox CRLF
 * specials := '\(' | '\)' | '[<>]' | '\[' | '\]' | '[:;@]' | '\\' | ',' | '\.' | DQUOTE
-* subject := _name='Subject' B=':' _value=unstructured CRLF
+* subject := name='Subject' B=':' body=unstructured CRLF
 * text := '[\x01-\x09]' | '\x0B' | '\x0C' | '[\x0E-\x7f]'
 * time := time_of_day=time_of_day zone=zone
 * time_of_day := hour=hour B=':' minute=minute D={ E=':' second=second }?
@@ -1303,9 +1303,9 @@ export interface obs_sender {
 }
 export interface obs_subject {
     kind: ASTKinds.obs_subject;
-    _name: string;
+    name: string;
     C: string;
-    _value: unstructured;
+    body: unstructured;
 }
 export interface obs_to {
     kind: ASTKinds.obs_to;
@@ -1358,9 +1358,8 @@ export type obs_zone_13 = string;
 export type obs_zone_14 = string;
 export interface optional_field {
     kind: ASTKinds.optional_field;
-    A: field_name;
-    B: string;
-    C: unstructured;
+    name: field_name;
+    body: unstructured;
 }
 export interface orig_date {
     kind: ASTKinds.orig_date;
@@ -1515,9 +1514,9 @@ export type specials_9 = string;
 export type specials_10 = DQUOTE;
 export interface subject {
     kind: ASTKinds.subject;
-    _name: string;
+    name: string;
     B: string;
-    _value: unstructured;
+    body: unstructured;
 }
 export type text = text_1 | text_2 | text_3 | text_4;
 export type text_1 = string;
@@ -5459,18 +5458,18 @@ export class Parser {
             () => {
                 return this.run<obs_subject>($$dpth,
                     () => {
-                        let $scope$_name: Nullable<string>;
+                        let $scope$name: Nullable<string>;
                         let $scope$C: Nullable<string>;
-                        let $scope$_value: Nullable<unstructured>;
+                        let $scope$body: Nullable<unstructured>;
                         let $$res: Nullable<obs_subject> = null;
                         if (true
-                            && ($scope$_name = this.regexAccept(String.raw`(?:Subject)`, $$dpth + 1, $$cr)) !== null
+                            && ($scope$name = this.regexAccept(String.raw`(?:Subject)`, $$dpth + 1, $$cr)) !== null
                             && this.loop<WSP>(() => this.matchWSP($$dpth + 1, $$cr), true) !== null
                             && ($scope$C = this.regexAccept(String.raw`(?::)`, $$dpth + 1, $$cr)) !== null
-                            && ($scope$_value = this.matchunstructured($$dpth + 1, $$cr)) !== null
+                            && ($scope$body = this.matchunstructured($$dpth + 1, $$cr)) !== null
                             && this.matchCRLF($$dpth + 1, $$cr) !== null
                         ) {
-                            $$res = {kind: ASTKinds.obs_subject, _name: $scope$_name, C: $scope$C, _value: $scope$_value};
+                            $$res = {kind: ASTKinds.obs_subject, name: $scope$name, C: $scope$C, body: $scope$body};
                         }
                         return $$res;
                     });
@@ -5701,17 +5700,16 @@ export class Parser {
             () => {
                 return this.run<optional_field>($$dpth,
                     () => {
-                        let $scope$A: Nullable<field_name>;
-                        let $scope$B: Nullable<string>;
-                        let $scope$C: Nullable<unstructured>;
+                        let $scope$name: Nullable<field_name>;
+                        let $scope$body: Nullable<unstructured>;
                         let $$res: Nullable<optional_field> = null;
                         if (true
-                            && ($scope$A = this.matchfield_name($$dpth + 1, $$cr)) !== null
-                            && ($scope$B = this.regexAccept(String.raw`(?::)`, $$dpth + 1, $$cr)) !== null
-                            && ($scope$C = this.matchunstructured($$dpth + 1, $$cr)) !== null
+                            && ($scope$name = this.matchfield_name($$dpth + 1, $$cr)) !== null
+                            && this.regexAccept(String.raw`(?::)`, $$dpth + 1, $$cr) !== null
+                            && ($scope$body = this.matchunstructured($$dpth + 1, $$cr)) !== null
                             && this.matchCRLF($$dpth + 1, $$cr) !== null
                         ) {
-                            $$res = {kind: ASTKinds.optional_field, A: $scope$A, B: $scope$B, C: $scope$C};
+                            $$res = {kind: ASTKinds.optional_field, name: $scope$name, body: $scope$body};
                         }
                         return $$res;
                     });
@@ -6186,7 +6184,7 @@ export class Parser {
                         let $scope$C: Nullable<msg_id>;
                         let $$res: Nullable<resent_msg_id> = null;
                         if (true
-                            && ($scope$A = this.regexAccept(String.raw`(?:Resent-Message_ID)`, $$dpth + 1, $$cr)) !== null
+                            && ($scope$A = this.regexAccept(String.raw`(?:Resent-Message-ID)`, $$dpth + 1, $$cr)) !== null
                             && ($scope$B = this.regexAccept(String.raw`(?::)`, $$dpth + 1, $$cr)) !== null
                             && ($scope$C = this.matchmsg_id($$dpth + 1, $$cr)) !== null
                             && this.matchCRLF($$dpth + 1, $$cr) !== null
@@ -6362,17 +6360,17 @@ export class Parser {
             () => {
                 return this.run<subject>($$dpth,
                     () => {
-                        let $scope$_name: Nullable<string>;
+                        let $scope$name: Nullable<string>;
                         let $scope$B: Nullable<string>;
-                        let $scope$_value: Nullable<unstructured>;
+                        let $scope$body: Nullable<unstructured>;
                         let $$res: Nullable<subject> = null;
                         if (true
-                            && ($scope$_name = this.regexAccept(String.raw`(?:Subject)`, $$dpth + 1, $$cr)) !== null
+                            && ($scope$name = this.regexAccept(String.raw`(?:Subject)`, $$dpth + 1, $$cr)) !== null
                             && ($scope$B = this.regexAccept(String.raw`(?::)`, $$dpth + 1, $$cr)) !== null
-                            && ($scope$_value = this.matchunstructured($$dpth + 1, $$cr)) !== null
+                            && ($scope$body = this.matchunstructured($$dpth + 1, $$cr)) !== null
                             && this.matchCRLF($$dpth + 1, $$cr) !== null
                         ) {
-                            $$res = {kind: ASTKinds.subject, _name: $scope$_name, B: $scope$B, _value: $scope$_value};
+                            $$res = {kind: ASTKinds.subject, name: $scope$name, B: $scope$B, body: $scope$body};
                         }
                         return $$res;
                     });

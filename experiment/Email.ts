@@ -6,14 +6,25 @@ export class Email {
   from: NonemptyList<Mailbox>
   cc: NonemptyList<Address> | undefined
   bcc: NonemptyList<Address> | undefined
-  sender: Mailbox
+  sender: Mailbox | undefined
   reply_to: NonemptyList<Address>
   orig_date: DateTime
   message_id: string | undefined
   in_reply_to: NonemptyList<string> | undefined
   references: NonemptyList<string> | undefined
-  comments: string | undefined
-  keywords: string[] | undefined
+  comments: string[] | undefined
+  keywords: string[][] | undefined
+  optional_fields: { name: string, body: string }[]
+  //  TODO:
+  // resent: {
+  //   date: DateTime | undefined
+  //   from: NonemptyList<Mailbox>
+  //   sender: Mailbox | undefined
+  //   to: NonemptyList<Address> | undefined
+  //   cc: NonemptyList<Address> | undefined
+  //   bcc: NonemptyList<Address> | undefined
+  //   msg_id: string | undefined
+  // }
 
   constructor(ast: message) {
     let fields = ast.fields
@@ -31,13 +42,18 @@ export class Email {
             case K.message_id: this.message_id = concat(f.msg_id).trim(); break;
             case K.in_reply_to: this.in_reply_to = f.msg_id.map(m => concat(m).trim()) as NonemptyList<string>; break;
             case K.references: this.references = f.msg_id.map(m => concat(m).trim()) as NonemptyList<string>; break;
-            case K.subject: this.subject = concat(f._value).trim(); break;
-            case K.comments: this.comments = concat(f.C).trim(); break;
-            case K.keywords: this.keywords = [concat(f.head).trim(), ...f.tail.map(k => concat(k.keyword).trim())]
-            default: break; // TODO
+            case K.subject: this.subject = concat(f.body).trim(); break;
+            case K.comments: this.comments = [...this.comments || [], concat(f.C).trim()]; break;
+            case K.keywords: this.keywords = [...this.keywords || [], [concat(f.head).trim(), ...f.tail.map(k => concat(k.keyword).trim())]]; break;
+            case K.optional_field: {
+              this.optional_fields = [...this.optional_fields || []
+                , { name: concat(f.name), body: concat(f.body).trim() }]
+              break
+            }
+            default: { const exhaustive: never = f; throw new Error(exhaustive) }
           }
         })
-        break;
+        break
       }
       case K.obs_fields: {
         fields.A.forEach(f => {
@@ -52,9 +68,13 @@ export class Email {
             case K.obs_message_id: this.message_id = concat(f.msg_id).trim(); break;
             case K.obs_in_reply_to: this.in_reply_to = f.D.map(m => concat(m).trim()) as NonemptyList<string>; break;
             case K.obs_references: this.in_reply_to = f.D.map(m => concat(m).trim()) as NonemptyList<string>; break;
-            case K.obs_subject: this.subject = concat(f._value).trim(); break;
-            case K.obs_comments: this.comments = concat(f.D).trim(); break;
-            case K.obs_keywords: this.keywords = [concat(f.keywords.head).trim(), ...f.keywords.tail.map(el => concat(el.F).trim())].filter(keyword => keyword !== '')
+            case K.obs_subject: this.subject = concat(f.body).trim(); break;
+            case K.obs_comments: this.comments = [...this.comments || [], concat(f.D).trim()]; break;
+            case K.obs_keywords: {
+              this.keywords = [...this.keywords || [], [concat(f.keywords.head).trim(),
+              ...f.keywords.tail.map(el => concat(el.F).trim())].filter(keyword => keyword !== '')]
+              break
+            }
             default: break; // TODO
           }
         })

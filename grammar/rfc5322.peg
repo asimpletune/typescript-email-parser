@@ -148,7 +148,7 @@ resent_sender   :=    'Resent-Sender' ':' mailbox CRLF
 resent_to       :=    'Resent-To' ':' address_list CRLF
 resent_cc       :=    'Resent-Cc' ':' address_list CRLF
 resent_bcc      :=    'Resent-Bcc' ':' {address_list | CFWS }? CRLF
-resent_msg_id   :=    'Resent-Message_ID' ':' msg_id CRLF
+resent_msg_id   :=    'Resent-Message-ID' ':' msg_id CRLF
 
 // § 3.6.7 Trace Fields
 // See: https://datatracker.ietf.org/doc/html/rfc5322#section-3.6.7
