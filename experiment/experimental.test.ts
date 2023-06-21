@@ -11,24 +11,27 @@ describe('fields', () => {
   test('orig_date', () => {
     expect(email.orig_date).toEqual({ "day": "20", "dayOfWeek": "Tue", "hour": "20", "minute": "28", "month": "Jun", "second": "11", "year": "2023", "zone": "+0200" })
   })
-  test('to', () => {
-    expect(email.to?.[0]).toEqual({ "email": "bob@example.com", "name": undefined })
-    expect(email.to?.slice(1)).toEqual([{ "email": "alice@example.com", "name": "Alice" }])
-  })
   test('from', () => {
     expect(email.from).toEqual([{ "email": "test@example.com", "name": undefined }])
   })
   test('sender', () => {
-    expect(email.sender).toEqual({ "email": "Savannah@example.com", "name": "Savannah Secretary" })
+    expect(email.sender).toEqual({ "email": "savannah@example.com", "name": "Savannah Secretary" })
   })
   test('reply_to', () => {
     expect(email.reply_to).toEqual([{ "email": "olivia@example.com", "name": "olivia" }])
+  })
+  test('to', () => {
+    expect(email.to?.[0]).toEqual({ "email": "bob@example.com", "name": undefined })
+    expect(email.to?.slice(1)).toEqual([{ "email": "alice@example.com", "name": "Alice" }])
   })
   test('cc', () => {
     expect(email.cc).toEqual([{ "email": "carol@example.com", "name": "carol" }])
   })
   test('bcc', () => {
     expect(email.bcc).toEqual([{ "email": "eve@example.com", "name": "Eve" }])
+  })
+  test('message_id', () => {
+    expect(email.message_id).toEqual("FE97A840-9401-4B26-902E-61EB5D6CD285@example.com")
   })
   test('subject', () => { expect(email.subject).toBe("This is a test email") })
 })

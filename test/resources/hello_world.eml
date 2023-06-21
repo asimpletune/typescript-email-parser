@@ -10,8 +10,8 @@ X-Universally-Unique-Identifier: 933A3A26-A86B-4D3C-B393-2C260D5BC557
 Cc: carol <carol@example.com>
 To: bob@example.com,
  Alice <alice@example.com>
-Message-Id: <FE97A840-9401-4B26-902E-61EB5D6CD285@spenc.es>
-Sender: Savannah Secretary <Savannah@example.com>
+Message-Id: <FE97A840-9401-4B26-902E-61EB5D6CD285@example.com>
+Sender: Savannah Secretary <savannah@example.com>
 
 
 --Apple-Mail=_34F098F6-D5B7-4B8B-8443-7EC0348A5A0E

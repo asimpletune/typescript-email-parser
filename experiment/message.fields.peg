@@ -55,10 +55,10 @@ local_part := dot_atom | quoted_string | obs_local_part
 mailbox := name_addr | addr_spec
 mailbox_list := head=mailbox tail={ ',' mailbox=mailbox }* | obs_mbox_list
 message := fields={ fields | obs_fields } D={ CRLF F=body }?
-message_id := A='Message-ID' B=':' C=msg_id CRLF
+message_id := A='Message-ID' ':' msg_id=msg_id CRLF
 minute := TWO_DIGIT | obs_minute
 month := 'Jan' | 'Feb' | 'Mar' | 'Apr' | 'May' | 'Jun' | 'Jul' | 'Aug' | 'Sep' | 'Oct' | 'Nov' | 'Dec'
-msg_id := CFWS? B='<' C=id_left D='@' E=id_right '>' G=CFWS?
+msg_id := CFWS? '<' A_id_left=id_left B_at='@' C_id_right=id_right '>' CFWS?
 name_addr := name=display_name? angle_addr=angle_addr
 no_fold_literal := A='\[' B=dtext* C='\]'
 obs_FWS := A=WSP+ { CRLF WSP+ }*
@@ -85,7 +85,7 @@ obs_in_reply_to := A='In-Reply-To' WSP* C=':' D={ phrase | msg_id }* CRLF
 obs_keywords := A='Keywords' WSP* C=':' D=obs_phrase_list CRLF
 obs_local_part := A=word B={ C='\.' D=word }*
 obs_mbox_list := { CFWS? ',' }* head=mailbox tail={ F=',' mailbox={ mailbox | I=CFWS }? }*
-obs_message_id := A='Message-ID' WSP* C=':' D=msg_id CRLF
+obs_message_id := A='Message-ID' WSP* ':' msg_id=msg_id CRLF
 obs_minute := CFWS? B=TWO_DIGIT CFWS?
 obs_optional := A=field_name WSP* C=':' D=unstructured CRLF
 obs_orig_date := A='Date' WSP* ':' date_time=date_time CRLF

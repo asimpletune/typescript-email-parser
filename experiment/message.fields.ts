@@ -57,10 +57,10 @@
 * mailbox := name_addr | addr_spec
 * mailbox_list := head=mailbox tail={ ',' mailbox=mailbox }* | obs_mbox_list
 * message := fields={ fields | obs_fields } D={ CRLF F=body }?
-* message_id := A='Message-ID' B=':' C=msg_id CRLF
+* message_id := A='Message-ID' ':' msg_id=msg_id CRLF
 * minute := TWO_DIGIT | obs_minute
 * month := 'Jan' | 'Feb' | 'Mar' | 'Apr' | 'May' | 'Jun' | 'Jul' | 'Aug' | 'Sep' | 'Oct' | 'Nov' | 'Dec'
-* msg_id := CFWS? B='<' C=id_left D='@' E=id_right '>' G=CFWS?
+* msg_id := CFWS? '<' A_id_left=id_left B_at='@' C_id_right=id_right '>' CFWS?
 * name_addr := name=display_name? angle_addr=angle_addr
 * no_fold_literal := A='\[' B=dtext* C='\]'
 * obs_FWS := A=WSP+ { CRLF WSP+ }*
@@ -87,7 +87,7 @@
 * obs_keywords := A='Keywords' WSP* C=':' D=obs_phrase_list CRLF
 * obs_local_part := A=word B={ C='\.' D=word }*
 * obs_mbox_list := { CFWS? ',' }* head=mailbox tail={ F=',' mailbox={ mailbox | I=CFWS }? }*
-* obs_message_id := A='Message-ID' WSP* C=':' D=msg_id CRLF
+* obs_message_id := A='Message-ID' WSP* ':' msg_id=msg_id CRLF
 * obs_minute := CFWS? B=TWO_DIGIT CFWS?
 * obs_optional := A=field_name WSP* C=':' D=unstructured CRLF
 * obs_orig_date := A='Date' WSP* ':' date_time=date_time CRLF
@@ -870,8 +870,7 @@ export interface message_$1 {
 export interface message_id {
     kind: ASTKinds.message_id;
     A: string;
-    B: string;
-    C: msg_id;
+    msg_id: msg_id;
 }
 export type minute = minute_1 | minute_2;
 export type minute_1 = TWO_DIGIT;
@@ -891,11 +890,9 @@ export type month_11 = string;
 export type month_12 = string;
 export interface msg_id {
     kind: ASTKinds.msg_id;
-    B: string;
-    C: id_left;
-    D: string;
-    E: id_right;
-    G: Nullable<CFWS>;
+    A_id_left: id_left;
+    B_at: string;
+    C_id_right: id_right;
 }
 export interface name_addr {
     kind: ASTKinds.name_addr;
@@ -1158,8 +1155,7 @@ export interface obs_mbox_list_$1_$0_2 {
 export interface obs_message_id {
     kind: ASTKinds.obs_message_id;
     A: string;
-    C: string;
-    D: msg_id;
+    msg_id: msg_id;
 }
 export interface obs_minute {
     kind: ASTKinds.obs_minute;
@@ -3555,16 +3551,15 @@ export class Parser {
                 return this.run<message_id>($$dpth,
                     () => {
                         let $scope$A: Nullable<string>;
-                        let $scope$B: Nullable<string>;
-                        let $scope$C: Nullable<msg_id>;
+                        let $scope$msg_id: Nullable<msg_id>;
                         let $$res: Nullable<message_id> = null;
                         if (true
                             && ($scope$A = this.regexAccept(String.raw`(?:Message-ID)`, $$dpth + 1, $$cr)) !== null
-                            && ($scope$B = this.regexAccept(String.raw`(?::)`, $$dpth + 1, $$cr)) !== null
-                            && ($scope$C = this.matchmsg_id($$dpth + 1, $$cr)) !== null
+                            && this.regexAccept(String.raw`(?::)`, $$dpth + 1, $$cr) !== null
+                            && ($scope$msg_id = this.matchmsg_id($$dpth + 1, $$cr)) !== null
                             && this.matchCRLF($$dpth + 1, $$cr) !== null
                         ) {
-                            $$res = {kind: ASTKinds.message_id, A: $scope$A, B: $scope$B, C: $scope$C};
+                            $$res = {kind: ASTKinds.message_id, A: $scope$A, msg_id: $scope$msg_id};
                         }
                         return $$res;
                     });
@@ -3651,22 +3646,20 @@ export class Parser {
             () => {
                 return this.run<msg_id>($$dpth,
                     () => {
-                        let $scope$B: Nullable<string>;
-                        let $scope$C: Nullable<id_left>;
-                        let $scope$D: Nullable<string>;
-                        let $scope$E: Nullable<id_right>;
-                        let $scope$G: Nullable<Nullable<CFWS>>;
+                        let $scope$A_id_left: Nullable<id_left>;
+                        let $scope$B_at: Nullable<string>;
+                        let $scope$C_id_right: Nullable<id_right>;
                         let $$res: Nullable<msg_id> = null;
                         if (true
                             && ((this.matchCFWS($$dpth + 1, $$cr)) || true)
-                            && ($scope$B = this.regexAccept(String.raw`(?:<)`, $$dpth + 1, $$cr)) !== null
-                            && ($scope$C = this.matchid_left($$dpth + 1, $$cr)) !== null
-                            && ($scope$D = this.regexAccept(String.raw`(?:@)`, $$dpth + 1, $$cr)) !== null
-                            && ($scope$E = this.matchid_right($$dpth + 1, $$cr)) !== null
+                            && this.regexAccept(String.raw`(?:<)`, $$dpth + 1, $$cr) !== null
+                            && ($scope$A_id_left = this.matchid_left($$dpth + 1, $$cr)) !== null
+                            && ($scope$B_at = this.regexAccept(String.raw`(?:@)`, $$dpth + 1, $$cr)) !== null
+                            && ($scope$C_id_right = this.matchid_right($$dpth + 1, $$cr)) !== null
                             && this.regexAccept(String.raw`(?:>)`, $$dpth + 1, $$cr) !== null
-                            && (($scope$G = this.matchCFWS($$dpth + 1, $$cr)) || true)
+                            && ((this.matchCFWS($$dpth + 1, $$cr)) || true)
                         ) {
-                            $$res = {kind: ASTKinds.msg_id, B: $scope$B, C: $scope$C, D: $scope$D, E: $scope$E, G: $scope$G};
+                            $$res = {kind: ASTKinds.msg_id, A_id_left: $scope$A_id_left, B_at: $scope$B_at, C_id_right: $scope$C_id_right};
                         }
                         return $$res;
                     });
@@ -4801,17 +4794,16 @@ export class Parser {
                 return this.run<obs_message_id>($$dpth,
                     () => {
                         let $scope$A: Nullable<string>;
-                        let $scope$C: Nullable<string>;
-                        let $scope$D: Nullable<msg_id>;
+                        let $scope$msg_id: Nullable<msg_id>;
                         let $$res: Nullable<obs_message_id> = null;
                         if (true
                             && ($scope$A = this.regexAccept(String.raw`(?:Message-ID)`, $$dpth + 1, $$cr)) !== null
                             && this.loop<WSP>(() => this.matchWSP($$dpth + 1, $$cr), true) !== null
-                            && ($scope$C = this.regexAccept(String.raw`(?::)`, $$dpth + 1, $$cr)) !== null
-                            && ($scope$D = this.matchmsg_id($$dpth + 1, $$cr)) !== null
+                            && this.regexAccept(String.raw`(?::)`, $$dpth + 1, $$cr) !== null
+                            && ($scope$msg_id = this.matchmsg_id($$dpth + 1, $$cr)) !== null
                             && this.matchCRLF($$dpth + 1, $$cr) !== null
                         ) {
-                            $$res = {kind: ASTKinds.obs_message_id, A: $scope$A, C: $scope$C, D: $scope$D};
+                            $$res = {kind: ASTKinds.obs_message_id, A: $scope$A, msg_id: $scope$msg_id};
                         }
                         return $$res;
                     });
@@ -6759,7 +6751,7 @@ export class Parser {
     private regexAccept(match: string, dpth: number, cr?: ErrorTracker): Nullable<string> {
         return this.run<string>(dpth,
             () => {
-                const reg = new RegExp(match, "y");
+                const reg = new RegExp(match, "yi");
                 const mrk = this.mark();
                 reg.lastIndex = mrk.overallPos;
                 const res = this.tryConsume(reg);

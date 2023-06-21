@@ -1,4 +1,4 @@
-import { ASTNodeIntf, ASTKinds as K, addr_spec, address, address_list, address_list_1, angle_addr_1, bcc_$0, cc, date_time, day_name, day_of_week, fields, fields_$1, from, group, group_list, hour, mailbox, mailbox_list, message, minute, name_addr, obs_addr_list, obs_addr_list_$1, obs_addr_list_$1_$0, obs_angle_addr, obs_cc, obs_fields_$0, obs_from, obs_subject, obs_to, parse, second, subject, to, year, zone } from './message.fields'
+import { ASTNodeIntf, ASTKinds as K, addr_spec, address, address_list, address_list_1, angle_addr_1, bcc_$0, cc, date_time, day_name, day_of_week, fields, fields_$1, from, group, group_list, hour, mailbox, mailbox_list, message, message_id, minute, msg_id, name_addr, obs_addr_list, obs_addr_list_$1, obs_addr_list_$1_$0, obs_angle_addr, obs_cc, obs_fields_$0, obs_from, obs_message_id, obs_subject, obs_to, parse, second, subject, to, year, zone } from './message.fields'
 import { ASTKinds } from './metagrammar.parser'
 import { concat } from './util'
 export class Email {
@@ -10,6 +10,7 @@ export class Email {
   sender: Mailbox
   reply_to: NonemptyList<Address>
   orig_date: DateTime
+  message_id: string
 
   constructor(ast: message) {
     let fields = ast.fields
@@ -24,6 +25,7 @@ export class Email {
             case K.to: this.to = Util.fromAddressList(f.address_list); break;
             case K.cc: this.cc = Util.fromAddressList(f.address_list); break;
             case K.bcc: this.bcc = Util.addressListOrUndefined(f.address_list); break;
+            case K.message_id: this.message_id = concat(f.msg_id).trim(); break;
             case K.subject: this.subject = concat(f._value).trim(); break;
             default: break; // TODO
           }
@@ -40,6 +42,7 @@ export class Email {
             case K.obs_to: this.to = Util.fromAddressList(f.address_list); break;
             case K.obs_cc: this.cc = Util.fromAddressList(f.address_list); break;
             case K.obs_bcc: this.bcc = Util.addressListOrUndefined(f.address_list); break;
+            case K.obs_message_id: this.message_id = concat(f.msg_id).trim(); break;
             case K.obs_subject: this.subject = concat(f._value).trim(); break;
             default: break; // TODO
           }
