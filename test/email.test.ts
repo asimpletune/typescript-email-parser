@@ -3,11 +3,12 @@ import { parse } from '../parser/email.parser';
 import { readFileSync } from 'fs'
 import { Email } from '../email';
 
-let email = new Email(parse(readFileSync('./test/resources/hello_world.eml', 'ascii')).ast!)
-let reply = new Email(parse(readFileSync('./test/resources/hello_world_reply.eml', 'ascii')).ast!)
+let email = Email.parse(readFileSync('./test/resources/hello_world.eml', 'ascii'))!
+let reply = Email.parse(readFileSync('./test/resources/hello_world_reply.eml', 'ascii'))!
 
 describe('fields', () => {
   test('orig_date', () => {
+    console.log(`Re: ${email.subject}`)
     expect(email.orig_date).toEqual({ "day": "20", "dayOfWeek": "Tue", "hour": "20", "minute": "28", "month": "Jun", "second": "11", "year": "2023", "zone": "+0200" })
   })
   test('from', () => {
@@ -65,4 +66,31 @@ describe('fields', () => {
         '\t OhP85bABfn+7g=='
     }])
   })
+})
+
+describe('body', () => {
+  expect(email.body).toBe('\r\n' +
+    '\r\n' +
+    '--Apple-Mail=_34F098F6-D5B7-4B8B-8443-7EC0348A5A0E\r\n' +
+    'Content-Transfer-Encoding: 7bit\r\n' +
+    'Content-Type: text/plain;\r\n' +
+    '\tcharset=us-ascii\r\n' +
+    '\r\n' +
+    'Hello, world\r\n' +
+    '\r\n' +
+    '-Tester\r\n' +
+    '\r\n' +
+    '\r\n' +
+    '--Apple-Mail=_34F098F6-D5B7-4B8B-8443-7EC0348A5A0E\r\n' +
+    'Content-Transfer-Encoding: 7bit\r\n' +
+    'Content-Type: text/html;\r\n' +
+    '\tcharset=us-ascii\r\n' +
+    '\r\n' +
+    '<html><head><meta http-equiv="content-type" content="text/html; charset=us-ascii"></head><body style="overflow-wrap: break-word; -webkit-nbsp-mode: space; line-break: after-white-space;"><div dir="auto" style="overflow-wrap: break-word; -webkit-nbsp-mode: space; line-break: after-white-space;">Hello, world<br><br><div>\r\n' +
+    '<div>-Spence</div>\r\n' +
+    '\r\n' +
+    '</div>\r\n' +
+    '\r\n' +
+    '<br></div></body></html>\r\n' +
+    '--Apple-Mail=_34F098F6-D5B7-4B8B-8443-7EC0348A5A0E--')
 })

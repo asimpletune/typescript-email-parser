@@ -98,7 +98,7 @@ dtext           :=    '[\x21-\x5a]' | '[\x5e-\x7e]' | obs_dtext
 message         :=    { fields | obs_fields } { CRLF body }?
 body            :=    { _998text CRLF }* _998text | obs_body
 text            :=    '[\x01-\x09]' | '\x0B' | '\x0C' | '[\x0E-\x7f]' // Characters excluding CR and LF
-_998text        :=    '[\x01-\x09\x0B\x0C\x0E-\x7F]{998,}'            // Note: _998text to workaround tspeg operator
+_998text        :=    '[\x01-\x09\x0B\x0C\x0E-\x7F]{0,998}'            // Note: _998text to workaround tspeg operator
 
 // § 3.6 Field Definitions
 // See: https://datatracker.ietf.org/doc/html/rfc5322#section-3.6

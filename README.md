@@ -1,31 +1,74 @@
 # RFC5322 Email Parser (typescript)
 
-Parse [RFC5322](https://datatracker.ietf.org/doc/html/rfc5322#section-4.1) emails into typed objects.
+Parse emails into typed objects, according to the [RFC5322](https://datatracker.ietf.org/doc/html/rfc5322#section-4.1) specification.
 
-This project is new and currently in WIP. It is currently not tested very well. The strategy is to literally just take the specification, word for word more or less, and convert it into a PEG grammar. There are many tools that can take such a grammar and produce an AST. For this project I'm using [tsPEG](https://github.com/EoinDavey/tsPEG), which produces a parser that can be used in typescript.
+## How to use
+
+You can construct an `email` object by supplying a string to the `parse` function as shown below. Note that invalid strings will return `undefined`. (*See the [grammar](#the-grammar) below for precise description on valid strings.*)
+
+```typescript
+import { Email } from '../email';
+
+// Create an instance by parsing an email as a string
+let email = Email.parse(readFileSync('./hello.eml', 'ascii'))!
+
+// Access the various email fields directly
+console.log(`Re: ${email.subject}`)
+```
+
+The following properties and their types are available
+
+```typescript
+
+prepended:        PrependedFieldBlock[]
+
+to?:              NonemptyList<Address>
+subject?:         string
+from:             NonemptyList<Mailbox>
+cc?:              NonemptyList<Address>
+bcc?:             NonemptyList<Address>
+sender?:          Mailbox
+reply_to?:        NonemptyList<Address>
+orig_date:        DateTime
+message_id?:      string
+in_reply_to?:     NonemptyList<string>
+references?:      NonemptyList<string>
+comments?:        string[]
+keywords?:        string[][]
+optional_fields:  OptionalField[]
+
+/**
+ *  The `body` consists of strings that are
+ *  a.) terminated by `\r\n` and
+ *  b.) max 998 columns wide.
+ */
+body?:            string
+```
+
+You will notice how nearly every field is optional, which may seems strange, but it follows the original specification. This allows for emails in various states of composition to be validly parsed.
 
 ## Help Wanted
 
-I think the most useful help I could get at this point is writing more tests.
+There is a lot of work that needs to be done around writing regressions tests.
 
 ## The Grammar
+
+The following EBNF style grammar describes formally how emails are parsed.
 
 ```peg
 // RFC 5322
 // See: https://datatracker.ietf.org/doc/html/rfc5322
 // The following is the RFC5322 "Internet Message Format" specification
 // using tspeg to represent the grammar and to generate a parser in TS
-
-// Note: this first token is the entrypoint for the rest of the grammar
-start           :=    message
+// This file is intended purely to document (without computed fields)
 
 // "Core Rules" from RFC5234
 // See: https://datatracker.ietf.org/doc/html/rfc5234#appendix-B.1
 CR              :=    '\x0D'              // carriage return, i.e. '\r'
-CRLF            :=    CR LF               // Internet standard newline
-DIGIT           :=    '\x30-39'           // 0-9
-TWO_DIGIT       :=    DIGIT DIGIT         // 00-99
-FOUR_DIGIT      :=    TWO_DIGIT TWO_DIGIT // 0000-9999
+CRLF            :=    '\r\n'              // Internet standard newline
+DIGIT           :=    '\d'                // 0-9
+TWO_DIGIT       :=    '\d\d'              // 00-99
+FOUR_DIGIT      :=    '\d\d\d\d'          // 0000-9999
 DQUOTE          :=    '\x22'              // double quote, i.e. '"'
 HTAB            :=    '\x09'              // horizontal tab, i.e. 'TAB'
 LF              :=    '\x0A'              // linefeed, i.e. '\n'
@@ -35,67 +78,57 @@ WSP             :=    SP | HTAB           // white space
 
 // § 3.2.1 Quoted Characters
 // See: https://datatracker.ietf.org/doc/html/rfc5322#section-3.2.1
-quoted_pair     :=    { '\\' { VCHAR | WSP } } | obs_qp
+quoted_pair     :=    '\\' { VCHAR | WSP }  | obs_qp
 
 // §3.2.2 Folding White Space and Comments
 // See: https://datatracker.ietf.org/doc/html/rfc5322#section-3.2.2
-FWS             :=    { { WSP* CRLF }? WSP+ } |  obs_FWS
+FWS             :=    { WSP* CRLF }? WSP+ |  obs_FWS
 ctext           :=    '[\x21-\x27]' | '[\x2a-\x5b]' | '[\x5d-\x7e]' | obs_ctext
 ccontent        :=    ctext | quoted_pair | comment
 comment         :=    '\(' { FWS? ccontent }* FWS? '\)'
-CFWS            :=    { { FWS? comment }+ FWS? } | FWS
+CFWS            :=    { FWS? comment }+ FWS? | FWS
 
 // § 3.2.3 Atom
 // See: https://datatracker.ietf.org/doc/html/rfc5322#section-3.2.3
 // (Printable US-ASCII characters not including specials. Used for atoms.)
 atext           :=    '[A-Za-z0-9!#$%&\x27\*\+\-\/=?^_`{|}~]'
 atom            :=    CFWS? atext+ CFWS?
-dot_atom_text   :=    _head_atext = atext+ _tail_atext={ '\.' _atext = atext+ }*
-                      .head = string { return this._head_atext.join('') }
-                      .tail = string[] { return this._tail_atext.map(a => a._atext.join('')) }
-                      .literal = string { return this.head + this.tail.map(atext => '.' + atext).join('') }
-
-dot_atom        :=    CFWS? _dot_atom_text = dot_atom_text CFWS?
-                      .head = string { return this._dot_atom_text.head }
-                      .tail = string[] { return this._dot_atom_text.tail }
-                      .literal = string { return this._dot_atom_text.literal }
-                      .parts = string[] { return this.literal.split('.') }
+dot_atom_text   :=    atext+ { '\.' atext+ }*
+dot_atom        :=    CFWS? dot_atom_text CFWS?
 
 // (Special characters that do not appear in atext)
 specials        :=     '\(' |'\)' | '[<>]' | '\[' | '\]' | '[:;@]' | '\\' | ',' | '\.' | DQUOTE
 
 // § 3.2.4 Quoted Strings
 // See https://datatracker.ietf.org/doc/html/rfc5322#section-3.2.4
-// (Printable US-ASCII characters not including '\"' or the quote character)
+// (Printable US-ASCII characters not including '"' or the quote character)
 qtext           :=    '\x21' | '[\x23-\x5b]' | '[\x5d-\x7e]' | obs_qtext
 qcontent        :=    qtext | quoted_pair
-quoted_string   :=    CFWS? DQUOTE _contents = { FWS? _qcontent = qcontent }* FWS? DQUOTE CFWS?
-                      .literal = string { return `"${this.contents}"` }
-                      .contents = string { return this._contents.map(c => c._qcontent).join('') }
+quoted_string   :=    CFWS? DQUOTE { FWS? qcontent }* FWS? DQUOTE CFWS?
 
 // § 3.2.5 Miscellaneous Tokens
 // See: https://datatracker.ietf.org/doc/html/rfc5322#section-3.2.5
 word            :=    atom | quoted_string
 phrase          :=    word+ | obs_phrase
-unstructured    :=    { { FWS? VCHAR }* WSP* } | obs_unstruct
+unstructured    :=    { FWS? VCHAR }* WSP* | obs_unstruct
 
 // § 3.3.  Date and Time Specification
 // See: https://datatracker.ietf.org/doc/html/rfc5322#section-3.3
 date_time       :=    { day_of_week ',' }? date time CFWS?
-day_of_week     :=    { FWS? day_name } | obs_day_of_week
+day_of_week     :=    FWS? day_name | obs_day_of_week
 day_name        :=    'Mon' | 'Tue' | 'Wed' | 'Thu' | 'Fri' | 'Sat' | 'Sun'
 date            :=    day month year
-day             :=    { FWS? DIGIT DIGIT? FWS } | obs_day
+day             :=    FWS? DIGIT DIGIT? FWS | obs_day
 month           :=    'Jan' | 'Feb' | 'Mar' | 'Apr' |
                       'May' | 'Jun' | 'Jul' | 'Aug' |
                       'Sep' | 'Oct' | 'Nov' | 'Dec'
-year            :=    { FWS FOUR_DIGIT DIGIT* FWS } | obs_year
+year            :=    FWS FOUR_DIGIT DIGIT* FWS | obs_year
 time            :=    time_of_day zone
 time_of_day     :=    hour ':' minute { ':' second }?
 hour            :=    TWO_DIGIT | obs_hour
 minute          :=    TWO_DIGIT | obs_minute
 second          :=    TWO_DIGIT | obs_second
-zone            :=    { FWS { '\+' | '\-' } FOUR_DIGIT } | obs_zone
+zone            :=    FWS { '\+' | '\-' } FOUR_DIGIT | obs_zone
 
 // § 3.4 Address Specification
 // See: https://datatracker.ietf.org/doc/html/rfc5322#section-3.4
@@ -105,26 +138,25 @@ name_addr       :=    display_name? angle_addr
 angle_addr      :=    CFWS? '<' addr_spec '>' CFWS? | obs_angle_addr
 group           :=    display_name ':' group_list? ';' CFWS?
 display_name    :=    phrase
-mailbox_list    :=    { mailbox { ',' mailbox }* } | obs_mbox_list
-address_list    :=    { address { ',' address }*  } | obs_addr_list
+mailbox_list    :=    mailbox { ',' mailbox }* | obs_mbox_list
+address_list    :=    address { ',' address }* | obs_addr_list
 group_list      :=    mailbox_list | CFWS | obs_group_list
 
 // § 3.4.1 Addr-Spec Specification
 // See: https://datatracker.ietf.org/doc/html/rfc5322#section-3.4.1
-addr_spec       :=    local_part = local_part '@' domain = domain
-local_part      :=    token = dot_atom | token = quoted_string | token = obs_local_part
-domain          :=    token = dot_atom | token = domain_literal | token = obs_domain
-domain_literal  :=    CFWS? '\[' _contents = { FWS? _dtext = dtext }* FWS? '\]' CFWS?
-                      // .literal = string { return `[${this.contents}]` }
-                      // .contents = string { return this._contents.map(c => c._dtext).join('') }
+addr_spec       :=    local_part '@' domain
+local_part      :=    dot_atom | quoted_string | obs_local_part
+domain          :=    dot_atom | domain_literal | obs_domain
+domain_literal  :=    CFWS? '\[' { FWS? dtext }* FWS? '\]' CFWS?
 // (Printable US-ASCII characters not including '[', ']', or '\"')
-dtext           :=    '[\x21-\x5a]' | '[\x5e-\x7e]' | obs_dtext = obs_dtext
+dtext           :=    '[\x21-\x5a]' | '[\x5e-\x7e]' | obs_dtext
 
 // § 3.5 Overall Message Syntax
+// See: https://datatracker.ietf.org/doc/html/rfc5322#section-3.5
 message         :=    { fields | obs_fields } { CRLF body }?
-body            :=    {  { _998text CRLF }* _998text } | obs_body
+body            :=    { _998text CRLF }* _998text | obs_body
 text            :=    '[\x01-\x09]' | '\x0B' | '\x0C' | '[\x0E-\x7f]' // Characters excluding CR and LF
-_998text        :=    '[\x01-\x09\x0B\x0C\x0E-\x7F]{998,}'            // Note: _998text to workaround tspeg operator
+_998text        :=    '[\x01-\x09\x0B\x0C\x0E-\x7F]{0,998}'            // Note: _998text to workaround tspeg operator
 
 // § 3.6 Field Definitions
 // See: https://datatracker.ietf.org/doc/html/rfc5322#section-3.6
@@ -136,25 +168,25 @@ fields          :=    {
 
 // § 3.6.1. The Origination Date Field
 // See: https://datatracker.ietf.org/doc/html/rfc5322#section-3.6.1
-orig_date       :=   'Date:' date_time CRLF
+orig_date       :=   'Date' ':' date_time CRLF
 
 // § 3.6.2 Originator Fields
 // See: https://datatracker.ietf.org/doc/html/rfc5322#section-3.6.2
-from            :=    'From:' mailbox_list CRLF
-sender          :=    'Sender:' mailbox CRLF
-reply_to        :=    'Reply_To:' address_list CRLF
+from            :=    'From' ':' mailbox_list CRLF
+sender          :=    'Sender' ':' mailbox CRLF
+reply_to        :=    'Reply-To' ':' address_list CRLF
 
 // § 3.6.3 Destination Address Fields
 // See: https://datatracker.ietf.org/doc/html/rfc5322#section-3.6.3
-to              :=    'To:' address_list CRLF
-cc              :=    'Cc:' address_list CRLF
-bcc             :=    'Bcc:' { address_list | CFWS }? CRLF
+to              :=    'To' ':' address_list CRLF
+cc              :=    'Cc' ':' address_list CRLF
+bcc             :=    'Bcc' ':' { address_list | CFWS }? CRLF
 
 // § 3.6.4 Identification Fields
 // See: https://datatracker.ietf.org/doc/html/rfc5322#section-3.6.4
-message_id      :=    'Message-ID:' msg_id CRLF
-in_reply_to     :=    'In-Reply-To:' msg_id+ CRLF
-references      :=    'References:' msg_id+ CRLF
+message_id      :=    'Message-ID' ':' msg_id CRLF
+in_reply_to     :=    'In-Reply-To' ':' msg_id+ CRLF
+references      :=    'References' ':' msg_id+ CRLF
 msg_id          :=    CFWS? '<' id_left '@' id_right '>' CFWS?
 id_left         :=    dot_atom_text | obs_id_left
 id_right        :=    dot_atom_text | no_fold_literal | obs_id_right
@@ -162,26 +194,26 @@ no_fold_literal :=    '\[' dtext* '\]'
 
 // § 3.6.5 Informational Fields
 // See: https://datatracker.ietf.org/doc/html/rfc5322#section-3.6.5
-subject         :=    'Subject:' unstructured CRLF
-comments        :=    'Comments:' unstructured CRLF
-keywords        :=    'Keywords:' phrase { ',' phrase }* CRLF
+subject         :=    'Subject' ':' unstructured CRLF
+comments        :=    'Comments' ':' unstructured CRLF
+keywords        :=    'Keywords' ':' phrase { ',' phrase }* CRLF
 
-// § 3.6.6
+// § 3.6.6 Resent Fields
 // See: https://datatracker.ietf.org/doc/html/rfc5322#section-3.6.6
-resent_date     :=    'Resent-Date:' date_time CRLF
-resent_from     :=    'Resent-From:' mailbox_list CRLF
-resent_sender   :=    'Resent-Sender:' mailbox CRLF
-resent_to       :=    'Resent-To:' address_list CRLF
-resent_cc       :=    'Resent-Cc:' address_list CRLF
-resent_bcc      :=    'Resent-Bcc:' {address_list | CFWS }? CRLF
-resent_msg_id   :=    'Resent-Message_ID:' msg_id CRLF
+resent_date     :=    'Resent-Date' ':' date_time CRLF
+resent_from     :=    'Resent-From' ':' mailbox_list CRLF
+resent_sender   :=    'Resent-Sender' ':' mailbox CRLF
+resent_to       :=    'Resent-To' ':' address_list CRLF
+resent_cc       :=    'Resent-Cc' ':' address_list CRLF
+resent_bcc      :=    'Resent-Bcc' ':' {address_list | CFWS }? CRLF
+resent_msg_id   :=    'Resent-Message-ID' ':' msg_id CRLF
 
 // § 3.6.7 Trace Fields
 // See: https://datatracker.ietf.org/doc/html/rfc5322#section-3.6.7
 trace           :=    return_path? received+
-return_path     :=    'Return-Path:' path CRLF
-path            :=    angle_addr | { CFWS '<' CFWS '>' CFWS }
-received        :=    'Received:' received_token* ';' date_time CRLF
+return_path     :=    'Return-Path' ':' path CRLF
+path            :=    angle_addr | CFWS? '<' CFWS '>' CFWS?
+received        :=    'Received' ':' received_token* ';' date_time CRLF
 received_token  :=    word | angle_addr | addr_spec | domain
 
 // § 3.6.8 Optional Fields
@@ -237,13 +269,13 @@ obs_mbox_list   :=    { CFWS? ',' }* mailbox { ',' { mailbox | CFWS }? }*
 obs_addr_list   :=    { CFWS? ',' }* address { ',' { address | CFWS }? }*
 obs_group_list  :=    { CFWS? ',' }+ CFWS?
 obs_local_part  :=    word { '\.' word }*
-obs_domain      :=    head_atom = atom { '\.' tail_atom = atom }*
+obs_domain      :=    atom { '\.' atom }*
 obs_dtext       :=    obs_NO_WS_CTL | quoted_pair
 
 // § 4.5 Obsolete Header Fields
 // See: https://datatracker.ietf.org/doc/html/rfc5322#section-4.5
 obs_fields      :=    { obs_return | obs_received | obs_orig_date | obs_from | obs_sender |
-                        obs_reply_to | obs_to |       obs_cc | obs_bcc | obs_message_id | obs_in_reply_to |
+                        obs_reply_to | obs_to | obs_cc | obs_bcc | obs_message_id | obs_in_reply_to |
                         obs_references | obs_subject | obs_comments | obs_keywords | obs_resent_date |
                         obs_resent_from | obs_resent_send | obs_resent_rply | obs_resent_to | obs_resent_cc |
                         obs_resent_bcc | obs_resent_mid | obs_optional }*
@@ -262,13 +294,13 @@ obs_reply_to    :=    'Reply-To' WSP* ':' address_list CRLF
 // See: https://datatracker.ietf.org/doc/html/rfc5322#section-4.5.3
 obs_to          :=    'To' WSP* ':' address_list CRLF
 obs_cc          :=    'Cc' WSP* ':' address_list CRLF
-obs_bcc         :=    'Bcc' WSP* ':' { address_list | { { CFWS? ',' }* CFWS? } } CRLF
+obs_bcc         :=    'Bcc' WSP* ':' { address_list | { CFWS? ',' }* CFWS? } CRLF
 
 // § 4.5.4.  Obsolete Identification Fields
 // See: https://datatracker.ietf.org/doc/html/rfc5322#section-4.5.4
 obs_message_id  :=    'Message-ID' WSP* ':' msg_id CRLF
 obs_in_reply_to :=    'In-Reply-To' WSP* ':' { phrase | msg_id }* CRLF
-obs_references  :=    'References' WSP* ':' {phrase | msg_id }* CRLF
+obs_references  :=    'References' WSP* ':' { phrase | msg_id }* CRLF
 obs_id_left     :=    local_part
 obs_id_right    :=    domain
 
@@ -286,7 +318,7 @@ obs_resent_send :=    'Resent-Sender'     WSP* ':' mailbox      CRLF
 obs_resent_date :=    'Resent-Date'       WSP* ':' date_time    CRLF
 obs_resent_to   :=    'Resent-To'         WSP* ':' address_list CRLF
 obs_resent_cc   :=    'Resent-Cc'         WSP* ':' address_list CRLF
-obs_resent_bcc  :=    'Resent-Bcc'        WSP* ':' { address_list | { { CFWS? ',' }* CFWS? } } CRLF
+obs_resent_bcc  :=    'Resent-Bcc'        WSP* ':' { address_list | { CFWS? ',' }* CFWS? } CRLF
 obs_resent_mid  :=    'Resent-Message-ID' WSP* ':' msg_id CRLF
 obs_resent_rply :=    'Resent-Reply-To'   WSP* ':' address_list CRLF
 

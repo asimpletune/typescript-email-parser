@@ -1,33 +1,56 @@
-import { ASTNodeIntf, ASTKinds as K, addr_spec, address, address_list, address_list_1, date_time, day_of_week, fields_$0, fields_$1, group, hour, mailbox, mailbox_list, message, minute, name_addr, obs_addr_list, obs_fields, path, received, received_token, second, trace, year, zone } from './parser/email.parser'
+import { ASTNodeIntf, ASTKinds as K, addr_spec, address, address_list, address_list_1, date_time, day_of_week, fields_$0, fields_$1, group, hour, mailbox, mailbox_list, message, message_$1, minute, name_addr, obs_addr_list, obs_fields, parse, path, received, received_token, second, trace, year, zone } from './parser/email.parser'
 export class Email {
 
   prepended: PrependedFieldBlock[]
 
-  to: NonemptyList<Address> | undefined
-  subject: string | undefined
+  to?: NonemptyList<Address>
+  subject?: string
   from: NonemptyList<Mailbox>
-  cc: NonemptyList<Address> | undefined
-  bcc: NonemptyList<Address> | undefined
-  sender: Mailbox | undefined
-  reply_to: NonemptyList<Address> | undefined
+  cc?: NonemptyList<Address>
+  bcc?: NonemptyList<Address>
+  sender?: Mailbox
+  reply_to?: NonemptyList<Address>
   orig_date: DateTime
-  message_id: string | undefined
-  in_reply_to: NonemptyList<string> | undefined
-  references: NonemptyList<string> | undefined
-  comments: string[] | undefined
-  keywords: string[][] | undefined
+  message_id?: string
+  in_reply_to?: NonemptyList<string>
+  references?: NonemptyList<string>
+  comments?: string[]
+  keywords?: string[][]
   optional_fields: OptionalField[]
+
+  body?: string
 
   constructor(ast: message) {
     let fields = ast.fields
+    let body = ast.D ? ((m: message_$1) => {
+      console.log("BODY");
+
+      switch (ast.D.F.kind) {
+        case K.body_1: {
+          console.log(ast.D.F.A.length)
+          return concat(ast.D.F)
+        }
+        case K.body_2: {
+          console.log("bar")
+          return concat(ast.D.F)
+        }
+        default: { const exhaustive: never = ast.D.F; throw new Error(exhaustive) }
+      }
+    })(ast.D) : undefined
     switch (fields.kind) {
       case K.fields: return {
         prepended: Util.prependedFields(fields.prepended),
-        ...Util.nonprependedFields(fields.nonprepended)
+        ...Util.nonprependedFields(fields.nonprepended),
+        body: body
       }
-      case K.obs_fields: return { prepended: Util.obsoletePrepended(fields), ...Util.obsoleteFields(fields) }
+      case K.obs_fields: return { prepended: Util.obsoletePrepended(fields), ...Util.obsoleteFields(fields), body: body }
       default: { const exhaustive: never = fields; throw new Error(exhaustive) }
     }
+  }
+
+  static parse(emailStr: string): Email | undefined {
+    try { return new Email(parse(emailStr).ast!) }
+    catch (error) { return undefined }
   }
 }
 
