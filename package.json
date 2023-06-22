@@ -35,7 +35,7 @@
     "peg",
     "typescript"
   ],
-  "author": "Spencer Scorcelletti",
+  "author": "Spencer Scorcelletti <hello@spenc.es> (https://spenc.es/)",
   "license": "MIT",
   "bugs": {
     "url": "https://github.com/asimpletune/rfc5322-email-parser_ts/issues"

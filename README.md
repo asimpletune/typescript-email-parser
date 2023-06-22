@@ -1,10 +1,35 @@
 # RFC5322 Email Parser (typescript)
 
-Parse emails into typed objects, according to the [RFC5322](https://datatracker.ietf.org/doc/html/rfc5322#section-4.1) specification.
+Parse emails into typed objects, according to the [RFC5322](https://datatracker.ietf.org/doc/html/rfc5322#section-4.1) specification. Great for Typescript!
+
+Table of Contents:
+<!-- TOC -->
+- [Installation](#installation)
+- [Features](#features)
+- [How to use](#how-to-use)
+- [FAQ](#faq)
+- [Contributing](#contributing)
+- [The Grammar](#the-grammar)
+<!-- /TOC -->
+
+
+## Installation
+
+Install the project using `npm`
+
+```zsh
+npm install --save-dev rfc5322-email-parser_ts
+```
+
+## Features
+
+This project is a library that is perfect for converting strings or files into typed object that can be used by code. It supports Typescript.
+
+The main focus is correctness, completeness, and performance for parsing emails. It is a complete implementation of the RFC5322 standard, for the specification of the structure of internet messages (i.e. emails).
 
 ## How to use
 
-You can construct an `email` object by supplying a string to the `parse` function as shown below. Note that invalid strings will return `undefined`. (*See the [grammar](#the-grammar) below for precise description on valid strings.*)
+You can get an `email` object by supplying a string to the `parse` function as shown below. Note that invalid strings will return `undefined`. (*See the [grammar](#the-grammar) below for precise description on valid strings.*)
 
 ```typescript
 import { Email } from '../email';
@@ -67,6 +92,23 @@ export default {
     /* ... */
 ```
 
+## FAQ
+
+Some commonly asked questions:
+
+### Email not parsing
+
+> I'm always getting `undefined` when I parse a valid email
+
+The parser is extremely tolerant and will parse most emails correctly, however there are two situations where an email can *seem* correct but is not.
+
+1. Not using `CRLF` as line breaks.
+2. The email MUST end in a `CRLF` line break.
+
+A common way you can get this error is by copying a plain text email into an editor that is configured for that specific file to use `\n`, such as in your test code. What you can do is just replace `\n` with `\r\n` and it should work.
+
+Also, as mentioned in point 2, that it's common for the the last `CRLF` to be left off when copying an email. If you add a `CRLF` linebreak at the end then you should be fine.
+
 ## Contributing
 
 Since this is a new project, there's a lot of work to do. Just as a few ideas, here are some things that are currently needed.
@@ -76,6 +118,8 @@ Since this is a new project, there's a lot of work to do. Just as a few ideas, h
 3. More granular functionality and convenience methods
 4. A streaming version of this same project
 5. Refinement of the "rewriter" and that whole process
+
+The project is maintained by [Spence](https://spenc.es/). Feel free to [open an issue](https://github.com/asimpletune/rfc5322-email-parser_ts/issues), or [contact](https://spenc.es/contact/) him directly.
 
 ## The Grammar
 
