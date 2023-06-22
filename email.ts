@@ -1,39 +1,32 @@
-import { ASTNodeIntf, ASTKinds as K, addr_spec, address, address_list, address_list_1, date_time, day_of_week, fields_$0, fields_$1, group, hour, mailbox, mailbox_list, message, message_$1, minute, name_addr, obs_addr_list, obs_fields, parse, path, received, received_token, second, trace, year, zone } from './parser/email.parser'
+import { ASTNodeIntf, ASTKinds as K, Parser, addr_spec, address, address_list, address_list_1, date_time, day_of_week, fields_$0, fields_$1, group, hour, mailbox, mailbox_list, message, message_$1, minute, name_addr, obs_addr_list, obs_fields, parse, path, received, received_token, second, trace, year, zone } from './parser/email.parser'
 export class Email {
 
-  prepended: PrependedFieldBlock[]
+  prepended?: PrependedFieldBlock[]
 
   to?: NonemptyList<Address>
   subject?: string
-  from: NonemptyList<Mailbox>
+  from?: NonemptyList<Mailbox>
   cc?: NonemptyList<Address>
   bcc?: NonemptyList<Address>
   sender?: Mailbox
   reply_to?: NonemptyList<Address>
-  orig_date: DateTime
+  orig_date?: DateTime
   message_id?: string
   in_reply_to?: NonemptyList<string>
   references?: NonemptyList<string>
   comments?: string[]
   keywords?: string[][]
-  optional_fields: OptionalField[]
+  optional_fields?: OptionalField[]
 
   body?: string
 
+  /* ... */
   constructor(ast: message) {
     let fields = ast.fields
     let body = ast.D ? ((m: message_$1) => {
-      console.log("BODY");
-
       switch (ast.D.F.kind) {
-        case K.body_1: {
-          console.log(ast.D.F.A.length)
-          return concat(ast.D.F)
-        }
-        case K.body_2: {
-          console.log("bar")
-          return concat(ast.D.F)
-        }
+        case K.body_1: return concat(ast.D.F)
+        case K.body_2: return concat(ast.D.F)
         default: { const exhaustive: never = ast.D.F; throw new Error(exhaustive) }
       }
     })(ast.D) : undefined
@@ -51,6 +44,11 @@ export class Email {
   static parse(emailStr: string): Email | undefined {
     try { return new Email(parse(emailStr).ast!) }
     catch (error) { return undefined }
+  }
+  static parseHeaders(input: string): NonprependedFields | undefined {
+    let parser = new Parser(input)
+    let fields = parser.matchfields(0)
+    return fields ? Util.nonprependedFields(fields.nonprepended) : undefined
   }
 }
 
@@ -396,7 +394,7 @@ export class Util {
 }
 
 class Group {
-  display_name: string
+  display_name!: string
   group_list?: NonemptyList<Mailbox>
   constructor(group: group) {
     let gl = ((): NonemptyList<Mailbox> | undefined => {
@@ -430,7 +428,7 @@ class Group {
 
 class Mailbox {
   name?: string
-  email: string
+  email!: string
 
   constructor(mb: mailbox) {
     switch (mb.kind) {

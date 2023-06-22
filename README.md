@@ -1,10 +1,35 @@
 # RFC5322 Email Parser (typescript)
 
-Parse emails into typed objects, according to the [RFC5322](https://datatracker.ietf.org/doc/html/rfc5322#section-4.1) specification.
+Parse emails into typed objects, according to the [RFC5322](https://datatracker.ietf.org/doc/html/rfc5322#section-4.1) specification. Great for Typescript!
+
+Table of Contents:
+<!-- TOC -->
+- [Installation](#installation)
+- [Features](#features)
+- [How to use](#how-to-use)
+- [FAQ](#faq)
+- [Contributing](#contributing)
+- [The Grammar](#the-grammar)
+<!-- /TOC -->
+
+
+## Installation
+
+Install the project using `npm`
+
+```zsh
+npm install --save-dev typescript-email-parser
+```
+
+## Features
+
+This project is a library that is perfect for converting strings or files into typed object that can be used by code. It supports Typescript.
+
+The main focus is correctness, completeness, and performance for parsing emails. It is a complete implementation of the RFC5322 standard, for the specification of the structure of internet messages (i.e. emails).
 
 ## How to use
 
-You can construct an `email` object by supplying a string to the `parse` function as shown below. Note that invalid strings will return `undefined`. (*See the [grammar](#the-grammar) below for precise description on valid strings.*)
+You can get an `email` object by supplying a string to the `parse` function as shown below. Note that invalid strings will return `undefined`. (*See the [grammar](#the-grammar) below for precise description on valid strings.*)
 
 ```typescript
 import { Email } from '../email';
@@ -20,36 +45,81 @@ The following properties and their types are available
 
 ```typescript
 
-prepended:        PrependedFieldBlock[]
+export class Email {
 
-to?:              NonemptyList<Address>
-subject?:         string
-from:             NonemptyList<Mailbox>
-cc?:              NonemptyList<Address>
-bcc?:             NonemptyList<Address>
-sender?:          Mailbox
-reply_to?:        NonemptyList<Address>
-orig_date:        DateTime
-message_id?:      string
-in_reply_to?:     NonemptyList<string>
-references?:      NonemptyList<string>
-comments?:        string[]
-keywords?:        string[][]
-optional_fields:  OptionalField[]
+  prepended?        : PrependedFieldBlock[]
 
-/**
- *  The `body` consists of strings that are
- *  a.) terminated by `\r\n` and
- *  b.) max 998 columns wide.
- */
-body?:            string
+  to?               : NonemptyList<Address>
+  subject?          : string
+  from?             : NonemptyList<Mailbox>
+  cc?               : NonemptyList<Address>
+  bcc?              : NonemptyList<Address>
+  sender?           : Mailbox
+  reply_to?         : NonemptyList<Address>
+  orig_date?        : DateTime
+  message_id?       : string
+  in_reply_to?      : NonemptyList<string>
+  references?       : NonemptyList<string>
+  comments?         : string[]
+  keywords?         : string[][]
+  optional_fields?  : OptionalField[]
+  /**
+   *  The `body` consists of strings that are
+   *  a.) terminated by `\r\n` and
+   *  b.) max 998 columns wide.
+   */
+  body?             : string
+
+  /* ... */
+}
 ```
 
-You will notice how nearly every field is optional, which may seems strange, but it follows the original specification. This allows for emails in various states of composition to be validly parsed.
+You will notice how  every field is optional, which may seems strange, but it closely follows the grammar in the specification, which additionally states that the only required fields are `orig_date`, and the the originator field(s). One benefit of this is it allows emails that are in various states of completion in their composition to still be validly parsed.
 
-## Help Wanted
+Additionally, the underlying parser that the `Email` class wraps is also exposed. This can be useful for accessing functionality that is not yet implemented, without having to implement your own email parser. Below is an example of how to use the `Parser` object directly.
 
-There is a lot of work that needs to be done around writing regressions tests.
+Below is an example, using cloudflare's inbound email handler, to show a toy example of using the underlying Parser directly.
+
+```typescript
+import { Email, Parser, ASTKinds } from 'rfc5322-email-parser_ts'
+export default {
+  async email(initialEmail: ForwardableEmailMessage, env: Env, ctx: ExecutionContext) {
+    let parser = new Parser(initialEmail.headers.get("subject") || '')
+    let body = parser.matchsubject(0)?.body
+    if (body && body.kind === ASTKinds.unstructured_1) {
+      console.log(body.A.map(u => u.C).join(''))
+    }
+    /* ... */
+```
+
+## FAQ
+
+Some commonly asked questions:
+
+### Email not parsing
+
+> I'm always getting `undefined` when I parse a valid email
+
+The parser is extremely tolerant and will parse most emails correctly, however there are two situations where an email can *seem* correct but is not.
+
+1. Not using `CRLF` as line breaks.
+2. The email MUST end in a `CRLF` line break.
+
+A common way you can get this error is by copying a plain text email into an editor that is configured for that specific file to use `\n`, such as in your test code. What you can do is just replace `\n` with `\r\n` and it should work.
+
+Also, as mentioned in point 2, that it's common for the the last `CRLF` to be left off when copying an email. If you add a `CRLF` linebreak at the end then you should be fine.
+
+## Contributing
+
+Since this is a new project, there's a lot of work to do. Just as a few ideas, here are some things that are currently needed.
+
+1. Help writing more tests
+2. Parsing the body of the email into structured chunks, i.e. for multipart messages
+3. More granular functionality and convenience methods
+4. A streaming version of this same project
+5. Refinement of the "rewriter" and that whole process
+
+The project is maintained by [Spence](https://spenc.es/). Feel free to [open an issue](https://github.com/asimpletune/rfc5322-email-parser_ts/issues), or [contact](https://spenc.es/contact/) him directly.
 
 ## The Grammar
 

@@ -8,7 +8,6 @@ let reply = Email.parse(readFileSync('./test/resources/hello_world_reply.eml', '
 
 describe('fields', () => {
   test('orig_date', () => {
-    console.log(`Re: ${email.subject}`)
     expect(email.orig_date).toEqual({ "day": "20", "dayOfWeek": "Tue", "hour": "20", "minute": "28", "month": "Jun", "second": "11", "year": "2023", "zone": "+0200" })
   })
   test('from', () => {
