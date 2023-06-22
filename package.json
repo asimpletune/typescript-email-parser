@@ -10,13 +10,17 @@
   "name": "rfc5322-email-parser_ts",
   "description": "Parse RFC5322 emails into typed objects",
   "version": "0.1.0",
-  "main": "index.js",
+  "main": "email.js",
+  "types": "dist/email.d.ts",
   "scripts": {
     "meta": "tspeg --enable-memo ./grammar/metagrammar.peg ./scratch/metagrammar.parser.ts",
     "rewrite": "ts-node ./rewriter.ts",
     "gen": "tspeg --include-grammar-comment=false --regex-flags=i --enable-memo ./grammar/email.rewritten.peg ./parser/email.parser.ts",
     "test": "jest",
-    "test-all": "npm run rewrite && npm run gen && npm test"
+    "test-all": "npm run prebuild && npm test",
+    "prebuild": "npm run rewrite && npm run gen",
+    "build": "tsc",
+    "prepublish": "npm run prebuild && npm run build"
   },
   "repository": {
     "type": "git",

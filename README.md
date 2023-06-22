@@ -20,32 +20,36 @@ The following properties and their types are available
 
 ```typescript
 
-prepended:        PrependedFieldBlock[]
+export class Email {
 
-to?:              NonemptyList<Address>
-subject?:         string
-from:             NonemptyList<Mailbox>
-cc?:              NonemptyList<Address>
-bcc?:             NonemptyList<Address>
-sender?:          Mailbox
-reply_to?:        NonemptyList<Address>
-orig_date:        DateTime
-message_id?:      string
-in_reply_to?:     NonemptyList<string>
-references?:      NonemptyList<string>
-comments?:        string[]
-keywords?:        string[][]
-optional_fields:  OptionalField[]
+  prepended?        : PrependedFieldBlock[]
 
-/**
- *  The `body` consists of strings that are
- *  a.) terminated by `\r\n` and
- *  b.) max 998 columns wide.
- */
-body?:            string
+  to?               : NonemptyList<Address>
+  subject?          : string
+  from?             : NonemptyList<Mailbox>
+  cc?               : NonemptyList<Address>
+  bcc?              : NonemptyList<Address>
+  sender?           : Mailbox
+  reply_to?         : NonemptyList<Address>
+  orig_date?        : DateTime
+  message_id?       : string
+  in_reply_to?      : NonemptyList<string>
+  references?       : NonemptyList<string>
+  comments?         : string[]
+  keywords?         : string[][]
+  optional_fields?  : OptionalField[]
+  /**
+   *  The `body` consists of strings that are
+   *  a.) terminated by `\r\n` and
+   *  b.) max 998 columns wide.
+   */
+  body?             : string
+
+  /* ... */
+}
 ```
 
-You will notice how nearly every field is optional, which may seems strange, but it follows the original specification. This allows for emails in various states of composition to be validly parsed.
+You will notice how  every field is optional, which may seems strange, but it closely follows the grammar in the specification, which additionally states that the only fields are `orig_date`, and the the originator field(s). One benefit of this is it allows emails that are in various states of completion in their composition to still be validly parsed.
 
 ## Help Wanted
 
