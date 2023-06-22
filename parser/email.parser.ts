@@ -2071,7 +2071,7 @@ export class Parser {
     public match_998text($$dpth: number, $$cr?: ErrorTracker): Nullable<_998text> {
         return this.memoise(
             () => {
-                return this.regexAccept(String.raw`(?:[\x01-\x09\x0B\x0C\x0E-\x7F]{998,})`, $$dpth + 1, $$cr);
+                return this.regexAccept(String.raw`(?:[\x01-\x09\x0B\x0C\x0E-\x7F]{0,998})`, $$dpth + 1, $$cr);
             },
             this.$scope$_998text$memo,
         );

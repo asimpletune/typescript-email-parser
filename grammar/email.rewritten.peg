@@ -15,7 +15,7 @@ SP := '\x20'
 TWO_DIGIT := '\d\d'
 VCHAR := '[\x21-\x7E]'
 WSP := SP | HTAB
-_998text := '[\x01-\x09\x0B\x0C\x0E-\x7F]{998,}'
+_998text := '[\x01-\x09\x0B\x0C\x0E-\x7F]{0,998}'
 addr_spec := local=local_part '@' domain=domain
 address := mailbox | group
 address_list := head=address tail={ C=',' address=address }* | obs_addr_list

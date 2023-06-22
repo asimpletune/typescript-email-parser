@@ -15,7 +15,8 @@
     "meta": "tspeg --enable-memo ./grammar/metagrammar.peg ./scratch/metagrammar.parser.ts",
     "rewrite": "ts-node ./rewriter.ts",
     "gen": "tspeg --include-grammar-comment=false --regex-flags=i --enable-memo ./grammar/email.rewritten.peg ./parser/email.parser.ts",
-    "test": "jest"
+    "test": "jest",
+    "test-all": "npm run rewrite && npm run gen && npm test"
   },
   "repository": {
     "type": "git",
