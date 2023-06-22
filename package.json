@@ -10,8 +10,8 @@
   "name": "rfc5322-email-parser_ts",
   "description": "Parse RFC5322 emails into typed objects",
   "version": "0.1.0",
-  "main": "email.js",
-  "types": "dist/email.d.ts",
+  "main": "index.js",
+  "types": "dist/index.d.ts",
   "scripts": {
     "meta": "tspeg --enable-memo ./grammar/metagrammar.peg ./scratch/metagrammar.parser.ts",
     "rewrite": "ts-node ./rewriter.ts",

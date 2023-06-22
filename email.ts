@@ -1,4 +1,4 @@
-import { ASTNodeIntf, ASTKinds as K, addr_spec, address, address_list, address_list_1, date_time, day_of_week, fields_$0, fields_$1, group, hour, mailbox, mailbox_list, message, message_$1, minute, name_addr, obs_addr_list, obs_fields, parse, path, received, received_token, second, trace, year, zone } from './parser/email.parser'
+import { ASTNodeIntf, ASTKinds as K, Parser, addr_spec, address, address_list, address_list_1, date_time, day_of_week, fields_$0, fields_$1, group, hour, mailbox, mailbox_list, message, message_$1, minute, name_addr, obs_addr_list, obs_fields, parse, path, received, received_token, second, trace, year, zone } from './parser/email.parser'
 export class Email {
 
   prepended?: PrependedFieldBlock[]
@@ -44,6 +44,11 @@ export class Email {
   static parse(emailStr: string): Email | undefined {
     try { return new Email(parse(emailStr).ast!) }
     catch (error) { return undefined }
+  }
+  static parseHeaders(input: string): NonprependedFields | undefined {
+    let parser = new Parser(input)
+    let fields = parser.matchfields(0)
+    return fields ? Util.nonprependedFields(fields.nonprepended) : undefined
   }
 }
 

@@ -49,11 +49,33 @@ export class Email {
 }
 ```
 
-You will notice how  every field is optional, which may seems strange, but it closely follows the grammar in the specification, which additionally states that the only fields are `orig_date`, and the the originator field(s). One benefit of this is it allows emails that are in various states of completion in their composition to still be validly parsed.
+You will notice how  every field is optional, which may seems strange, but it closely follows the grammar in the specification, which additionally states that the only required fields are `orig_date`, and the the originator field(s). One benefit of this is it allows emails that are in various states of completion in their composition to still be validly parsed.
 
-## Help Wanted
+Additionally, the underlying parser that the `Email` class wraps is also exposed. This can be useful for accessing functionality that is not yet implemented, without having to implement your own email parser. Below is an example of how to use the `Parser` object directly.
 
-There is a lot of work that needs to be done around writing regressions tests.
+Below is an example, using cloudflare's inbound email handler, to show a toy example of using the underlying Parser directly.
+
+```typescript
+import { Email, Parser, ASTKinds } from 'rfc5322-email-parser_ts'
+export default {
+  async email(initialEmail: ForwardableEmailMessage, env: Env, ctx: ExecutionContext) {
+    let parser = new Parser(initialEmail.headers.get("subject") || '')
+    let body = parser.matchsubject(0)?.body
+    if (body && body.kind === ASTKinds.unstructured_1) {
+      console.log(body.A.map(u => u.C).join(''))
+    }
+    /* ... */
+```
+
+## Contributing
+
+Since this is a new project, there's a lot of work to do. Just as a few ideas, here are some things that are currently needed.
+
+1. Help writing more tests
+2. Parsing the body of the email into structured chunks, i.e. for multipart messages
+3. More granular functionality and convenience methods
+4. A streaming version of this same project
+5. Refinement of the "rewriter" and that whole process
 
 ## The Grammar
 
