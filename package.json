@@ -9,7 +9,7 @@
   },
   "name": "typescript-email-parser",
   "description": "Parse RFC5322 emails into typed objects",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "main": "index.js",
   "types": "dist/index.d.ts",
   "scripts": {
