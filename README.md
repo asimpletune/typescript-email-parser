@@ -1,6 +1,6 @@
 # RFC5322 Email Parser (typescript)
 
-Parse emails into typed objects, according to the [RFC5322](https://datatracker.ietf.org/doc/html/rfc5322#section-4.1) specification. Great for Typescript!
+Parse emails into typed objects, that can be used in your typescript code. Parsing is done according to the [RFC5322](https://datatracker.ietf.org/doc/html/rfc5322#section-4.1) specification.  [Github](https://github.com/asimpletune/rfc5322-email-parser_ts) | [npm](https://www.npmjs.com/package/typescript-email-parser?activeTab=readme)
 
 Table of Contents:
 <!-- TOC -->
@@ -32,7 +32,7 @@ The main focus is correctness, completeness, and performance for parsing emails.
 You can get an `email` object by supplying a string to the `parse` function as shown below. Note that invalid strings will return `undefined`. (*See the [grammar](#the-grammar) below for precise description on valid strings.*)
 
 ```typescript
-import { Email } from '../email';
+import { Email } from 'typescript-email-parser';
 
 // Create an instance by parsing an email as a string
 let email = Email.parse(readFileSync('./hello.eml', 'ascii'))!
@@ -76,7 +76,7 @@ export class Email {
 
 You will notice how  every field is optional, which may seems strange, but it closely follows the grammar in the specification, which additionally states that the only required fields are `orig_date`, and the the originator field(s). One benefit of this is it allows emails that are in various states of completion in their composition to still be validly parsed.
 
-Additionally, the underlying parser that the `Email` class wraps is also exposed. This can be useful for accessing functionality that is not yet implemented, without having to implement your own email parser. Below is an example of how to use the `Parser` object directly.
+Additionally, the underlying parser that the `Email` class wraps is also exposed. This can be useful for accessing functionality that is not yet implemented, without having to implement your own email parser.
 
 Below is an example, using cloudflare's inbound email handler, to show a toy example of using the underlying Parser directly.
 

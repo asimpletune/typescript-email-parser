@@ -1,4 +1,4 @@
-import { RULE, RULEDEF, parse } from './parser/metagrammar.parser'
+import { RULE, RULEDEF, parse } from './metagrammar.parser'
 import { readFileSync, writeFileSync } from 'fs'
 
 let inputFilePath = './grammar/rfc5322.peg'
@@ -158,7 +158,7 @@ modifyRules.set('obs_optional', { skipFields: new Set('BE'.split('')), mapFields
 
 let inputGrammar = readFileSync(inputFilePath, 'ascii')
 let ast = parse(inputGrammar).ast!
-let output = `---\nimport { concat } from '../email'\n---\nstart := message\n` + addFieldsToRules(ast.rules, modifyRules)
+let output = `---\nimport { concat } from '../src/email'\n---\nstart := message\n` + addFieldsToRules(ast.rules, modifyRules)
 writeFileSync(outputFilePath, output)
 
 function addFieldsToRules(ruleDefs: RULEDEF[], modifications: Map<string, RuleAugmentation>) {

@@ -14,13 +14,14 @@
   "types": "dist/index.d.ts",
   "scripts": {
     "meta": "tspeg --enable-memo ./grammar/metagrammar.peg ./scratch/metagrammar.parser.ts",
-    "rewrite": "ts-node ./rewriter.ts",
-    "gen": "tspeg --include-grammar-comment=false --regex-flags=i --enable-memo ./grammar/email.rewritten.peg ./parser/email.parser.ts",
+    "clean": "rm -rf ./dist",
+    "rewrite": "ts-node ./rewriter/rewriter.ts",
+    "gen": "tspeg --include-grammar-comment=false --regex-flags=i --enable-memo ./grammar/email.rewritten.peg ./src/email.parser.ts",
+    "prebuild": "npm run rewrite && npm run gen",
     "test": "jest",
     "test-all": "npm run prebuild && npm test",
-    "prebuild": "npm run rewrite && npm run gen",
     "build": "tsc",
-    "prepublish": "npm run prebuild && npm run build"
+    "prepublish": "npm run clean && npm run prebuild && npm run build && npm test"
   },
   "repository": {
     "type": "git",

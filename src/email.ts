@@ -1,4 +1,4 @@
-import { ASTNodeIntf, ASTKinds as K, Parser, addr_spec, address, address_list, address_list_1, date_time, day_of_week, fields_$0, fields_$1, group, hour, mailbox, mailbox_list, message, message_$1, minute, name_addr, obs_addr_list, obs_fields, parse, path, received, received_token, second, trace, year, zone } from './parser/email.parser'
+import { ASTNodeIntf, ASTKinds as K, Parser, addr_spec, address, address_list, address_list_1, date_time, day_of_week, fields_$0, fields_$1, group, hour, mailbox, mailbox_list, message, message_$1, minute, name_addr, obs_addr_list, obs_fields, parse, path, received, received_token, second, trace, year, zone } from './email.parser'
 export class Email {
 
   prepended?: PrependedFieldBlock[]
