@@ -1,7 +1,6 @@
 import { describe, expect, test } from '@jest/globals';
-import { parse } from '../parser/email.parser';
 import { readFileSync } from 'fs'
-import { Email } from '../email';
+import { Email } from '../src/email';
 
 let email = Email.parse(readFileSync('./test/resources/hello_world.eml', 'ascii'))!
 let reply = Email.parse(readFileSync('./test/resources/hello_world_reply.eml', 'ascii'))!
