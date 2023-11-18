@@ -35,6 +35,7 @@ You can get an `email` object by supplying a string to the `parse` function as s
 
 ```typescript
 import { Email } from 'typescript-email-parser';
+import { readFileSync } from 'fs';
 
 // Create an instance by parsing an email as a string
 let email = Email.parse(readFileSync('./hello.eml', 'ascii'))!
